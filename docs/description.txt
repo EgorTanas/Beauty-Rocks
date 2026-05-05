@@ -1,0 +1,148 @@
+Beauty Salon Web Application
+
+Descriere
+
+Această aplicație web este o platformă completă pentru gestionarea unui salon de frumusețe. Utilizatorii pot crea conturi, se pot autentifica, își pot gestiona profilul și pot face programări online pentru diferite servicii oferite de salon.
+
+Aplicația este construită folosind tehnologii moderne și este gândită să suporte un număr mare de utilizatori, oferind performanță și securitate.
+
+---
+
+Funcționalități principale
+
+ Autentificare & Autorizare
+
+* Înregistrare (Register)
+* Autentificare (Login)
+* Logout securizat
+* Autentificare bazată pe cookie-uri (httpOnly)
+* Protecția rutelor private
+
+---
+
+Profil utilizator
+
+* Vizualizare date personale
+* Editare profil
+* Istoric programări
+
+---
+
+ Servicii salon
+
+* Listă servicii disponibile (ex: tuns, coafură, manichiură)
+* Detalii pentru fiecare serviciu (preț, durată)
+
+---
+
+Sistem de programări
+
+* Creare programare
+* Selectare dată și oră
+* Verificare disponibilitate în timp real
+* Prevenirea dublării rezervărilor
+* Anulare programare
+
+---
+
+Performanță & Scalabilitate
+
+* Cache pentru date frecvent accesate
+* Gestionarea sesiunilor pentru utilizatori multipli
+* Sistem optimizat pentru trafic mare
+
+---
+
+ Tehnologii utilizate
+ Frontend
+
+* React – interfață modernă și dinamică
+
+ Backend
+
+* Node.js – runtime JavaScript
+* Express – framework backend
+
+ Bază de date
+
+* MongoDB – stocare date utilizatori, servicii și programări
+
+ Cache & sesiuni
+
+* Redis – gestionarea sesiunilor și caching
+
+ Autentificare
+
+* Cookie-uri securizate (httpOnly)
+* JSON Web Tokens (JWT)
+
+---
+
+ Arhitectură
+
+Aplicația este împărțită în două părți principale:
+
+* Frontend (client)
+* Backend (server API)
+
+Backend-ul expune API-uri REST pentru:
+
+* autentificare (`/api/auth`)
+* utilizatori (`/api/users`)
+* servicii (`/api/services`)
+* programări (`/api/appointments`)
+
+---
+
+ Deploy
+
+Aplicația poate fi rulată în producție folosind:
+
+* Frontend: Vercel
+* Backend: Render / Railway
+* Bază de date: MongoDB Atlas
+* Redis: Redis Cloud
+
+---
+
+ Instalare locală
+
+```bash
+# Clone repository
+git clone https://github.com/username/beauty-salon-app.git
+
+# Backend
+cd backend
+npm install
+npm run dev
+
+# Frontend
+cd ../frontend
+npm install
+npm start
+```
+
+---
+
+ Securitate
+
+* Parole criptate (bcrypt)
+* Cookie-uri httpOnly
+* Protecție împotriva accesului neautorizat
+* Validare input utilizator
+
+---
+
+Posibile îmbunătățiri
+
+* Panou Admin
+* Notificări email/SMS pentru programări
+* Plăți online
+* Review-uri și rating servicii
+
+---
+
+ Autor
+
+Tanas Egor
+Russu Ion
