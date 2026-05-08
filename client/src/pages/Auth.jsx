@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import '../style/Auth.css';
 
-export default function Auth() {
+export default function Auth({ apiBaseUrl = 'http://localhost:5000' }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { authType } = useParams();
   
   // Setează view-ul bazat pe URL
   const [view, setView] = useState(() => {
@@ -20,6 +19,9 @@ export default function Auth() {
     confirm: '',
   });
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
   // Ascultă schimbările de URL
   useEffect(() => {
     if (location.pathname === '/register') {
@@ -27,48 +29,146 @@ export default function Auth() {
     } else if (location.pathname === '/login') {
       setView('login');
     }
+    setError(''); // Reset error when switching views
   }, [location.pathname]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    setError(''); // Clear error when user types
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+    
     try {
-      // TODO: logica de login
-      console.log('Login:', { email: form.email, password: form.password });
+      console.log('Sending login request to:', `${apiBaseUrl}/api/auth/login`);
+      console.log('Login data:', { email: form.email, password: form.password });
       
-      // Salvează token-ul (dacă ai)
-      // localStorage.setItem('token', response.data.token);
+      const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password,
+        }),
+      });
+
+      const data = await response.json();
+      console.log('Login response:', data);
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+
+      // Salvează token-ul
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
+      
+      // Salvează informațiile utilizatorului (opțional)
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+      }
       
       navigate('/dashboard');
     } catch (error) {
       console.error('Login error:', error);
+      setError(error.message || 'An error occurred during login');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
     
+    console.log('=== REGISTRATION STARTED ===');
+    console.log('API URL:', `${apiBaseUrl}/api/auth/register`);
+    
     // Validare parolă
     if (form.password !== form.confirm) {
-      alert('Passwords do not match!');
+      setError('Passwords do not match!');
+      console.log('Password validation failed: passwords do not match');
       return;
     }
     
+    if (form.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      console.log('Password validation failed: too short');
+      return;
+    }
+    
+    setLoading(true);
+    setError('');
+    
+    // Pregătim datele pentru trimitere
+    const requestBody = {
+      name: form.name,
+      email: form.email,
+      password: form.password,
+    };
+    
+    console.log('Request body being sent:', requestBody);
+    console.log('Request body JSON:', JSON.stringify(requestBody));
+    
     try {
-      // TODO: logica de register
-      console.log('Register:', { name: form.name, email: form.email, password: form.password });
+      // Trimitere date către server la endpoint-ul /api/auth/register
+      const response = await fetch(`${apiBaseUrl}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      console.log('Response status:', response.status);
+      console.log('Response status text:', response.statusText);
       
-      navigate('/dashboard');
+      // Citim răspunsul ca text pentru debugging
+      const responseText = await response.text();
+      console.log('Raw response text:', responseText);
+      
+      // Încercăm să parse-ăm ca JSON
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log('Parsed response data:', data);
+      } catch (parseError) {
+        console.error('Failed to parse response as JSON:', parseError);
+        throw new Error('Server returned invalid response format');
+      }
+
+      if (!response.ok) {
+        throw new Error(data.message || data.error || 'Registration failed');
+      }
+
+      console.log('Registration successful:', data);
+      
+      // Dacă serverul returnează token direct după înregistrare
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        navigate('/dashboard');
+      } else {
+        // Redirect to login page after successful registration
+        alert('Registration successful! Please login.');
+        switchView('login');
+      }
     } catch (error) {
-      console.error('Register error:', error);
+      console.error('Registration error details:', error);
+      console.error('Error message:', error.message);
+      setError(error.message || 'An error occurred during registration');
+    } finally {
+      setLoading(false);
     }
   };
 
   const switchView = (newView) => {
     setForm({ name: '', email: '', password: '', confirm: '' });
+    setError('');
     // Navighează la URL-ul corespunzător
     navigate(`/${newView}`);
   };
@@ -96,8 +196,15 @@ export default function Auth() {
             : 'Fill in the details to get started'}
         </p>
 
+        {/* Error Message */}
+        {error && (
+          <div className="auth-error">
+            {error}
+          </div>
+        )}
+
         {/* Google button */}
-        <button className="auth-google-btn">
+        <button className="auth-google-btn" type="button">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908C16.658 14.015 17.64 11.707 17.64 9.2z" fill="#4285F4"/>
             <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/>
@@ -124,6 +231,7 @@ export default function Auth() {
                 value={form.name}
                 onChange={handleChange}
                 required
+                disabled={loading}
               />
             </div>
           )}
@@ -138,6 +246,7 @@ export default function Auth() {
               value={form.email}
               onChange={handleChange}
               required
+              disabled={loading}
             />
           </div>
 
@@ -151,6 +260,7 @@ export default function Auth() {
               value={form.password}
               onChange={handleChange}
               required
+              disabled={loading}
             />
           </div>
 
@@ -165,12 +275,13 @@ export default function Auth() {
                 value={form.confirm}
                 onChange={handleChange}
                 required
+                disabled={loading}
               />
             </div>
           )}
 
-          <button type="submit" className="auth-submit-btn">
-            {view === 'login' ? 'Sign in' : 'Create account'}
+          <button type="submit" className="auth-submit-btn" disabled={loading}>
+            {loading ? 'Processing...' : (view === 'login' ? 'Sign in' : 'Create account')}
           </button>
         </form>
 
@@ -178,13 +289,13 @@ export default function Auth() {
         <p className="auth-footer">
           {view === 'login' ? (
             <>No account?{' '}
-              <button className="auth-link-btn" onClick={() => switchView('register')}>
+              <button className="auth-link-btn" onClick={() => switchView('register')} disabled={loading}>
                 Register
               </button>
             </>
           ) : (
             <>Already have an account?{' '}
-              <button className="auth-link-btn" onClick={() => switchView('login')}>
+              <button className="auth-link-btn" onClick={() => switchView('login')} disabled={loading}>
                 Sign in
               </button>
             </>
