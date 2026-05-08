@@ -1,20 +1,16 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect } from "react";
 import Auth from './pages/Auth';
 
 function App() {
-  useEffect(() => {
-    fetch("http://localhost:5000")
-      .then(res => res.json())
-      .then(data => console.log(data));
-  }, []);
+  // Poți seta URL-ul de bază al API-ului într-o constantă
+  const API_BASE_URL = 'http://localhost:5000';
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/login" element={<Auth />} />
-        <Route path="/register" element={<Auth />} />
+        <Route path="/" element={<Navigate to="/register" replace />} />
+        <Route path="/login" element={<Auth apiBaseUrl={API_BASE_URL} />} />
+        <Route path="/register" element={<Auth apiBaseUrl={API_BASE_URL} />} />
       </Routes>
     </BrowserRouter>
   );
