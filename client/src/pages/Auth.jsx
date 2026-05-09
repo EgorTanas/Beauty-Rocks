@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Eye, EyeOff, Heart, Lock, Mail, Sparkles, UserRound } from 'lucide-react';
 import '../style/Auth.css';
 
 export default function Auth({ apiBaseUrl = 'http://localhost:5000' }) {
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Setează view-ul bazat pe URL
+
   const [view, setView] = useState(() => {
     if (location.pathname === '/register') return 'register';
     return 'login';
@@ -14,43 +15,44 @@ export default function Auth({ apiBaseUrl = 'http://localhost:5000' }) {
 
   const [form, setForm] = useState({
     name: '',
-    email: '',  
+    email: '',
     password: '',
     confirm: '',
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  // Ascultă schimbările de URL
   useEffect(() => {
     if (location.pathname === '/register') {
       setView('register');
     } else if (location.pathname === '/login') {
       setView('login');
     }
-    setError(''); // Reset error when switching views
+    setError('');
   }, [location.pathname]);
+
+  useEffect(() => {
+    document.body.classList.add('auth-page');
+    return () => document.body.classList.remove('auth-page');
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    setError(''); // Clear error when user types
+    setError('');
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    
+
     try {
-      console.log('Sending login request to:', `${apiBaseUrl}/api/auth/login`);
-      console.log('Login data:', { email: form.email, password: form.password });
-      
       const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: form.email,
           password: form.password,
@@ -58,26 +60,15 @@ export default function Auth({ apiBaseUrl = 'http://localhost:5000' }) {
       });
 
       const data = await response.json();
-      console.log('Login response:', data);
-
       if (!response.ok) {
         throw new Error(data.message || 'Login failed');
       }
 
-      // Salvează token-ul
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-      }
-      
-      // Salvează informațiile utilizatorului (opțional)
-      if (data.user) {
-        localStorage.setItem('user', JSON.stringify(data.user));
-      }
-      
+      if (data.token) localStorage.setItem('token', data.token);
+      if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
       navigate('/dashboard');
-    } catch (error) {
-      console.error('Login error:', error);
-      setError(error.message || 'An error occurred during login');
+    } catch (loginError) {
+      setError(loginError.message || 'An error occurred during login');
     } finally {
       setLoading(false);
     }
@@ -85,60 +76,38 @@ export default function Auth({ apiBaseUrl = 'http://localhost:5000' }) {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    
-    console.log('=== REGISTRATION STARTED ===');
-    console.log('API URL:', `${apiBaseUrl}/api/auth/register`);
-    
-    // Validare parolă
+
     if (form.password !== form.confirm) {
       setError('Passwords do not match!');
-      console.log('Password validation failed: passwords do not match');
       return;
     }
-    
+
     if (form.password.length < 6) {
       setError('Password must be at least 6 characters long');
-      console.log('Password validation failed: too short');
       return;
     }
-    
+
     setLoading(true);
     setError('');
-    
-    // Pregătim datele pentru trimitere
+
     const requestBody = {
-      name: form.name,
+      username: form.name,
       email: form.email,
       password: form.password,
     };
-    
-    console.log('Request body being sent:', requestBody);
-    console.log('Request body JSON:', JSON.stringify(requestBody));
-    
+
     try {
-      // Trimitere date către server la endpoint-ul /api/auth/register
       const response = await fetch(`${apiBaseUrl}/api/auth/register`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody),
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response status text:', response.statusText);
-      
-      // Citim răspunsul ca text pentru debugging
       const responseText = await response.text();
-      console.log('Raw response text:', responseText);
-      
-      // Încercăm să parse-ăm ca JSON
       let data;
       try {
         data = JSON.parse(responseText);
-        console.log('Parsed response data:', data);
-      } catch (parseError) {
-        console.error('Failed to parse response as JSON:', parseError);
+      } catch {
         throw new Error('Server returned invalid response format');
       }
 
@@ -146,21 +115,15 @@ export default function Auth({ apiBaseUrl = 'http://localhost:5000' }) {
         throw new Error(data.message || data.error || 'Registration failed');
       }
 
-      console.log('Registration successful:', data);
-      
-      // Dacă serverul returnează token direct după înregistrare
       if (data.token) {
         localStorage.setItem('token', data.token);
         navigate('/dashboard');
       } else {
-        // Redirect to login page after successful registration
         alert('Registration successful! Please login.');
         switchView('login');
       }
-    } catch (error) {
-      console.error('Registration error details:', error);
-      console.error('Error message:', error.message);
-      setError(error.message || 'An error occurred during registration');
+    } catch (registerError) {
+      setError(registerError.message || 'An error occurred during registration');
     } finally {
       setLoading(false);
     }
@@ -169,140 +132,287 @@ export default function Auth({ apiBaseUrl = 'http://localhost:5000' }) {
   const switchView = (newView) => {
     setForm({ name: '', email: '', password: '', confirm: '' });
     setError('');
-    // Navighează la URL-ul corespunzător
+    setShowPassword(false);
+    setShowConfirmPassword(false);
     navigate(`/${newView}`);
   };
 
+  const cardReveal = {
+    hidden: { opacity: 0, y: 46, scale: 0.95 },
+    show: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1], delayChildren: 0.12, staggerChildren: 0.08 },
+    },
+  };
+
+  const cardItem = {
+    hidden: { opacity: 0, y: 16 },
+    show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } },
+  };
+
   return (
-    <div className="auth-wrapper">
-      <div className={`auth-card ${view === 'register' ? 'auth-card--register' : ''}`}>
+    <motion.div
+      className="auth-shell"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.45, ease: 'easeOut' }}
+    >
+      <div className="auth-frame">
+        <motion.aside
+          className="auth-showcase"
+          initial={{ opacity: 0, x: -28 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.55, ease: 'easeOut' }}
+        >
+          <div className="auth-silk auth-silk-one" />
+          <div className="auth-silk auth-silk-two" />
+          <div className="auth-orbit" />
 
-        {/* Logo */}
-        <div className="auth-logo">
-          <div className="auth-logo-box">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-            </svg>
-          </div>
-        </div>
+          <motion.div className="auth-float auth-float-top" animate={{ y: [0, -8, 0], rotate: [0, 8, 0] }} transition={{ duration: 5.6, repeat: Infinity, ease: 'easeInOut' }}>
+            <Heart size={28} />
+          </motion.div>
+          <motion.div className="auth-float auth-float-side" animate={{ y: [0, 10, 0], rotate: [0, -9, 0] }} transition={{ duration: 6.2, repeat: Infinity, ease: 'easeInOut' }}>
+            <Sparkles size={22} />
+          </motion.div>
+          <motion.div className="auth-float auth-float-bottom" animate={{ y: [0, -9, 0], rotate: [0, 6, 0] }} transition={{ duration: 6.8, repeat: Infinity, ease: 'easeInOut' }}>
+            <Heart size={20} />
+          </motion.div>
 
-        {/* Title */}
-        <h1 className="auth-title">
-          {view === 'login' ? 'Welcome back' : 'Create account'}
-        </h1>
-        <p className="auth-subtitle">
-          {view === 'login'
-            ? 'Sign in to continue to your account'
-            : 'Fill in the details to get started'}
-        </p>
-
-        {/* Error Message */}
-        {error && (
-          <div className="auth-error">
-            {error}
-          </div>
-        )}
-
-        {/* Google button */}
-        <button className="auth-google-btn" type="button">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-            <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908C16.658 14.015 17.64 11.707 17.64 9.2z" fill="#4285F4"/>
-            <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/>
-            <path d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.548 0 9s.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
-            <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
-          </svg>
-          Continue with Google
-        </button>
-
-        {/* Divider */}
-        <div className="auth-divider"><span>OR</span></div>
-
-        {/* Form */}
-        <form onSubmit={view === 'login' ? handleLogin : handleRegister} className="auth-form">
-
-          {view === 'register' && (
-            <div className="auth-field">
-              <label htmlFor="name">Full name</label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                placeholder="John Doe"
-                value={form.name}
-                onChange={handleChange}
-                required
-                disabled={loading}
-              />
+          <div className="auth-showcase-content">
+            <div className="brand-mark" aria-label="Beauty Rocks">
+              <div className="brand-tools">
+                <span />
+                <img src="/img/instruments-cropped.png" alt="" aria-hidden="true" />
+                <span />
+              </div>
+              <strong>Beauty</strong>
+              <em>Rocks</em>
+              <div className="brand-heart">
+                <span />
+                <Heart size={20} />
+                <span />
+              </div>
             </div>
-          )}
 
-          <div className="auth-field">
-            <label htmlFor="email">Email</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              placeholder="you@example.com"
-              value={form.email}
-              onChange={handleChange}
-              required
-              disabled={loading}
-            />
-          </div>
-
-          <div className="auth-field">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              placeholder="••••••••"
-              value={form.password}
-              onChange={handleChange}
-              required
-              disabled={loading}
-            />
-          </div>
-
-          {view === 'register' && (
-            <div className="auth-field">
-              <label htmlFor="confirm">Confirm password</label>
-              <input
-                type="password"
-                id="confirm"
-                name="confirm"
-                placeholder="••••••••"
-                value={form.confirm}
-                onChange={handleChange}
-                required
-                disabled={loading}
-              />
+            <div className="showcase-copy">
+              <h2>
+                Welcome, <span>Beautiful!</span>
+              </h2>
+              <div className="mini-heart">
+                <Heart size={18} />
+              </div>
+              <p>Your beauty, your time, your way.</p>
+              <p>Book appointments, explore exclusive services, and enjoy a luxury salon experience.</p>
             </div>
-          )}
+          </div>
+        </motion.aside>
 
-          <button type="submit" className="auth-submit-btn" disabled={loading}>
-            {loading ? 'Processing...' : (view === 'login' ? 'Sign in' : 'Create account')}
-          </button>
-        </form>
+        <motion.section
+          className="auth-form-panel"
+          initial={{ opacity: 0, x: 28 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.55, ease: 'easeOut' }}
+        >
+          <motion.div
+            className="auth-card"
+            whileHover={{ y: -1 }}
+            transition={{ duration: 0.25 }}
+            variants={cardReveal}
+            initial="hidden"
+            animate="show"
+          >
+            <motion.div variants={cardItem}>
+              <Link to="/" className="back-home">
+                <ArrowLeft size={13} />
+                Back to Home
+              </Link>
+            </motion.div>
 
-        {/* Footer switch */}
-        <p className="auth-footer">
-          {view === 'login' ? (
-            <>No account?{' '}
-              <button className="auth-link-btn" onClick={() => switchView('register')} disabled={loading}>
-                Register
+            <motion.div variants={cardItem} className="auth-heading">
+              <p>Beauty Rocks</p>
+              <h1>{view === 'login' ? 'Welcome Back!' : 'Create Account'}</h1>
+              <span>
+                {view === 'login'
+                  ? 'Sign in to manage your beauty appointments'
+                  : 'Join Beauty Rocks and start your beauty journey'}
+              </span>
+            </motion.div>
+
+            <AnimatePresence mode="wait">
+              {error && (
+                <motion.div
+                  key={error}
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  className="auth-error-box"
+                >
+                  {error}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence mode="wait">
+              <motion.form
+                key={view}
+                initial={{ opacity: 0, x: 24 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -24 }}
+                transition={{ duration: 0.28, ease: 'easeInOut' }}
+                onSubmit={view === 'login' ? handleLogin : handleRegister}
+                className="auth-form"
+              >
+                {view === 'register' && (
+                  <InputRow
+                    label="Full Name"
+                    name="name"
+                    type="text"
+                    placeholder="Jane Doe"
+                    value={form.name}
+                    onChange={handleChange}
+                    disabled={loading}
+                    icon={<UserRound size={16} />}
+                  />
+                )}
+
+                <InputRow
+                  label="Email Address"
+                  name="email"
+                  type="email"
+                  placeholder="jane@example.com"
+                  value={form.email}
+                  onChange={handleChange}
+                  disabled={loading}
+                  icon={<Mail size={16} />}
+                />
+
+                <InputRow
+                  label="Password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter your password"
+                  value={form.password}
+                  onChange={handleChange}
+                  disabled={loading}
+                  icon={<Lock size={16} />}
+                  suffix={
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="password-toggle"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  }
+                />
+
+                {view === 'register' && (
+                  <InputRow
+                    label="Confirm Password"
+                    name="confirm"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    placeholder="Confirm your password"
+                    value={form.confirm}
+                    onChange={handleChange}
+                    disabled={loading}
+                    icon={<Lock size={16} />}
+                    suffix={
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="password-toggle"
+                        aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                      >
+                        {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    }
+                  />
+                )}
+
+                {view === 'login' && (
+                  <div className="forgot-password">
+                    <a href="#forgot">Forgot password?</a>
+                  </div>
+                )}
+
+                <motion.button
+                  type="submit"
+                  disabled={loading}
+                  whileHover={{ y: -1, scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  className="submit-button"
+                >
+                  {loading ? 'Processing...' : view === 'login' ? 'Sign In' : 'Create Account'}
+                </motion.button>
+              </motion.form>
+            </AnimatePresence>
+
+            <motion.div variants={cardItem} className="auth-divider">
+              <span>Or continue with</span>
+            </motion.div>
+
+            <motion.div variants={cardItem} className="social-grid">
+              <button type="button" className="social-button">
+                <span className="google-mark">G</span>
+                <span>Google</span>
               </button>
-            </>
-          ) : (
-            <>Already have an account?{' '}
-              <button className="auth-link-btn" onClick={() => switchView('login')} disabled={loading}>
-                Sign in
+              <button type="button" className="social-button">
+                <span className="apple-mark">●</span>
+                <span>Apple</span>
               </button>
-            </>
-          )}
-        </p>
+            </motion.div>
 
+            <motion.p variants={cardItem} className="auth-switch">
+              {view === 'login' ? "Don't have an account? " : 'Already have an account? '}
+              <button
+                onClick={() => switchView(view === 'login' ? 'register' : 'login')}
+                disabled={loading}
+              >
+                {view === 'login' ? 'Sign up' : 'Sign in'}
+              </button>
+            </motion.p>
+
+            <motion.p variants={cardItem} className="terms-copy">
+              By continuing, you agree to our <Link to="#">Terms of Service</Link> and{' '}
+              <Link to="#">Privacy Policy</Link>.
+            </motion.p>
+          </motion.div>
+        </motion.section>
       </div>
-    </div>
+    </motion.div>
+  );
+}
+
+function InputRow({
+  label,
+  name,
+  type,
+  placeholder,
+  value,
+  onChange,
+  disabled,
+  icon,
+  suffix,
+}) {
+  return (
+    <label className="input-row">
+      <span>{label}</span>
+      <div className="input-shell">
+        <span className="input-icon">{icon}</span>
+        <input
+          type={type}
+          name={name}
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange}
+          required
+          disabled={disabled}
+        />
+        {suffix}
+      </div>
+    </label>
   );
 }
