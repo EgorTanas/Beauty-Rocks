@@ -1,40 +1,56 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+function getCallbackState(searchParams) {
+  const error = searchParams.get('error');
+  if (error) {
+    return {
+      status: 'Google login failed. Redirecting...',
+      redirectTo: '/login?error=' + error,
+      user: null,
+    };
+  }
+
+  const rawUser = searchParams.get('user');
+  if (!rawUser) {
+    return {
+      status: 'Something went wrong. Redirecting...',
+      redirectTo: '/login',
+      user: null,
+    };
+  }
+
+  try {
+    return {
+      status: 'Processing your login...',
+      redirectTo: '/home',
+      user: JSON.parse(decodeURIComponent(rawUser)),
+    };
+  } catch {
+    return {
+      status: 'Failed to process login data. Redirecting...',
+      redirectTo: '/login',
+      user: null,
+    };
+  }
+}
 
 export default function GoogleAuthSuccess() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [status, setStatus] = useState('Processing your login...');
+  const callbackState = useMemo(() => getCallbackState(searchParams), [searchParams]);
 
   useEffect(() => {
-    const error = searchParams.get('error');
-
-    if (error) {
-      setStatus('Google login failed. Redirecting...');
-      setTimeout(() => navigate('/login?error=' + error), 1500);
-      return;
-    }
-
-    const rawUser = searchParams.get('user');
-
-    if (!rawUser) {
-      setStatus('Something went wrong. Redirecting...');
-      setTimeout(() => navigate('/login'), 1500);
-      return;
-    }
-
-    try {
-      const user = JSON.parse(decodeURIComponent(rawUser));
-      localStorage.setItem('user', JSON.stringify(user));
-
+    if (callbackState.user) {
+      localStorage.setItem('user', JSON.stringify(callbackState.user));
       // Replace current history entry so back-button doesn't return here
-      navigate('/dashboard', { replace: true });
-    } catch {
-      setStatus('Failed to process login data. Redirecting...');
-      setTimeout(() => navigate('/login'), 1500);
+      navigate('/home', { replace: true });
+      return undefined;
     }
-  }, []);
+
+    const redirectTimer = setTimeout(() => navigate(callbackState.redirectTo), 1500);
+    return () => clearTimeout(redirectTimer);
+  }, [callbackState, navigate]);
 
   return (
     <div style={{
@@ -56,7 +72,7 @@ export default function GoogleAuthSuccess() {
         animation: 'spin 0.8s linear infinite',
       }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      <p>{status}</p>
+      <p>{callbackState.status}</p>
     </div>
   );
 }

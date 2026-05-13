@@ -1,0 +1,122 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap');
+
+.home-page {
+  min-height: 100svh;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 0, 0, 0.06), transparent),
+    #fafaf9;
+  color: #0a0a0a;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.home-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px clamp(20px, 4vw, 32px);
+  border-bottom: 1px solid #ebebeb;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+}
+
+.home-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.home-brand-mark {
+  width: 40px;
+  height: auto;
+  border-radius: 10px;
+}
+
+.home-brand-text {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.home-sign-out {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: 1px solid #e0e0e0;
+  border-radius: 999px;
+  background: #fff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.home-sign-out:hover {
+  background: #f5f5f5;
+  border-color: #ccc;
+}
+
+.home-sign-out:active {
+  transform: scale(0.98);
+}
+
+.home-main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: clamp(48px, 10vw, 88px) clamp(20px, 4vw, 32px);
+}
+
+.home-hero-card {
+  padding: clamp(36px, 6vw, 48px);
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid #ececec;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.06);
+  text-align: center;
+}
+
+.home-hero-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 20px;
+  border-radius: 14px;
+  background: #f4f4f2;
+  color: #111;
+}
+
+.home-kicker {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6f6f6f;
+}
+
+.home-title {
+  margin: 0 0 16px;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.home-lead {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.65;
+  color: #555;
+}
