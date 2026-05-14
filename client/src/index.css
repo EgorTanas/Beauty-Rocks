@@ -26,3 +26,13 @@ body.auth-page #root {
 #root {
   min-height: 100svh;
 }
+
+/* Ascundem bara de scroll global */
+html {
+  -ms-overflow-style: none; /* IE și Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+html::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, și Opera */
+}
