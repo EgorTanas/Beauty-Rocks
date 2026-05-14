@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 
 const userSchema = new mongoose.Schema(
   {
@@ -25,7 +26,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null,
       minlength: [6, "Password must be at least 6 characters"],
-      select: false, // never returned in queries by default
+      select: false,
     },
 
     role: {
@@ -46,9 +47,35 @@ const userSchema = new mongoose.Schema(
       select: false,
     },
 
-    // Refresh token stored hashed for invalidation on logout
+    
     refreshToken: {
       type: String,
+      default: null,
+      select: false,
+    },
+
+    // ── Password Reset
+    passwordResetToken: {
+      type: String,
+      default: null,
+      select: false,
+    },
+
+    passwordResetExpires: {
+      type: Date,
+      default: null,
+      select: false,
+    },
+
+    // ── Email Verification 
+    emailVerificationToken: {
+      type: String,
+      default: null,
+      select: false,
+    },
+
+    emailVerificationExpires: {
+      type: Date,
       default: null,
       select: false,
     },
@@ -77,7 +104,7 @@ const userSchema = new mongoose.Schema(
       default: null,
     },
 
-    // ── Account state 
+    // ── Account state
     isActive: {
       type: Boolean,
       default: true,
@@ -94,7 +121,7 @@ const userSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true, // createdAt, updatedAt
+    timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
   }
@@ -110,17 +137,39 @@ userSchema.virtual("avatarUrl").get(function () {
 // ── Pre-save: hash password 
 userSchema.pre("save", async function () {
   if (!this.isModified("password") || !this.password) return;
-
   const salt = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-// ── Instance method: compare password 
+
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// ── Instance method: safe public object (no sensitive fields) ─
+
+
+userSchema.methods.createPasswordResetToken = function () {
+  const rawToken = crypto.randomBytes(32).toString("hex");
+  this.passwordResetToken = crypto
+    .createHash("sha256")
+    .update(rawToken)
+    .digest("hex");
+  this.passwordResetExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 min
+  return rawToken;
+};
+
+
+userSchema.methods.createEmailVerificationToken = function () {
+  const rawToken = crypto.randomBytes(32).toString("hex");
+  this.emailVerificationToken = crypto
+    .createHash("sha256")
+    .update(rawToken)
+    .digest("hex");
+  this.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
+  return rawToken;
+};
+
+
 userSchema.methods.toPublicJSON = function () {
   return {
     id: this._id,

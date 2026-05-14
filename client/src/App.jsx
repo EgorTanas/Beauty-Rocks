@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Auth from './pages/Auth';
 import GoogleAuthSuccess from './pages/GoogleAuthSuccess';
 import Home from './pages/Home';

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 function getCallbackState(searchParams) {
@@ -23,7 +23,7 @@ function getCallbackState(searchParams) {
   try {
     return {
       status: 'Processing your login...',
-      redirectTo: '/home',
+      redirectTo: '/home', // temporary, will be overridden
       user: JSON.parse(decodeURIComponent(rawUser)),
     };
   } catch {
@@ -38,16 +38,25 @@ function getCallbackState(searchParams) {
 export default function GoogleAuthSuccess() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [status, setStatus] = useState('Processing your login...');
   const callbackState = useMemo(() => getCallbackState(searchParams), [searchParams]);
 
   useEffect(() => {
     if (callbackState.user) {
       localStorage.setItem('user', JSON.stringify(callbackState.user));
+      
+      // Recuperăm pagina de unde a venit userul înainte de Google OAuth
+      const redirectTo = sessionStorage.getItem('authRedirectFrom') || '/home';
+      sessionStorage.removeItem('authRedirectFrom');
+      
       // Replace current history entry so back-button doesn't return here
-      navigate('/home', { replace: true });
+      navigate(redirectTo, { replace: true });
       return undefined;
     }
 
+    // Setăm statusul din callbackState
+    setStatus(callbackState.status);
+    
     const redirectTimer = setTimeout(() => navigate(callbackState.redirectTo), 1500);
     return () => clearTimeout(redirectTimer);
   }, [callbackState, navigate]);
@@ -72,7 +81,7 @@ export default function GoogleAuthSuccess() {
         animation: 'spin 0.8s linear infinite',
       }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      <p>{callbackState.status}</p>
+      <p>{status}</p>
     </div>
   );
 }

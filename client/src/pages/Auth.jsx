@@ -10,6 +10,8 @@ import {
   LockKeyhole,
   Mail,
   UserRound,
+  CheckCircle,
+  ArrowLeft,
 } from 'lucide-react';
 import '../style/Auth.css';
 
@@ -124,21 +126,46 @@ function getOAuthErrorMessage(searchParams) {
 }
 
 /* ════════════════════════════════════════════════════════════
-   AUTH COMPONENT
+   AUTH COMPONENT - with Forgot & Reset Password views
+   and ProtectedRoute redirect support
 ════════════════════════════════════════════════════════════ */
 export default function Auth({ apiBaseUrl = 'http://localhost:5000' }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
-  const view = location.pathname === '/register' ? 'register' : 'login';
+  // 🔥 IMPORTANT: Pagina de unde a venit userul (setată de ProtectedRoute)
+  // Dacă nu există, merge la /home implicit
+  const from = location.state?.from?.pathname || '/home';
+
+  // Get current view from URL path
+  const getViewFromPath = (pathname) => {
+    if (pathname === '/register') return 'register';
+    if (pathname === '/forgot-password') return 'forgot';
+    if (pathname === '/reset-password') return 'reset';
+    return 'login';
+  };
+
+  const view = getViewFromPath(location.pathname);
   const isLogin = view === 'login';
+  const isRegister = view === 'register';
+  const isForgot = view === 'forgot';
+  const isReset = view === 'reset';
+  
+  const resetToken = searchParams.get('token') || '';
 
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(() => getOAuthErrorMessage(searchParams));
+  const [successMsg, setSuccessMsg] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Handle OAuth and verification messages
+  useEffect(() => {
+    const verified = searchParams.get('verified');
+    if (verified === 'true') setSuccessMsg('Email verified! You can now sign in.');
+  }, [searchParams]);
 
   useEffect(() => {
     document.body.classList.add('auth-page');
@@ -148,6 +175,7 @@ export default function Auth({ apiBaseUrl = 'http://localhost:5000' }) {
   const handleChange = (e) => {
     setForm((c) => ({ ...c, [e.target.name]: e.target.value }));
     setError('');
+    setSuccessMsg('');
   };
 
   const authFetch = async (endpoint, body) => {
@@ -162,6 +190,7 @@ export default function Auth({ apiBaseUrl = 'http://localhost:5000' }) {
     return data;
   };
 
+  // 🔥 MODIFICAT: Redirectează înapoi pe pagina de unde a venit userul
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -169,7 +198,8 @@ export default function Auth({ apiBaseUrl = 'http://localhost:5000' }) {
     try {
       const data = await authFetch('/api/auth/login', { email: form.email, password: form.password });
       if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
-      navigate('/home');
+      // Redirect înapoi pe pagina protejată de unde a venit, sau /home
+      navigate(from, { replace: true });
     } catch (err) {
       setError(err.message || 'An error occurred during login');
     } finally {
@@ -177,6 +207,7 @@ export default function Auth({ apiBaseUrl = 'http://localhost:5000' }) {
     }
   };
 
+  // 🔥 MODIFICAT: La register trimitem pe /home (cont nou, nu avem de unde să venim)
   const handleRegister = async (e) => {
     e.preventDefault();
     if (form.password !== form.confirm) { setError('Passwords do not match!'); return; }
@@ -190,7 +221,7 @@ export default function Auth({ apiBaseUrl = 'http://localhost:5000' }) {
         password: form.password,
       });
       if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
-      navigate('/home');
+      navigate('/home', { replace: true });
     } catch (err) {
       setError(err.message || 'An error occurred during registration');
     } finally {
@@ -198,16 +229,120 @@ export default function Auth({ apiBaseUrl = 'http://localhost:5000' }) {
     }
   };
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setSuccessMsg('');
+    try {
+      const data = await authFetch('/api/auth/forgot-password', { email: form.email });
+      setSuccessMsg(data.message || 'If that email exists, a reset link has been sent.');
+      setForm({ ...form, email: '' });
+    } catch (err) {
+      setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (form.password !== form.confirm) { setError('Passwords do not match!'); return; }
+    if (form.password.length < 6) { setError('Password must be at least 6 characters'); return; }
+    if (!resetToken) { setError('Invalid or missing reset token. Please request a new link.'); return; }
+    setLoading(true);
+    setError('');
+    try {
+      const data = await authFetch('/api/auth/reset-password', {
+        token: resetToken,
+        password: form.password,
+      });
+      if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
+      setSuccessMsg('Password reset successfully! Redirecting…');
+      setTimeout(() => navigate('/home', { replace: true }), 1800);
+    } catch (err) {
+      setError(err.message || 'Failed to reset password. The link may have expired.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🔥 MODIFICAT: Salvează `from` în sessionStorage pentru Google OAuth
   const handleGoogleLogin = () => {
+    sessionStorage.setItem('authRedirectFrom', from);
     window.location.href = `${apiBaseUrl}/api/auth/google`;
   };
 
-  const switchView = () => {
+  const switchView = (newView) => {
     setForm({ name: '', email: '', password: '', confirm: '' });
     setError('');
+    setSuccessMsg('');
     setShowPassword(false);
     setShowConfirmPassword(false);
-    navigate(isLogin ? '/register' : '/login');
+    
+    const paths = {
+      login: '/login',
+      register: '/register',
+      forgot: '/forgot-password',
+    };
+    // Păstrăm `from` în state pentru a fi disponibil în view-ul nou
+    navigate(paths[newView] || '/login', { state: { from: location.state?.from } });
+  };
+
+  // Dynamic content based on current view
+  const getHeadingContent = () => {
+    if (isLogin) {
+      return {
+        title: 'Welcome Back',
+        subtitle: 'Sign in to continue your beauty journey',
+        spark: '✦',
+      };
+    }
+    if (isRegister) {
+      return {
+        title: 'Create Account',
+        subtitle: 'Join Beauty Rocks and start your journey',
+        spark: '✦',
+      };
+    }
+    if (isForgot) {
+      return {
+        title: 'Forgot Password?',
+        subtitle: 'Enter your email and we\'ll send a reset link',
+        spark: '✧',
+      };
+    }
+    if (isReset) {
+      return {
+        title: 'Set New Password',
+        subtitle: 'Choose a strong password for your account',
+        spark: '⚡',
+      };
+    }
+    return { title: 'Welcome', subtitle: '', spark: '✦' };
+  };
+
+  const headingContent = getHeadingContent();
+
+  const getSubmitLabel = () => {
+    if (loading) {
+      if (isLogin) return 'Signing in…';
+      if (isRegister) return 'Creating…';
+      if (isForgot) return 'Sending…';
+      if (isReset) return 'Resetting…';
+    }
+    if (isLogin) return 'Sign In';
+    if (isRegister) return 'Create Account';
+    if (isForgot) return 'Send Reset Link';
+    if (isReset) return 'Reset Password';
+    return 'Continue';
+  };
+
+  const handleSubmit = (e) => {
+    if (isLogin) handleLogin(e);
+    else if (isRegister) handleRegister(e);
+    else if (isForgot) handleForgotPassword(e);
+    else if (isReset) handleResetPassword(e);
   };
 
   return (
@@ -246,14 +381,29 @@ export default function Auth({ apiBaseUrl = 'http://localhost:5000' }) {
         initial="hidden"
         animate="show"
       >
-        {/* Language picker */}
-        <button type="button" className="language-button" aria-label="Select language">
-          <Globe2 size={14} strokeWidth={1.8} />
-          <span>EN</span>
-          <ChevronDown size={12} strokeWidth={2} />
-        </button>
+        {/* Language picker - hidden on forgot/reset */}
+        {(isLogin || isRegister) && (
+          <button type="button" className="language-button" aria-label="Select language">
+            <Globe2 size={14} strokeWidth={1.8} />
+            <span>EN</span>
+            <ChevronDown size={12} strokeWidth={2} />
+          </button>
+        )}
 
         <div className="auth-panel-inner">
+          {/* Back to Home link - for forgot/reset */}
+          {(isForgot || isReset) && (
+            <motion.button
+              className="back-home-link"
+              onClick={() => navigate('/login', { state: { from: location.state?.from } })}
+              whileHover={{ x: -3 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <ArrowLeft size={14} />
+              <span>Back to Sign In</span>
+            </motion.button>
+          )}
+
           {/* Heading */}
           <motion.div
             className="auth-heading"
@@ -262,16 +412,12 @@ export default function Auth({ apiBaseUrl = 'http://localhost:5000' }) {
             initial="hidden"
             animate="show"
           >
-            <span className="heading-spark" aria-hidden="true">✦</span>
-            <h1>{isLogin ? 'Welcome Back' : 'Create Account'}</h1>
+            <span className="heading-spark" aria-hidden="true">{headingContent.spark}</span>
+            <h1>{headingContent.title}</h1>
             <div className="heading-rule" aria-hidden="true">
               <span /><b>✦</b><span />
             </div>
-            <p>
-              {isLogin
-                ? 'Sign in to continue your beauty journey'
-                : 'Join Beauty Rocks and start your journey'}
-            </p>
+            <p>{headingContent.subtitle}</p>
           </motion.div>
 
           {/* Error banner */}
@@ -290,6 +436,23 @@ export default function Auth({ apiBaseUrl = 'http://localhost:5000' }) {
             )}
           </AnimatePresence>
 
+          {/* Success banner */}
+          <AnimatePresence mode="wait">
+            {successMsg && (
+              <motion.div
+                className="auth-success"
+                key={successMsg}
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.22, ease }}
+              >
+                <CheckCircle size={16} style={{ flexShrink: 0 }} />
+                {successMsg}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Form */}
           <motion.div className="auth-flow" layout transition={{ layout: { duration: 0.5, ease: smoothEase } }}>
             <motion.form
@@ -298,11 +461,11 @@ export default function Auth({ apiBaseUrl = 'http://localhost:5000' }) {
               initial="hidden"
               animate="show"
               variants={{ show: { transition: { staggerChildren: 0.055 } } }}
-              onSubmit={isLogin ? handleLogin : handleRegister}
+              onSubmit={handleSubmit}
             >
               {/* Full Name — register only */}
               <AnimatePresence initial={false}>
-                {!isLogin && (
+                {isRegister && (
                   <motion.div
                     key="name"
                     className="auth-collapsible-field"
@@ -326,49 +489,53 @@ export default function Auth({ apiBaseUrl = 'http://localhost:5000' }) {
                 )}
               </AnimatePresence>
 
-              {/* Email */}
-              <motion.div variants={fieldVariants} layout>
-                <InputRow
-                  label="Email"
-                  name="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={form.email}
-                  onChange={handleChange}
-                  disabled={loading}
-                  icon={<Mail size={17} strokeWidth={1.7} />}
-                />
-              </motion.div>
+              {/* Email - shown on login, register, forgot */}
+              {(isLogin || isRegister || isForgot) && (
+                <motion.div variants={fieldVariants} layout>
+                  <InputRow
+                    label="Email"
+                    name="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    value={form.email}
+                    onChange={handleChange}
+                    disabled={loading}
+                    icon={<Mail size={17} strokeWidth={1.7} />}
+                  />
+                </motion.div>
+              )}
 
-              {/* Password */}
-              <motion.div variants={fieldVariants} layout>
-                <InputRow
-                  label="Password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter your password"
-                  value={form.password}
-                  onChange={handleChange}
-                  disabled={loading}
-                  icon={<LockKeyhole size={17} strokeWidth={1.7} />}
-                  suffix={
-                    <button
-                      type="button"
-                      className="input-action"
-                      onClick={() => setShowPassword((c) => !c)}
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    >
-                      {showPassword
-                        ? <EyeOff size={16} strokeWidth={1.8} />
-                        : <Eye size={16} strokeWidth={1.8} />}
-                    </button>
-                  }
-                />
-              </motion.div>
+              {/* Password - shown on login, register, reset */}
+              {(isLogin || isRegister || isReset) && (
+                <motion.div variants={fieldVariants} layout>
+                  <InputRow
+                    label={isReset ? 'New Password' : 'Password'}
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder={isReset ? 'Choose a strong password' : 'Enter your password'}
+                    value={form.password}
+                    onChange={handleChange}
+                    disabled={loading}
+                    icon={<LockKeyhole size={17} strokeWidth={1.7} />}
+                    suffix={
+                      <button
+                        type="button"
+                        className="input-action"
+                        onClick={() => setShowPassword((c) => !c)}
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showPassword
+                          ? <EyeOff size={16} strokeWidth={1.8} />
+                          : <Eye size={16} strokeWidth={1.8} />}
+                      </button>
+                    }
+                  />
+                </motion.div>
+              )}
 
-              {/* Confirm Password — register only */}
+              {/* Confirm Password — register or reset */}
               <AnimatePresence initial={false}>
-                {!isLogin && (
+                {(isRegister || isReset) && (
                   <motion.div
                     key="confirm"
                     className="auth-collapsible-field"
@@ -404,87 +571,100 @@ export default function Auth({ apiBaseUrl = 'http://localhost:5000' }) {
                 )}
               </AnimatePresence>
 
-              {/* Forgot password — login only */}
+              {/* Forgot password link — login only */}
               <AnimatePresence initial={false}>
                 {isLogin && (
-                  <motion.a
-                    href="#forgot-password"
-                    className="forgot-link"
+                  <motion.button
+                    type="button"
+                    className="forgot-link-button"
                     key="forgot"
                     variants={forgotVariants}
                     initial="hidden"
                     animate="show"
                     exit="exit"
                     layout
+                    onClick={() => switchView('forgot')}
                   >
                     Forgot password?
-                  </motion.a>
+                  </motion.button>
                 )}
               </AnimatePresence>
 
-              {/* Submit */}
+              {/* Submit button */}
               <motion.button
                 type="submit"
                 className="submit-button"
-                disabled={loading}
+                disabled={loading || (isForgot && !!successMsg)}
                 variants={fieldVariants}
                 layout
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <span>{loading ? 'Processing…' : isLogin ? 'Sign In' : 'Create Account'}</span>
+                <span>{getSubmitLabel()}</span>
                 <ArrowRight size={18} strokeWidth={1.6} />
               </motion.button>
             </motion.form>
           </motion.div>
 
-          {/* Divider */}
-          <div className="auth-divider">
-            <span /><p>or continue with</p><span />
-          </div>
+          {/* Divider & Social — only on login/register */}
+          {(isLogin || isRegister) && (
+            <>
+              <div className="auth-divider">
+                <span /><p>or continue with</p><span />
+              </div>
 
-          {/* Social */}
-          <div className="social-grid">
-            <motion.button
-              type="button"
-              className="social-button"
-              onClick={handleGoogleLogin}
-              disabled={loading}
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.98 }}
-              transition={{ duration: 0.18, ease }}
-            >
-              <GoogleIcon />
-              <span>Google</span>
-            </motion.button>
-            <motion.button
-              type="button"
-              className="social-button"
-              disabled
-              aria-disabled="true"
-              whileTap={{ scale: 0.98 }}
-              transition={{ duration: 0.18, ease }}
-            >
-              <AppleIcon />
-              <span>Apple</span>
-            </motion.button>
-          </div>
+              <div className="social-grid">
+                <motion.button
+                  type="button"
+                  className="social-button"
+                  onClick={handleGoogleLogin}
+                  disabled={loading}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.18, ease }}
+                >
+                  <GoogleIcon />
+                  <span>Google</span>
+                </motion.button>
+                <motion.button
+                  type="button"
+                  className="social-button"
+                  disabled
+                  aria-disabled="true"
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.18, ease }}
+                >
+                  <AppleIcon />
+                  <span>Apple</span>
+                </motion.button>
+              </div>
+            </>
+          )}
 
-          {/* Switch */}
-          <p className="auth-switch">
-            {isLogin ? "Don't have an account?" : 'Already have an account?'}
-            <motion.button
-              type="button"
-              onClick={switchView}
-              disabled={loading}
-              whileHover={{ x: 3 }}
-              whileTap={{ scale: 0.97 }}
-              transition={{ duration: 0.18, ease }}
-            >
-              <span>{isLogin ? 'Create Account' : 'Sign In'}</span>
-              <ArrowRight size={16} strokeWidth={1.6} />
-            </motion.button>
-          </p>
+          {/* Switch between login/register — only on login/register */}
+          {(isLogin || isRegister) && (
+            <p className="auth-switch">
+              {isLogin ? "Don't have an account?" : 'Already have an account?'}
+              <motion.button
+                type="button"
+                onClick={() => switchView(isLogin ? 'register' : 'login')}
+                disabled={loading}
+                whileHover={{ x: 3 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ duration: 0.18, ease }}
+              >
+                <span>{isLogin ? 'Create Account' : 'Sign In'}</span>
+                <ArrowRight size={16} strokeWidth={1.6} />
+              </motion.button>
+            </p>
+          )}
+
+          {/* Terms — only on login/register */}
+          {(isLogin || isRegister) && (
+            <p className="terms-note">
+              By continuing, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+            </p>
+          )}
         </div>
       </motion.section>
     </motion.main>

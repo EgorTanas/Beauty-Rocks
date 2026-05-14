@@ -694,3 +694,126 @@
     margin-top: 18px;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   ADD THESE RULES TO YOUR EXISTING Auth.css file
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* Success banner - green version of auth-error */
+.auth-success {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: -8px 0 20px;
+  padding: 11px 14px;
+  border: 1px solid rgba(40, 167, 69, 0.2);
+  border-radius: 8px;
+  color: #2e7d32;
+  background: rgba(232, 245, 233, 0.95);
+  font-size: 13.5px;
+  line-height: 1.4;
+}
+
+/* Back to home/back to sign in link - for forgot/reset views */
+.back-home-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  padding: 0;
+  margin-bottom: 20px;
+  color: #c9a96e;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.back-home-link:hover {
+  color: #a8883c;
+  gap: 10px;
+}
+
+/* Forgot password as button (not link) */
+.forgot-link-button {
+  justify-self: end;
+  margin-top: -3px;
+  background: none;
+  border: none;
+  padding: 0;
+  overflow: hidden;
+  color: #c9a96e;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 200ms ease;
+}
+
+.forgot-link-button:hover {
+  color: #a8883c;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Terms note at bottom */
+.terms-note {
+  margin: 20px 0 0;
+  text-align: center;
+  font-size: 11px;
+  color: #aaa;
+  line-height: 1.4;
+}
+
+.terms-note a {
+  color: #c9a96e;
+  text-decoration: none;
+  transition: color 200ms ease;
+}
+
+.terms-note a:hover {
+  color: #a8883c;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Reset specific - adjust spacing for smaller forms */
+.auth-shell-reset .auth-panel-inner,
+.auth-shell-forgot .auth-panel-inner {
+  width: min(100% - 60px, 400px);
+}
+
+.auth-shell-reset .auth-heading,
+.auth-shell-forgot .auth-heading {
+  margin-bottom: 28px;
+}
+
+/* Responsive adjustments for forgot/reset */
+@media (max-width: 768px) {
+  .auth-shell-reset .auth-panel,
+  .auth-shell-forgot .auth-panel {
+    padding: 50px 24px 40px;
+  }
+  
+  .auth-shell-reset .auth-heading,
+  .auth-shell-forgot .auth-heading {
+    margin-bottom: 24px;
+  }
+  
+  .back-home-link {
+    margin-bottom: 16px;
+  }
+  
+  .terms-note {
+    margin-top: 16px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 420px) {
+  .auth-shell-reset .auth-panel,
+  .auth-shell-forgot .auth-panel {
+    padding: 45px 18px 36px;
+  }
+}
