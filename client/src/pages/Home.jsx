@@ -134,7 +134,7 @@ export default function Home() {
 
       <main>
         <motion.section
-          className="br-hero"
+          className="br-hero br-hero--luxury"
           aria-labelledby="br-hero-title"
           initial="hidden"
           animate="visible"
@@ -202,6 +202,17 @@ export default function Home() {
                 </a>
               </div>
             </motion.div>
+            <div className="br-hero-mobile-accent" aria-hidden>
+              <img
+                src="/imgHome/girl%20exported.png"
+                alt=""
+                className="br-hero-mobile-accent__img"
+                width={400}
+                height={500}
+                loading="eager"
+                decoding="async"
+              />
+            </div>
             <motion.div
               className="br-hero-visual"
               variants={fadeUp}
