@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import SiteHeader from '../components/SiteHeader';
 import SiteFooter from '../components/SiteFooter';
+import { SOCIAL_LINKS } from '../constants/socialLinks';
 import '../style/Home.css';
 
 const SERVICES = [
@@ -55,12 +56,12 @@ const SERVICES = [
 ];
 
 const GALLERY = [
-  { label: 'Signature glow', tag: 'Makeup', image: '/imgHome/girl.png', position: '50% 38%' },
-  { label: 'Violet color story', tag: 'Hair color', image: '/imgHome/image.png', position: '48% 36%' },
-  { label: 'Studio rituals', tag: 'Salon', image: '/img/instruments-cropped.png', position: '50% 45%' },
-  { label: 'Precision finish', tag: 'Nails', image: '/imgHome/girl%20exported.png', position: '55% 35%' },
-  { label: 'Editorial polish', tag: 'Creative', image: '/img/image-1.png', position: '50% 42%' },
-  { label: 'After-dark styling', tag: 'Styling', image: '/imgHome/image.png', position: '52% 48%' },
+  { label: 'Salon experience', tag: 'Salon', image: '/imgHome/salonimage.jpeg', position: '50% 45%' },
+  { label: 'Nail artistry', tag: 'Nails', image: '/imgHome/nails3.jpeg', position: '50% 50%' },
+  { label: 'Studio space', tag: 'Salon', image: '/imgHome/salon2.jpg', position: '50% 40%' },
+  { label: 'Hair styling', tag: 'Hair', image: '/imgHome/hair.png', position: '50% 38%' },
+  { label: 'Salon details', tag: 'Salon', image: '/imgHome/salon3.png', position: '50% 45%' },
+  { label: 'Color & finish', tag: 'Hair', image: '/imgHome/hair2.png', position: '50% 42%' },
 ];
 
 const TEAM_PREVIEW = [
@@ -152,13 +153,13 @@ export default function Home() {
             <Sparkles size={28} strokeWidth={1.25} />
           </span>
           <div className="br-social-rail" aria-label="Social links">
-            <a href="https://instagram.com" aria-label="Instagram">
+            <a href={SOCIAL_LINKS.instagram} aria-label="Instagram" target="_blank" rel="noopener noreferrer">
               <IconInstagram />
             </a>
-            <a href="https://facebook.com" aria-label="Facebook">
+            <a href={SOCIAL_LINKS.facebook} aria-label="Facebook" target="_blank" rel="noopener noreferrer">
               <IconFacebook />
             </a>
-            <a href="https://tiktok.com" aria-label="TikTok">
+            <a href={SOCIAL_LINKS.tiktok} aria-label="TikTok" target="_blank" rel="noopener noreferrer">
               <IconTikTok />
             </a>
             <span aria-hidden />
@@ -188,15 +189,15 @@ export default function Home() {
                 </a>
               </div>
               <div className="br-hero-social-inline" aria-label="Social links">
-                <a href="https://instagram.com" aria-label="Instagram">
+                <a href={SOCIAL_LINKS.instagram} aria-label="Instagram" target="_blank" rel="noopener noreferrer">
                   <IconInstagram size={22} />
                 </a>
                 <span className="br-hero-social-inline-divider" aria-hidden />
-                <a href="https://facebook.com" aria-label="Facebook">
+                <a href={SOCIAL_LINKS.facebook} aria-label="Facebook" target="_blank" rel="noopener noreferrer">
                   <IconFacebook size={22} />
                 </a>
                 <span className="br-hero-social-inline-divider" aria-hidden />
-                <a href="https://tiktok.com" aria-label="TikTok">
+                <a href={SOCIAL_LINKS.tiktok} aria-label="TikTok" target="_blank" rel="noopener noreferrer">
                   <IconTikTok size={22} />
                 </a>
               </div>
@@ -336,22 +337,22 @@ export default function Home() {
               <div className="br-about-collage">
                 <img
                   className="br-about-collage__img br-about-collage__img--a"
-                  src="/imgHome/girl.png"
-                  alt=""
+                  src="/imgHome/model.png"
+                  alt="Beauty Rocks salon model"
                   loading="lazy"
                   decoding="async"
                 />
                 <img
                   className="br-about-collage__img br-about-collage__img--b"
-                  src="/imgHome/image.png"
-                  alt=""
+                  src="/imgHome/nail1.jpg"
+                  alt="Nail art at Beauty Rocks"
                   loading="lazy"
                   decoding="async"
                 />
                 <img
                   className="br-about-collage__img br-about-collage__img--c"
-                  src="/img/image-1.png"
-                  alt=""
+                  src="/imgHome/nail2.jpeg"
+                  alt="Manicure detail at Beauty Rocks"
                   loading="lazy"
                   decoding="async"
                 />

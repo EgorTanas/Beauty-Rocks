@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import SiteHeader from '../components/SiteHeader';
 import SiteFooter from '../components/SiteFooter';
+import { getUserDisplayName } from '../utils/userDisplay';
+import UserAvatar from '../components/UserAvatar';
+import '../style/Home.css';
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -22,38 +25,61 @@ export default function Profile() {
 
   if (!user) return null;
 
+  const displayName = getUserDisplayName(user);
+
   return (
     <div className="br-page">
       <SiteHeader />
-      <main className="site-inner" style={{ paddingTop: '120px', minHeight: '60vh' }}>
+      <main className="site-inner profile-page">
         <div className="br-container">
-          <div className="site-inner-card">
-            <h1 style={{ marginBottom: '20px' }}>Your Profile</h1>
-            <p style={{ marginBottom: '30px', color: 'var(--br-muted)' }}>
-              Welcome, {user.username || user.name || 'User'}! You can manage your account details and modifications here.
-            </p>
-            <form style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '30px' }} onSubmit={(e) => e.preventDefault()}>
+          <section className="profile-card">
+            <header className="profile-card-head">
+              <UserAvatar user={user} className="profile-avatar" />
               <div>
-                <label style={{ display: 'block', marginBottom: '5px', color: 'var(--br-beige)' }}>Name</label>
-                <input 
-                  type="text" 
-                  defaultValue={user.username || user.name || ''} 
-                  style={{ width: '100%', padding: '10px', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} 
+                <p className="profile-eyebrow">Your account</p>
+                <h1 className="profile-title">{displayName}</h1>
+                {user.email ? <p className="profile-email">{user.email}</p> : null}
+              </div>
+            </header>
+
+            <p className="profile-lead">
+              Manage your details and keep your booking information up to date.
+            </p>
+
+            <form className="profile-form" onSubmit={(e) => e.preventDefault()}>
+              <div className="profile-field">
+                <label className="profile-label" htmlFor="profile-name">
+                  Name
+                </label>
+                <input
+                  id="profile-name"
+                  type="text"
+                  className="profile-input"
+                  defaultValue={displayName}
+                  autoComplete="name"
                 />
               </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '5px', color: 'var(--br-beige)' }}>Email</label>
-                <input 
-                  type="email" 
-                  defaultValue={user.email || ''} 
-                  style={{ width: '100%', padding: '10px', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white' }} 
+              <div className="profile-field">
+                <label className="profile-label" htmlFor="profile-email">
+                  Email
+                </label>
+                <input
+                  id="profile-email"
+                  type="email"
+                  className="profile-input"
+                  defaultValue={user.email || ''}
+                  autoComplete="email"
+                  readOnly
                 />
               </div>
             </form>
+
             <div className="site-inner-actions">
-              <button className="br-btn br-btn--solid">Save Changes</button>
+              <button type="button" className="br-btn br-btn--solid">
+                Save changes
+              </button>
             </div>
-          </div>
+          </section>
         </div>
       </main>
       <SiteFooter />

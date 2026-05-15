@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ChevronUp, Sparkles } from 'lucide-react';
+import { SOCIAL_LINKS } from '../constants/socialLinks';
 
 function IconInstagram({ size = 18 }) {
   return (
@@ -15,6 +16,15 @@ function IconFacebook({ size = 18 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
       <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+    </svg>
+  );
+}
+
+function IconTikTok({ size = 18 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+      <path d="M14 3v11.2a4.2 4.2 0 1 1-4.2-4.2" />
+      <path d="M14 5.5c1.5 2.3 3.1 3.4 5 3.5" />
     </svg>
   );
 }
@@ -37,11 +47,32 @@ export default function SiteFooter() {
               Premium nails, hair, and self-care in a calm Los Angeles studio — crafted so you leave glowing.
             </p>
             <div className="site-social">
-              <a href="https://instagram.com" className="site-social-btn" aria-label="Instagram">
+              <a
+                href={SOCIAL_LINKS.instagram}
+                className="site-social-btn"
+                aria-label="Instagram"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <IconInstagram />
               </a>
-              <a href="https://facebook.com" className="site-social-btn" aria-label="Facebook">
+              <a
+                href={SOCIAL_LINKS.facebook}
+                className="site-social-btn"
+                aria-label="Facebook"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <IconFacebook />
+              </a>
+              <a
+                href={SOCIAL_LINKS.tiktok}
+                className="site-social-btn"
+                aria-label="TikTok"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <IconTikTok />
               </a>
             </div>
           </div>

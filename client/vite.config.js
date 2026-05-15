@@ -7,6 +7,12 @@ export default defineConfig({
   
   server: {
     allowedHosts: true,
+    proxy: {
+      '/uploads': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+    },
   },
 
   resolve: {

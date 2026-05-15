@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, Search, UserRound, X } from 'lucide-react';
+import { Menu, Search, X } from 'lucide-react';
+import { getUserDisplayName } from '../utils/userDisplay';
+import UserAvatar from './UserAvatar';
 
 function readStoredUser() {
   try {
@@ -20,10 +22,18 @@ export default function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const onStorage = () => setUser(readStoredUser());
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+    const syncUser = () => setUser(readStoredUser());
+    window.addEventListener('storage', syncUser);
+    window.addEventListener('br-auth-change', syncUser);
+    return () => {
+      window.removeEventListener('storage', syncUser);
+      window.removeEventListener('br-auth-change', syncUser);
+    };
   }, []);
+
+  useEffect(() => {
+    setUser(readStoredUser());
+  }, [pathname]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -83,17 +93,15 @@ export default function SiteHeader() {
             <Search size={20} strokeWidth={1.75} />
           </button>
           {user ? (
-            <>
-              <Link to="/profile" className="site-user-pill" style={{ textDecoration: 'none' }}>
-                <span className="site-user-avatar" aria-hidden>
-                  <UserRound size={16} strokeWidth={1.8} />
-                </span>
-                <span className="site-user-name">{user.username || user.name || 'Account'}</span>
+            <div className="site-nav-user">
+              <Link to="/profile" className="site-user-pill" onClick={closeMenu}>
+                <UserAvatar user={user} />
+                <span className="site-user-name">{getUserDisplayName(user)}</span>
               </Link>
-              <button type="button" className="site-btn-ghost" onClick={handleSignOut}>
+              <button type="button" className="site-btn-ghost site-btn-ghost--signout" onClick={handleSignOut}>
                 Sign out
               </button>
-            </>
+            </div>
           ) : (
             <Link to="/login" className="site-btn-primary site-btn-primary--nav">
               Sign In
