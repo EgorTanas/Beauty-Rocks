@@ -6,6 +6,7 @@ import Services from './pages/Services';
 import Team from './pages/Team';
 import Booking from './pages/Booking';
 import Profile from './pages/Profile';
+import AdminServices from './pages/AdminServices';
 
 
 const API_BASE_URL = 'http://localhost:5000';
@@ -41,6 +42,18 @@ const GuestRoute = ({ children }) => {
   return children;
 };
 
+const AdminRoute = ({ children }) => {
+  const location = useLocation();
+  const user = getUser();
+
+  if (!user) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+  if (user.role !== 'admin') {
+    return <Navigate to="/home" replace />;
+  }
+  return children;
+};
 
 function App() {
   
@@ -79,6 +92,10 @@ function App() {
         
       
          <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
+
+         <Route path="/admin/services"
+          element={<AdminRoute><AdminServices /></AdminRoute>}
+        />
       </Routes>
     </BrowserRouter>
   );

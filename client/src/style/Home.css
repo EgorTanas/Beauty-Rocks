@@ -759,7 +759,7 @@ body {
   mix-blend-mode: overlay;
 }
 
-/* Mobile-only portrait accent (hidden on desktop) */
+
 .br-hero-mobile-accent {
   display: none;
 }
@@ -1175,3 +1175,132 @@ body {
   background: linear-gradient(180deg, rgba(196, 165, 116, 0.8), transparent);
 }
 
+/* ── Add this to your existing navbar CSS file ─────────────────────────────── */
+
+/* Admin Panel button — desktop */
+.site-btn-admin {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-primary, #b08a6e);
+  background: color-mix(in srgb, var(--color-primary, #b08a6e) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary, #b08a6e) 30%, transparent);
+  text-decoration: none;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+
+.site-btn-admin:hover {
+  background: color-mix(in srgb, var(--color-primary, #b08a6e) 18%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary, #b08a6e) 55%, transparent);
+}
+
+/* Admin link in mobile menu */
+.site-nav-link--admin {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-primary, #b08a6e);
+  font-weight: 600;
+}
+
+/* ── ServicesSection DB cards — add to your existing services CSS ─────────── */
+
+/* Skeleton loading cards */
+.br-service-card--skeleton {
+  pointer-events: none;
+}
+
+.br-skeleton-box {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: linear-gradient(90deg, var(--color-surface-alt, #f5f0eb) 25%, #ede8e3 50%, var(--color-surface-alt, #f5f0eb) 75%);
+  background-size: 200% 100%;
+  animation: br-shimmer 1.4s infinite;
+}
+
+.br-skeleton-line {
+  height: 14px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--color-surface-alt, #f5f0eb) 25%, #ede8e3 50%, var(--color-surface-alt, #f5f0eb) 75%);
+  background-size: 200% 100%;
+  animation: br-shimmer 1.4s infinite;
+  margin-top: 10px;
+}
+
+.br-skeleton-line--title {
+  height: 20px;
+  width: 70%;
+}
+
+.br-skeleton-line--short {
+  width: 45%;
+}
+
+@keyframes br-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Icon wrap for emoji */
+.br-service-card__icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--color-primary, #b08a6e) 10%, transparent);
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.br-service-card__emoji {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+/* Category badge inside card */
+.br-service-card__badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin-bottom: 6px;
+  background: color-mix(in srgb, var(--color-primary, #b08a6e) 12%, transparent);
+  color: var(--color-primary, #b08a6e);
+}
+
+/* Meta row (price + duration) */
+.br-service-card__meta {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.br-service-card__meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--color-muted, #9a8880);
+}
+
+/* Error / empty states */
+.br-services-error,
+.br-services-empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--color-muted, #9a8880);
+  font-size: 0.9rem;
+}

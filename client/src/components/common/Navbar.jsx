@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, Search, X } from 'lucide-react';
+import { Menu, Search, Settings, X } from 'lucide-react';
 import { getUserDisplayName } from '../../utils/userDisplay';
 import UserAvatar from '../UserAvatar';
 
@@ -51,6 +51,7 @@ export default function Navbar() {
     navigate('/', { replace: true });
   };
 
+  const isAdmin = user?.role === 'admin';
   const homeActive = pathname === '/' || pathname === '/home';
   const navClass = ({ isActive }) =>
     `site-nav-link${isActive ? ' site-nav-link--active' : ''}`;
@@ -59,9 +60,7 @@ export default function Navbar() {
     <header className={`site-header${scrolled ? ' site-header--scrolled' : ''}`}>
       <nav className="site-nav" aria-label="Primary">
         <Link to="/" className="site-logo" onClick={closeMenu}>
-          <span className="site-logo-mark" aria-hidden>
-            BR
-          </span>
+          <span className="site-logo-mark" aria-hidden>BR</span>
           <span className="site-logo-text">Beauty Rocks</span>
         </Link>
 
@@ -86,19 +85,51 @@ export default function Navbar() {
           <NavLink to="/booking" className={navClass} onClick={closeMenu}>
             Booking
           </NavLink>
+
+          {/* Admin Panel link — visible only in mobile menu for admins */}
+          {isAdmin && (
+            <NavLink
+              to="/admin/services"
+              className={({ isActive }) =>
+                `site-nav-link site-nav-link--admin${isActive ? ' site-nav-link--active' : ''}`
+              }
+              onClick={closeMenu}
+            >
+              <Settings size={15} strokeWidth={1.75} aria-hidden />
+              Admin Panel
+            </NavLink>
+          )}
         </div>
 
         <div className="site-nav-actions">
           <button type="button" className="site-icon-btn" aria-label="Search (coming soon)">
             <Search size={20} strokeWidth={1.75} />
           </button>
+
+          {/* Admin Panel button — desktop, visible only for admins */}
+          {isAdmin && (
+            <Link
+              to="/admin/services"
+              className="site-btn-admin"
+              title="Admin Panel"
+              aria-label="Admin Panel"
+            >
+              <Settings size={16} strokeWidth={1.75} aria-hidden />
+              <span>Admin</span>
+            </Link>
+          )}
+
           {user ? (
             <div className="site-nav-user">
               <Link to="/profile" className="site-user-pill" onClick={closeMenu}>
                 <UserAvatar user={user} />
                 <span className="site-user-name">{getUserDisplayName(user)}</span>
               </Link>
-              <button type="button" className="site-btn-ghost site-btn-ghost--signout" onClick={handleSignOut}>
+              <button
+                type="button"
+                className="site-btn-ghost site-btn-ghost--signout"
+                onClick={handleSignOut}
+              >
                 Sign out
               </button>
             </div>
@@ -107,6 +138,7 @@ export default function Navbar() {
               Sign In
             </Link>
           )}
+
           <button
             type="button"
             className="site-menu-toggle"

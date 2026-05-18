@@ -1,0 +1,807 @@
+/* AdminServices.css */
+
+/* ===== Global Container ===== */
+.adm-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  background: linear-gradient(135deg, #f5f7fa 0%, #f8f9fc 100%);
+  min-height: 100vh;
+}
+
+/* ===== Header Section ===== */
+.adm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: white;
+  padding: 1rem 2rem;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.adm-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 10px;
+  color: #374151;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.adm-back-btn:hover {
+  background: #e5e7eb;
+  transform: translateX(-2px);
+}
+
+.adm-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #1f2937 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+
+.adm-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.5rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.adm-add-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* ===== Loading & Error States ===== */
+.adm-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem;
+  background: white;
+  border-radius: 16px;
+  margin-top: 2rem;
+}
+
+.adm-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.adm-error {
+  background: #fef2f2;
+  border-left: 4px solid #ef4444;
+  padding: 1rem;
+  border-radius: 12px;
+  margin: 1rem 0;
+  color: #991b1b;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.adm-error button {
+  padding: 0.5rem 1rem;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.adm-error button:hover {
+  background: #dc2626;
+}
+
+/* ===== Table Styles ===== */
+.adm-table-wrap {
+  overflow-x: auto;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  margin-top: 1rem;
+}
+
+.adm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.adm-table thead {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.adm-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.8125rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.adm-table td {
+  padding: 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.adm-table tbody tr {
+  transition: background 0.2s ease;
+}
+
+.adm-table tbody tr:hover {
+  background: #fafbff;
+}
+
+.adm-row--inactive {
+  opacity: 0.65;
+  background: #fefce8;
+}
+
+.adm-row--inactive:hover {
+  background: #fef9c3;
+}
+
+.adm-table-empty {
+  text-align: center;
+  padding: 3rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+/* ===== Cell Content ===== */
+.adm-cell-name {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.adm-thumb {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: #f3f4f6;
+}
+
+/* ===== Category Badges ===== */
+.adm-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.adm-badge--nails {
+  background: #fce7f3;
+  color: #be185d;
+}
+
+.adm-badge--hair {
+  background: #fed7aa;
+  color: #92400e;
+}
+
+.adm-badge--skincare {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.adm-badge--bridal {
+  background: #e9d5ff;
+  color: #5b21b6;
+}
+
+.adm-badge--other {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* ===== Toggle Button ===== */
+.adm-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  border: none;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.adm-toggle-btn--on {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.adm-toggle-btn--on:hover {
+  background: #a7f3d0;
+  transform: scale(1.02);
+}
+
+.adm-toggle-btn--off {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.adm-toggle-btn--off:hover {
+  background: #fecaca;
+  transform: scale(1.02);
+}
+
+/* ===== Action Icons ===== */
+.adm-cell-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.adm-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: transparent;
+}
+
+.adm-icon-btn--edit {
+  color: #3b82f6;
+}
+
+.adm-icon-btn--edit:hover {
+  background: #eff6ff;
+  transform: scale(1.1);
+}
+
+.adm-icon-btn--delete {
+  color: #ef4444;
+}
+
+.adm-icon-btn--delete:hover {
+  background: #fef2f2;
+  transform: scale(1.1);
+}
+
+/* ===== Modal Styles ===== */
+.adm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.adm-modal {
+  background: white;
+  border-radius: 24px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.adm-modal--sm {
+  max-width: 400px;
+}
+
+.adm-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.adm-modal-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.adm-modal-close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.adm-modal-close:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.adm-modal-danger-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #dc2626;
+  margin: 0 0 0.5rem 0;
+  padding: 1.5rem 1.5rem 0 1.5rem;
+}
+
+.adm-modal-danger-text {
+  padding: 0 1.5rem;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+/* ===== Form Styles ===== */
+.adm-form {
+  padding: 1.5rem;
+}
+
+.adm-form-error {
+  margin: 1rem 1.5rem 0 1.5rem;
+  padding: 0.75rem;
+  background: #fef2f2;
+  border-left: 3px solid #ef4444;
+  border-radius: 8px;
+  color: #991b1b;
+  font-size: 0.875rem;
+}
+
+.adm-label {
+  display: block;
+  margin-bottom: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.adm-label--checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.adm-label--checkbox input {
+  width: auto;
+  cursor: pointer;
+}
+
+.adm-input {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  margin-top: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.adm-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.adm-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.adm-select {
+  cursor: pointer;
+  background: white;
+}
+
+.adm-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 0;
+}
+
+/* ===== Form Footer ===== */
+.adm-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1rem 1.5rem 1.5rem 1.5rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.adm-btn {
+  padding: 0.625rem 1.25rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.adm-btn--primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+}
+
+.adm-btn--primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.adm-btn--primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.adm-btn--ghost {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.adm-btn--ghost:hover {
+  background: #e5e7eb;
+}
+
+.adm-btn--danger {
+  background: #ef4444;
+  color: white;
+}
+
+.adm-btn--danger:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 768px) {
+  .adm-page {
+    padding: 1rem;
+  }
+
+  .adm-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .adm-back-btn,
+  .adm-add-btn {
+    justify-content: center;
+  }
+
+  .adm-title {
+    text-align: center;
+    font-size: 1.5rem;
+  }
+
+  .adm-form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .adm-table th,
+  .adm-table td {
+    padding: 0.75rem;
+  }
+
+  .adm-cell-name {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ===== Scrollbar Styling ===== */
+.adm-table-wrap::-webkit-scrollbar {
+  height: 8px;
+}
+
+.adm-table-wrap::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.adm-table-wrap::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.adm-table-wrap::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ===== Print Styles ===== */
+@media print {
+  .adm-overlay,
+  .adm-add-btn,
+  .adm-icon-btn,
+  .adm-toggle-btn {
+    display: none;
+  }
+
+  .adm-page {
+    padding: 0;
+  }
+
+  .adm-table {
+    border: 1px solid #ddd;
+  }
+}
+
+/* =============================================
+   AdminServices.css — Cloudinary uploader patch
+   Add this at the END of your existing AdminServices.css
+   ============================================= */
+
+/* ===== Image Uploader ===== */
+.adm-uploader {
+  margin-bottom: 1.25rem;
+}
+
+/* Drop zone */
+.adm-drop-zone {
+  position: relative;
+  border: 2px dashed #cbd5e1;
+  border-radius: 14px;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.adm-drop-zone:hover {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.adm-drop-zone--active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  transform: scale(1.01);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.adm-drop-zone--uploading {
+  pointer-events: none;
+}
+
+/* Placeholder (no image yet) */
+.adm-uploader-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.adm-uploader-icon {
+  color: #cbd5e1;
+  margin-bottom: 0.25rem;
+}
+
+.adm-uploader-hint {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.adm-uploader-hint strong {
+  color: #3b82f6;
+}
+
+.adm-uploader-sub {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* Preview */
+.adm-uploader-preview {
+  position: relative;
+  width: 100%;
+  height: 180px;
+}
+
+.adm-uploader-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 12px;
+}
+
+/* Hover overlay on preview */
+.adm-uploader-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  border-radius: 12px;
+}
+
+.adm-drop-zone:hover .adm-uploader-overlay {
+  opacity: 1;
+}
+
+.adm-uploader-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background: rgba(59, 130, 246, 0.85);
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+}
+
+/* Progress bar */
+.adm-uploader-progress-wrap {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.92);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  border-radius: 12px;
+}
+
+.adm-uploader-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
+  border-radius: 0 0 12px 12px;
+  transition: width 0.15s ease;
+}
+
+.adm-uploader-progress-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #3b82f6;
+  position: relative; /* above the bar */
+}
+
+/* Error */
+.adm-uploader-error {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  color: #dc2626;
+  background: #fef2f2;
+  border-left: 3px solid #ef4444;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+}
+
+/* Clear button */
+.adm-uploader-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.adm-uploader-clear:hover {
+  color: #dc2626;
+  background: #fef2f2;
+}
+
+/* Table: placeholder icon for services without an image */
+.adm-thumb-placeholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
