@@ -1,12 +1,11 @@
 import { Link } from 'react-router-dom';
-import SiteHeader from '../components/SiteHeader';
-import SiteFooter from '../components/SiteFooter';
-import '../style/Home.css';
+import Navbar from '../components/common/Navbar';
+import Footer from '../components/common/Footer';
 
 export default function Services() {
   return (
     <div className="site-page">
-      <SiteHeader />
+      <Navbar />
       <main className="site-inner">
         <div className="site-inner-card">
           <h1>Services</h1>
@@ -24,7 +23,7 @@ export default function Services() {
           </div>
         </div>
       </main>
-      <SiteFooter />
+      <Footer />
     </div>
   );
 }

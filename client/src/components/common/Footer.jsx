@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ChevronUp, Sparkles } from 'lucide-react';
-import { SOCIAL_LINKS } from '../constants/socialLinks';
+import { SOCIAL_LINKS } from '../../constants/socialLinks';
 
 function IconInstagram({ size = 18 }) {
   return (
@@ -29,7 +29,7 @@ function IconTikTok({ size = 18 }) {
   );
 }
 
-export default function SiteFooter() {
+export default function Footer() {
   const year = new Date().getFullYear();
 
   return (
