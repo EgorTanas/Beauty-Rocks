@@ -1,28 +1,44 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
+import HeroSection from '../components/services/HeroSection';
+import CategoriesBar from '../components/services/CategoriesBar';
+import FeaturedServices from '../components/services/FeaturedServices';
+import ServicesGrid from '../components/services/ServicesGrid';
+import BenefitsSection from '../components/services/BenefitsSection';
+import CTASection from '../components/services/CTASection';
+import '../style/services.css';
 
 export default function Services() {
+  const [activeCategoryId, setActiveCategoryId] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleCategoryChange = (categoryId) => {
+    setActiveCategoryId(categoryId);
+    const target = categoryId === 'all' ? 'services-catalog' : `category-${categoryId}`;
+    requestAnimationFrame(() => {
+      document.getElementById(target)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
+
   return (
-    <div className="site-page">
+    <div className="br-page services-page">
       <Navbar />
-      <main className="site-inner">
-        <div className="site-inner-card">
-          <h1>Services</h1>
-          <p>
-            Full menu, add-ons, and pricing will live here. For now, explore highlights on the home page or send a
-            note through booking.
-          </p>
-          <div className="site-inner-actions">
-            <Link to="/#services" className="br-btn br-btn--solid">
-              View highlights
-            </Link>
-            <Link to="/booking" className="br-btn br-btn--outline">
-              Book now
-            </Link>
-          </div>
-        </div>
+
+      <main className="services-main">
+        <HeroSection />
+        <CategoriesBar
+          activeCategoryId={activeCategoryId}
+          onCategoryChange={handleCategoryChange}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
+        <FeaturedServices />
+        <ServicesGrid activeCategoryId={activeCategoryId} searchQuery={searchQuery} />
+        <BenefitsSection />
+        <CTASection />
       </main>
+
       <Footer />
     </div>
   );

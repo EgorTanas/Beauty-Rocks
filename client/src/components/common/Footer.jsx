@@ -44,7 +44,8 @@ export default function Footer() {
               <span className="site-logo-text">Beauty Rocks</span>
             </Link>
             <p className="site-footer-tagline">
-              Premium nails, hair, and self-care in a calm Los Angeles studio — crafted so you leave glowing.
+              Luxury nails, hair, and bridal styling in Los Angeles — a calm beauty studio where polished looks feel
+              effortless.
             </p>
             <div className="site-social">
               <a
@@ -84,13 +85,16 @@ export default function Footer() {
                 <Link to="/services">All services</Link>
               </li>
               <li>
-                <Link to="/services">Nail care</Link>
+                <Link to="/services">Manicure</Link>
+              </li>
+              <li>
+                <Link to="/services">Pedicure</Link>
               </li>
               <li>
                 <Link to="/services">Hair styling</Link>
               </li>
               <li>
-                <Link to="/services">Bridal packages</Link>
+                <Link to="/services">Bridal &amp; packages</Link>
               </li>
             </ul>
           </div>
