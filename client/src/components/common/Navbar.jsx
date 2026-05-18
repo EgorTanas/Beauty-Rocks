@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, Search, X } from 'lucide-react';
-import { getUserDisplayName } from '../utils/userDisplay';
-import UserAvatar from './UserAvatar';
+import { getUserDisplayName } from '../../utils/userDisplay';
+import UserAvatar from '../UserAvatar';
 
 function readStoredUser() {
   try {
@@ -14,7 +14,7 @@ function readStoredUser() {
   }
 }
 
-export default function SiteHeader() {
+export default function Navbar() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [user, setUser] = useState(() => readStoredUser());

@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import SiteHeader from '../components/SiteHeader';
-import SiteFooter from '../components/SiteFooter';
+import Navbar from '../components/common/Navbar';
+import Footer from '../components/common/Footer';
 import { getUserDisplayName } from '../utils/userDisplay';
 import UserAvatar from '../components/UserAvatar';
-import '../style/Home.css';
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -29,7 +28,7 @@ export default function Profile() {
 
   return (
     <div className="br-page">
-      <SiteHeader />
+      <Navbar />
       <main className="site-inner profile-page">
         <div className="br-container">
           <section className="profile-card">
@@ -82,7 +81,7 @@ export default function Profile() {
           </section>
         </div>
       </main>
-      <SiteFooter />
+      <Footer />
     </div>
   );
 }
