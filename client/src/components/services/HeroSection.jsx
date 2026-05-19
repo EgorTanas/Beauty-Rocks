@@ -1,49 +1,36 @@
-import { Link } from 'react-router-dom';
-
-const HERO_IMAGE = {
-  src: '/imgHome/nails3.jpeg',
-  alt: 'Luxury beauty services at Beauty Rocks',
-};
+import { motion } from 'framer-motion';
+import { Sparkles } from 'lucide-react';
+import { fadeUp } from '../common/motionVariants';
 
 export default function HeroSection() {
   return (
-    <section className="services-hero" aria-labelledby="services-hero-title">
-      <div className="services-container">
-        <div className="services-hero__panel">
-          <div className="services-hero__top">
-            <div className="services-hero__copy">
-              <p className="services-eyebrow services-hero__eyebrow">Our services</p>
-              <h1 id="services-hero-title" className="services-hero__title">
-                Premium
-                <br className="services-hero__title-break" />
-                Beauty Services
-              </h1>
-              <p className="services-hero__lead">
-                Luxury treatments designed to make you look and feel your best.
-              </p>
-            </div>
+    <motion.section
+      className="services-hero services-hero--minimal"
+      aria-labelledby="services-hero-title"
+      initial="hidden"
+      animate="visible"
+      transition={{ staggerChildren: 0.08 }}
+    >
+      <div className="services-hero__glow-gold" aria-hidden />
 
-            <div className="services-hero__visual">
-              <img
-                className="services-hero__image"
-                src={HERO_IMAGE.src}
-                alt={HERO_IMAGE.alt}
-                loading="eager"
-                decoding="async"
-              />
-            </div>
-          </div>
-
-          <div className="services-hero__actions">
-            <Link to="/booking" className="services-btn services-btn--primary services-hero__btn">
-              Book appointment
-            </Link>
-            <a href="#services-catalog" className="services-btn services-btn--secondary services-hero__btn">
-              Explore services
-            </a>
-          </div>
-        </div>
+      <div className="services-container services-hero__container services-hero__container--centered">
+        <motion.div
+          className="services-hero__copy services-hero__copy--centered"
+          variants={fadeUp}
+          transition={{ duration: 0.65, ease: 'easeOut' }}
+        >
+          <p className="br-badge br-badge--center">
+            <Sparkles size={14} strokeWidth={1.5} className="br-badge-icon" aria-hidden />
+            <span>Studio Menu</span>
+          </p>
+          <h1 id="services-hero-title" className="services-hero__title services-hero__title--centered">
+            <span>Our Services</span>
+          </h1>
+          <p className="services-hero__lead services-hero__lead--centered">
+            Bespoke manicures, couture hair transformations, and premium beauty rituals.
+          </p>
+        </motion.div>
       </div>
-    </section>
+    </motion.section>
   );
 }

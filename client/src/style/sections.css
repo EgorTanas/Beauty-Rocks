@@ -6,6 +6,25 @@
   gap: clamp(14px, 2vw, 22px);
 }
 
+.br-services-grid--listing {
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+}
+
+.br-services-grid--listing .br-services-grid__item,
+.br-services-grid--listing .services-card {
+  height: 100%;
+}
+
+.br-services-grid--listing .services-card__media-wrap {
+  aspect-ratio: 4 / 3;
+}
+
+.br-services-grid--listing .services-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .br-card {
   position: relative;
   display: flex;
@@ -340,14 +359,17 @@
 
 #contact {
   background:
-    radial-gradient(circle at 18% 12%, rgba(196, 165, 116, 0.08), transparent 22rem),
-    linear-gradient(180deg, #ffffff 0%, #f6f2eb 100%);
-  color: var(--br-black);
-  border-top: 1px solid rgba(15, 15, 16, 0.06);
+    radial-gradient(circle at 18% 12%, rgba(196, 165, 116, 0.14), transparent 26rem),
+    radial-gradient(circle at 82% 82%, rgba(139, 115, 85, 0.08), transparent 22rem),
+    linear-gradient(180deg, #121110 0%, #080808 100%);
+  color: var(--br-cream);
+  border-block: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .br-badge--contact {
   margin-bottom: 6px;
+  color: var(--br-lavender) !important;
+  border-color: rgba(196, 165, 116, 0.28) !important;
 }
 
 .br-contact-luxury {
@@ -366,7 +388,7 @@
 
 .br-contact-eyebrow {
   margin: 0;
-  color: var(--br-violet);
+  color: var(--br-lavender);
   font-size: 0.76rem;
   font-weight: 800;
   letter-spacing: 0.18em;
@@ -375,7 +397,7 @@
 
 .br-contact-display {
   margin: 0;
-  color: var(--br-black);
+  color: var(--br-cream);
   font-family: var(--br-serif);
   font-size: clamp(2.6rem, 6vw, 4.2rem);
   font-weight: 700;
@@ -385,7 +407,7 @@
 .br-contact-slogan {
   margin: 0;
   max-width: 28rem;
-  color: rgba(15, 15, 16, 0.58);
+  color: rgba(245, 241, 235, 0.72);
   font-size: clamp(1rem, 2vw, 1.12rem);
   line-height: 1.65;
 }
@@ -395,13 +417,13 @@
   flex-direction: column;
   gap: 0;
   padding-top: 8px;
-  border-left: 1px solid rgba(15, 15, 16, 0.1);
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
   padding-left: clamp(24px, 4vw, 40px);
 }
 
 .br-contact-meta {
   padding: clamp(20px, 3vw, 26px) 0;
-  border-bottom: 1px solid rgba(15, 15, 16, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .br-contact-meta:last-child {
@@ -410,28 +432,28 @@
 
 .br-contact-meta-title {
   margin: 0 0 10px;
-  color: var(--br-black);
+  color: var(--br-cream);
   font-family: var(--br-serif);
   font-size: 1.28rem;
 }
 
 .br-contact-meta-text {
   margin: 0;
-  color: rgba(15, 15, 16, 0.62);
+  color: rgba(245, 241, 235, 0.62);
   font-size: 0.94rem;
   line-height: 1.55;
 }
 
 .br-contact-meta-text a {
-  color: var(--br-violet);
+  color: var(--br-lavender);
   text-decoration: none;
-  border-bottom: 1px solid rgba(139, 115, 85, 0.35);
+  border-bottom: 1px solid rgba(196, 165, 116, 0.25);
   transition: color 0.2s ease, border-color 0.2s ease;
 }
 
 .br-contact-meta-text a:hover {
-  color: var(--br-lavender);
-  border-bottom-color: rgba(196, 165, 116, 0.55);
+  color: var(--br-cream);
+  border-bottom-color: rgba(255, 255, 255, 0.85);
 }
 
 /* Legacy — kept for other surfaces */
@@ -583,45 +605,74 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: clamp(22px, 3vw, 28px);
-  border: 1px solid rgba(15, 15, 16, 0.08);
+  padding: 16px;
+  border: 1px solid rgba(15, 15, 16, 0.06);
   border-radius: calc(var(--br-radius-panel) - 2px);
-  background:
-    linear-gradient(165deg, rgba(255, 255, 255, 0.96), rgba(247, 243, 237, 0.92));
-  box-shadow: 0 18px 46px rgba(15, 15, 16, 0.06);
-  transition: box-shadow 0.28s ease, border-color 0.28s ease;
+  background: linear-gradient(165deg, #ffffff, #faf8f5);
+  box-shadow: 0 14px 38px rgba(15, 15, 16, 0.04);
+  transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.35s ease, box-shadow 0.35s ease;
 }
 
 .br-team-preview-card:hover {
-  border-color: rgba(196, 165, 116, 0.28);
-  box-shadow: 0 26px 56px rgba(15, 15, 16, 0.09), 0 0 36px rgba(196, 165, 116, 0.12);
+  transform: translateY(-4px);
+  border-color: rgba(196, 165, 116, 0.35);
+  box-shadow: 0 22px 48px rgba(15, 15, 16, 0.08), 0 0 0 1px rgba(196, 165, 116, 0.08);
+}
+
+.br-team-preview-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f7f3ed;
+  border: 1px solid rgba(196, 165, 116, 0.08);
+}
+
+.br-team-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.br-team-preview-card:hover .br-team-preview-img {
+  transform: scale(1.04);
 }
 
 .br-team-preview-avatar {
-  display: inline-flex;
-  width: 52px;
-  height: 52px;
+  display: flex;
+  width: 100%;
+  height: 100%;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  background: linear-gradient(145deg, rgba(196, 165, 116, 0.22), rgba(139, 115, 85, 0.12));
+  background: linear-gradient(145deg, rgba(196, 165, 116, 0.15), rgba(139, 115, 85, 0.06));
   color: var(--br-violet);
-  font-size: 0.82rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
+  font-family: var(--br-serif);
+  font-size: 2.2rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+}
+
+.br-team-preview-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 4px 2px;
 }
 
 .br-team-preview-name {
   margin: 0;
   color: var(--br-black);
   font-family: var(--br-serif);
-  font-size: 1.35rem;
+  font-size: 1.25rem;
+  line-height: 1.2;
 }
 
 .br-team-preview-role {
   margin: 0;
   color: rgba(15, 15, 16, 0.52);
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;

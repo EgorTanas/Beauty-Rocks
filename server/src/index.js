@@ -5,6 +5,8 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const passport = require("./config/passport");
 const authRoutes = require("./routes/authRoutes");
+const serviceRoutes = require("./routes/Serviceroutes");
+const adminRoutes = require("./routes/Adminroutes");
 
 const app = express();
 connectDB();
@@ -21,10 +23,8 @@ app.use(passport.initialize());
 app.use("/api/auth", authRoutes);
 
 
-app.use("/api/services", require("./routes/serviceRoutes"));
-
-
-app.use("/api/admin", require("./routes/adminRoutes"));
+app.use("/api/services", serviceRoutes);
+app.use("/api/admin", adminRoutes);
 
 
 app.use((req, res) => {

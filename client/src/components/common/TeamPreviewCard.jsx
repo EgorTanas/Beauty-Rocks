@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 
-export default function TeamPreviewCard({ name, role, initials, index = 0, reduceMotion = false }) {
+export default function TeamPreviewCard({ name, role, initials, image, index = 0, reduceMotion = false }) {
   return (
     <motion.article
       className="br-team-preview-card"
@@ -10,11 +10,19 @@ export default function TeamPreviewCard({ name, role, initials, index = 0, reduc
       transition={{ duration: 0.4, delay: index * 0.06 }}
       whileHover={reduceMotion ? undefined : { y: -6, transition: { duration: 0.22 } }}
     >
-      <span className="br-team-preview-avatar" aria-hidden>
-        {initials}
-      </span>
-      <h3 className="br-team-preview-name">{name}</h3>
-      <p className="br-team-preview-role">{role}</p>
+      <div className="br-team-preview-media">
+        {image ? (
+          <img src={image} alt={name} className="br-team-preview-img" loading="lazy" />
+        ) : (
+          <span className="br-team-preview-avatar" aria-hidden>
+            {initials}
+          </span>
+        )}
+      </div>
+      <div className="br-team-preview-info">
+        <h3 className="br-team-preview-name">{name}</h3>
+        <p className="br-team-preview-role">{role}</p>
+      </div>
     </motion.article>
   );
 }

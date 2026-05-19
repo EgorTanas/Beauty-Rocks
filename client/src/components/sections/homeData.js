@@ -50,12 +50,10 @@ export const GALLERY = [
   { label: 'Nail artistry', tag: 'Nails', image: '/imgHome/nails3.jpeg', position: '50% 50%' },
   { label: 'Studio space', tag: 'Salon', image: '/imgHome/salon2.jpg', position: '50% 40%' },
   { label: 'Hair styling', tag: 'Hair', image: '/imgHome/hair.png', position: '50% 38%' },
-  { label: 'Salon details', tag: 'Salon', image: '/imgHome/salon3.png', position: '50% 45%' },
-  { label: 'Color & finish', tag: 'Hair', image: '/imgHome/hair2.png', position: '50% 42%' },
 ];
 
 export const TEAM_PREVIEW = [
-  { name: 'Maya Chen', role: 'Lead colorist', initials: 'MC' },
-  { name: 'Jordan Lee', role: 'Nail director', initials: 'JL' },
-  { name: 'Sofia Reyes', role: 'Bridal specialist', initials: 'SR' },
+  { name: 'Maya Chen', role: 'Lead colorist', initials: 'MC', image: '/imgHome/team1.png' },
+  { name: 'Jordan Lee', role: 'Nail director', initials: 'JL', image: '/imgHome/team2.png' },
+  { name: 'Sofia Reyes', role: 'Bridal specialist', initials: 'SR', image: '/imgHome/team3.png' },
 ];

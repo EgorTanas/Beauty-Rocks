@@ -1,4 +1,4 @@
-const Service = require('../models/Service');
+const Service = require('../models/service');
 const { deleteFromCloudinary, extractPublicId } = require('../middleware/uploadMiddleware');
 const getServices = async (req, res) => {
   try {
