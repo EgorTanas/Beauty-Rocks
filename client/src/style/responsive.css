@@ -623,27 +623,89 @@
     padding: 16px;
   }
 
-  /* ── Footer ── */
+  /* ── Footer — compact mobile ── */
   .site-footer {
-    padding: 40px 16px 24px;
+    padding: 1.75rem 1rem 1.25rem;
   }
 
   .site-footer-grid {
-    grid-template-columns: 1fr;
-    gap: 28px;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem 1rem;
+  }
+
+  .site-footer-brand {
+    grid-column: 1 / -1;
+  }
+
+  .site-logo--footer .site-logo-text {
+    font-size: 0.95rem;
+    letter-spacing: 0.22em;
+  }
+
+  .site-logo--footer .site-logo-mark {
+    width: 2rem;
+    height: 2rem;
   }
 
   .site-footer-tagline {
-    font-size: 0.85rem;
+    margin: 0.65rem 0 0.85rem;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    max-width: none;
+  }
+
+  .site-social {
+    gap: 0.5rem;
+  }
+
+  .site-social-btn {
+    width: 2.125rem;
+    height: 2.125rem;
+  }
+
+  .site-footer-heading {
+    margin-bottom: 0.5rem;
+    font-size: 0.625rem;
+    letter-spacing: 0.14em;
+  }
+
+  .site-footer-list {
+    gap: 0.4rem;
+  }
+
+  .site-footer-list a {
+    font-size: 0.78rem;
+  }
+
+  .site-logo--footer {
+    gap: 0.65rem;
+  }
+
+  .site-footer-grid > div:last-of-type {
+    grid-column: 1 / -1;
+  }
+
+  .site-footer-grid > div:last-of-type .site-footer-list {
+    flex-flow: row wrap;
+    column-gap: 1.25rem;
+    row-gap: 0.35rem;
   }
 
   .site-footer-bar {
     flex-direction: column;
     text-align: center;
-    gap: 12px;
-    margin-top: 28px;
-    padding-top: 18px;
-    font-size: 0.78rem;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+    padding-top: 0.85rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+  }
+
+  .site-scroll-fab {
+    width: 2.5rem;
+    height: 2.5rem;
+    right: 0.85rem;
+    bottom: 0.85rem;
   }
 }
 

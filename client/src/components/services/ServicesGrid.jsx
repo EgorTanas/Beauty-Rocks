@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import ServicesCarousel from './ServicesCarousel';
 import ServiceListingCard from './ServiceListingCard';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
@@ -168,11 +169,12 @@ export default function ServicesGrid({ activeCategoryId = 'all', searchQuery = '
                 </header>
               )}
 
-              <div className="services-card-grid services-card-grid--4">
-                {category.services.map((service) => (
-                  <ServiceListingCard key={service.id} {...service} />
-                ))}
-              </div>
+              <ServicesCarousel
+                className="services-category__carousel"
+                services={category.services}
+                dotsLabel={`${category.label} services`}
+                renderCard={(service) => <ServiceListingCard {...service} variant="light" />}
+              />
             </div>
           ))
         )}
