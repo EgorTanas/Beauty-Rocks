@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ChevronRight, Sparkles } from 'lucide-react';
-import { SOCIAL_LINKS } from '../../constants/socialLinks';
-import { IconFacebook, IconInstagram, IconTikTok } from '../common/SocialIcons';
 import { fadeUp } from '../common/motionVariants';
 
 export default function HeroSection() {
@@ -38,19 +36,6 @@ export default function HeroSection() {
         <span className="br-deco-spark br-deco-spark--bl" aria-hidden>
           <Sparkles size={28} strokeWidth={1.25} />
         </span>
-        <div className="br-social-rail" aria-label="Social links">
-          <a href={SOCIAL_LINKS.instagram} aria-label="Instagram" target="_blank" rel="noopener noreferrer">
-            <IconInstagram />
-          </a>
-          <a href={SOCIAL_LINKS.facebook} aria-label="Facebook" target="_blank" rel="noopener noreferrer">
-            <IconFacebook />
-          </a>
-          <a href={SOCIAL_LINKS.tiktok} aria-label="TikTok" target="_blank" rel="noopener noreferrer">
-            <IconTikTok />
-          </a>
-          <span aria-hidden />
-        </div>
-
         <div className="br-hero-grid">
           <motion.div className="br-hero-copy" variants={fadeUp} transition={{ duration: 0.65, ease: 'easeOut' }}>
             <p className="br-badge">
@@ -72,19 +57,6 @@ export default function HeroSection() {
               </Link>
               <a href="#services" className="br-btn br-btn--outline">
                 Explore services
-              </a>
-            </div>
-            <div className="br-hero-social-inline" aria-label="Social links">
-              <a href={SOCIAL_LINKS.instagram} aria-label="Instagram" target="_blank" rel="noopener noreferrer">
-                <IconInstagram size={22} />
-              </a>
-              <span className="br-hero-social-inline-divider" aria-hidden />
-              <a href={SOCIAL_LINKS.facebook} aria-label="Facebook" target="_blank" rel="noopener noreferrer">
-                <IconFacebook size={22} />
-              </a>
-              <span className="br-hero-social-inline-divider" aria-hidden />
-              <a href={SOCIAL_LINKS.tiktok} aria-label="TikTok" target="_blank" rel="noopener noreferrer">
-                <IconTikTok size={22} />
               </a>
             </div>
           </motion.div>

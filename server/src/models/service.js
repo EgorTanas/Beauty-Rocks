@@ -29,7 +29,18 @@ const serviceSchema = new mongoose.Schema(
     category: {
       type: String,
       required: [true, 'Category is required'],
-      enum: ['nails', 'hair', 'skincare', 'bridal', 'other'],
+      enum: [
+        'manicure',
+        'pedicure',
+        'hair-women',
+        'hair-men',
+        'other',
+        /* legacy values kept for existing records */
+        'nails',
+        'hair',
+        'skincare',
+        'bridal',
+      ],
       default: 'other',
     },
     image: {

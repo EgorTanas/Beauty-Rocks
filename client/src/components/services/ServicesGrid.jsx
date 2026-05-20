@@ -1,57 +1,54 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { ChevronDown } from 'lucide-react';
+import { catalogFade, catalogItem, catalogSlide, catalogStagger } from '../common/motionVariants';
 import ServiceListingCard from './ServiceListingCard';
+import {
+  CATEGORY_META,
+  matchesDurationFilter,
+  matchesPriceRange,
+  matchesServiceSearch,
+  normalizeCategory,
+  sortServices,
+  toListingCard,
+} from './servicesData';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const PAGE_SIZE = 8;
 
-// Mapare category din DB → label frumos + descriere scurtă
-const CATEGORY_META = {
-  nails:    { label: 'Nails',    lead: 'Manicure, pedicure, gel, extensions și nail art.' },
-  hair:     { label: 'Hair',     lead: 'Tunsori, culoare, styling, keratin și bridal.' },
-  skincare: { label: 'Skincare', lead: 'Tratamente faciale și îngrijire profesională a pielii.' },
-  bridal:   { label: 'Bridal',   lead: 'Pachete complete pentru mirese și ocazii speciale.' },
-  other:    { label: 'Other',    lead: 'Servicii și pachete curate.' },
-};
-
-// Mapare serviciu din DB → props pentru ServiceListingCard
-function toCardProps(service) {
-  return {
-    id:       service._id,
-    title:    service.name,
-    desc:     service.description,
-    duration: service.duration,
-    price:    service.price,
-    image:    service.image || '',
-    variant:  'light',
-    category: service.category,
-  };
-}
-
-// Grupare array de servicii după câmpul category
 function groupByCategory(services) {
   const map = {};
   services.forEach((s) => {
-    const cat = s.category || 'other';
+    const cat = normalizeCategory(s.category);
     if (!map[cat]) {
       map[cat] = {
-        id:       cat,
-        label:    CATEGORY_META[cat]?.label ?? cat,
-        lead:     CATEGORY_META[cat]?.lead  ?? '',
+        id: cat,
+        label: CATEGORY_META[cat]?.label ?? cat,
+        lead: CATEGORY_META[cat]?.lead ?? '',
         services: [],
       };
     }
-    map[cat].services.push(toCardProps(s));
+    map[cat].services.push(toListingCard(s));
   });
-  // Sortăm categoriile în ordinea din CATEGORY_META
-  const ORDER = ['nails', 'hair', 'skincare', 'bridal', 'other'];
+  const ORDER = ['manicure', 'pedicure', 'hair-women', 'hair-men', 'other'];
   return ORDER.map((k) => map[k]).filter(Boolean);
 }
 
-export default function ServicesGrid({ activeCategoryId = 'all', searchQuery = '' }) {
+export default function ServicesGrid({
+  activeCategoryId = 'all',
+  searchQuery = '',
+  categoryDirection = 1,
+  sortBy = 'popular',
+  durationFilter = 'all',
+  priceMax = 200,
+  onResultCount,
+}) {
+  const reduceMotion = useReducedMotion();
   const [allServices, setAllServices] = useState([]);
-  const [loading, setLoading]         = useState(true);
-  const [error, setError]             = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
-  // Fetch o singură dată toate serviciile active
   useEffect(() => {
     let cancelled = false;
 
@@ -62,7 +59,9 @@ export default function ServicesGrid({ activeCategoryId = 'all', searchQuery = '
         const res = await fetch(`${API}/api/services`);
         if (!res.ok) throw new Error('Failed to load services');
         const json = await res.json();
-        if (!cancelled) setAllServices(json.data);
+        if (!cancelled) {
+          setAllServices(Array.isArray(json?.data) ? json.data : []);
+        }
       } catch (err) {
         if (!cancelled) setError(err.message);
       } finally {
@@ -74,26 +73,49 @@ export default function ServicesGrid({ activeCategoryId = 'all', searchQuery = '
     return () => { cancelled = true; };
   }, []);
 
-  // Filtrare pe client după categorie + search
-  const query = searchQuery.trim().toLowerCase();
+  const filtered = useMemo(() => {
+    return allServices.filter((s) => {
+      const cat = normalizeCategory(s.category);
+      const matchCat = activeCategoryId === 'all' || cat === activeCategoryId;
+      return (
+        matchCat &&
+        matchesServiceSearch(s, searchQuery) &&
+        matchesPriceRange(s, priceMax) &&
+        matchesDurationFilter(s, durationFilter)
+      );
+    });
+  }, [allServices, activeCategoryId, searchQuery, sortBy, durationFilter, priceMax]);
 
-  const filtered = allServices.filter((s) => {
-    const matchCat =
-      activeCategoryId === 'all' || s.category === activeCategoryId;
-    const matchSearch =
-      !query ||
-      s.name.toLowerCase().includes(query) ||
-      s.description?.toLowerCase().includes(query);
-    return matchCat && matchSearch;
-  });
+  const sorted = useMemo(
+    () => sortServices(filtered, sortBy).map(toListingCard),
+    [filtered, sortBy],
+  );
 
-  // Grupăm rezultatele filtrate pe categorii
-  const categories = groupByCategory(filtered);
+  const categories = useMemo(() => groupByCategory(filtered), [filtered]);
 
-  // ── Loading
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [activeCategoryId, searchQuery, sortBy, durationFilter, priceMax]);
+
+  useEffect(() => {
+    if (!loading && !error) {
+      onResultCount?.(sorted.length);
+    }
+  }, [sorted.length, loading, error, onResultCount]);
+
+  const filterKey = `${activeCategoryId}-${searchQuery.trim().toLowerCase()}-${sortBy}-${durationFilter}-${priceMax}`;
+
+  const flatForDisplay = useMemo(() => {
+    if (activeCategoryId !== 'all') return sorted;
+    return categories.flatMap((c) => c.services);
+  }, [activeCategoryId, sorted, categories]);
+
+  const visibleServices = flatForDisplay.slice(0, visibleCount);
+  const hasMore = visibleCount < flatForDisplay.length;
+
   if (loading) {
     return (
-      <section id="services-catalog" className="services-grid-section">
+      <section id="services-catalog" className="services-catalog">
         <div className="services-container">
           <div className="services-loading" aria-live="polite">
             <span className="services-loading__spinner" aria-hidden />
@@ -104,10 +126,9 @@ export default function ServicesGrid({ activeCategoryId = 'all', searchQuery = '
     );
   }
 
-  // ── Error 
   if (error) {
     return (
-      <section id="services-catalog" className="services-grid-section">
+      <section id="services-catalog" className="services-catalog">
         <div className="services-container">
           <p className="services-empty">
             Could not load services right now. Please refresh the page.
@@ -117,66 +138,120 @@ export default function ServicesGrid({ activeCategoryId = 'all', searchQuery = '
     );
   }
 
-  // ── Title dinamic 
   const sectionTitle =
     activeCategoryId === 'all'
       ? 'Explore All Services'
       : (CATEGORY_META[activeCategoryId]?.label ?? 'Services');
 
-  const sectionLead =
-    activeCategoryId === 'all'
-      ? 'Browse by category — nails, hair, skincare, and curated packages.'
-      : (CATEGORY_META[activeCategoryId]?.lead ?? '');
-
   return (
-    <section
+    <motion.section
       id="services-catalog"
-      className="services-grid-section"
-      aria-labelledby="services-grid-title"
+      className="services-catalog"
+      aria-labelledby="services-catalog-title"
+      initial={reduceMotion ? false : { opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-12%' }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
     >
       <div className="services-container">
-        <header className="services-section-head">
-          <p className="services-eyebrow">Service menu</p>
-          <h2 id="services-grid-title" className="services-section-title">
+        <header className="services-catalog__head">
+          <h2 id="services-catalog-title" className="services-catalog__title">
             {sectionTitle}
           </h2>
-          <p className="services-section-lead">{sectionLead}</p>
+          {activeCategoryId !== 'all' ? (
+            <p className="services-catalog__lead">{CATEGORY_META[activeCategoryId]?.lead}</p>
+          ) : null}
         </header>
 
-        {categories.length === 0 ? (
-          <p className="services-empty">
-            No services match your search. Try another term or category.
-          </p>
-        ) : (
-          categories.map((category) => (
-            <div
-              key={category.id}
-              id={`category-${category.id}`}
-              className="services-category-block"
-              aria-labelledby={`category-title-${category.id}`}
+        <AnimatePresence mode="wait">
+          {sorted.length === 0 ? (
+            <motion.p
+              key="empty"
+              className="services-empty"
+              variants={catalogFade}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
             >
-              {/* Afișăm header-ul de categorie doar în modul "all" */}
-              {activeCategoryId === 'all' && (
-                <header className="services-category-head">
-                  <h3
-                    id={`category-title-${category.id}`}
-                    className="services-category-title"
-                  >
-                    {category.label}
-                  </h3>
-                  <p className="services-category-lead">{category.lead}</p>
-                </header>
-              )}
-
-              <div className="services-card-grid services-card-grid--4">
-                {category.services.map((service) => (
-                  <ServiceListingCard key={service.id} {...service} />
+              No services match your filters. Try adjusting search or price range.
+            </motion.p>
+          ) : activeCategoryId === 'all' ? (
+            <motion.div
+              key={filterKey}
+              custom={categoryDirection}
+              variants={reduceMotion ? catalogFade : catalogSlide}
+              initial={reduceMotion ? 'hidden' : 'enter'}
+              animate={reduceMotion ? 'visible' : 'center'}
+              exit={reduceMotion ? 'hidden' : 'exit'}
+            >
+              {categories.map((category) => (
+                <div
+                  key={category.id}
+                  id={`category-${category.id}`}
+                  className="services-category-block"
+                >
+                  <header className="services-category-head">
+                    <h3 className="services-category-title">{category.label}</h3>
+                    <p className="services-category-lead">{category.lead}</p>
+                  </header>
+                  <ul className="services-grid services-grid--catalog">
+                    {category.services.map((service) => (
+                      <li key={service.id} className="services-grid__item">
+                        <ServiceListingCard
+                          {...service}
+                          variant="light"
+                          showAddButton
+                          showWishlist={true}
+                          showCategoryTag={false}
+                          interactive
+                          highlightQuery={searchQuery}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div
+              key={filterKey}
+              custom={categoryDirection}
+              variants={reduceMotion ? catalogFade : catalogSlide}
+              initial={reduceMotion ? 'hidden' : 'enter'}
+              animate={reduceMotion ? 'visible' : 'center'}
+              exit={reduceMotion ? 'hidden' : 'exit'}
+            >
+              <ul className="services-grid services-grid--catalog">
+                {visibleServices.map((service) => (
+                  <motion.li key={service.id} variants={catalogItem} className="services-grid__item">
+                    <ServiceListingCard
+                      {...service}
+                      variant="light"
+                      showAddButton
+                      showWishlist={true}
+                      showCategoryTag={false}
+                      interactive
+                      highlightQuery={searchQuery}
+                    />
+                  </motion.li>
                 ))}
-              </div>
-            </div>
-          ))
-        )}
+              </ul>
+              {hasMore ? (
+                <div className="services-catalog__more-wrap">
+                  <button
+                    type="button"
+                    className="br-btn services-btn--load-more"
+                    onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
+                  >
+                    Load more services
+                    <ChevronDown size={16} strokeWidth={2} aria-hidden />
+                  </button>
+                </div>
+              ) : null}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-    </section>
+    </motion.section>
   );
 }

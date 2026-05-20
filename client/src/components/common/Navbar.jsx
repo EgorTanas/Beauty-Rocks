@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, Search, Settings, X } from 'lucide-react';
+import { Menu, Settings, X } from 'lucide-react';
 import { getUserDisplayName } from '../../utils/userDisplay';
 import UserAvatar from '../UserAvatar';
 
@@ -20,6 +20,9 @@ export default function Navbar() {
   const [user, setUser] = useState(() => readStoredUser());
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isDesktopNav, setIsDesktopNav] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(min-width: 1025px)').matches,
+  );
 
   useEffect(() => {
     const syncUser = () => setUser(readStoredUser());
@@ -40,6 +43,14 @@ export default function Navbar() {
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1025px)');
+    const sync = () => setIsDesktopNav(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
   }, []);
 
   const closeMenu = useCallback(() => setMenuOpen(false), []);
@@ -86,38 +97,32 @@ export default function Navbar() {
             Booking
           </NavLink>
 
-          {/* Admin Panel link — visible only in mobile menu for admins */}
-          {isAdmin && (
+          {isAdmin && !isDesktopNav ? (
             <NavLink
               to="/admin/services"
               className={({ isActive }) =>
-                `site-nav-link site-nav-link--admin${isActive ? ' site-nav-link--active' : ''}`
+                `site-nav-admin-mobile${isActive ? ' site-nav-admin-mobile--active' : ''}`
               }
               onClick={closeMenu}
             >
               <Settings size={15} strokeWidth={1.75} aria-hidden />
               Admin Panel
             </NavLink>
-          )}
+          ) : null}
         </div>
 
         <div className="site-nav-actions">
-          <button type="button" className="site-icon-btn" aria-label="Search (coming soon)">
-            <Search size={20} strokeWidth={1.75} />
-          </button>
-
-          {/* Admin Panel button — desktop, visible only for admins */}
-          {isAdmin && (
+          {isAdmin && isDesktopNav ? (
             <Link
               to="/admin/services"
               className="site-btn-admin"
               title="Admin Panel"
               aria-label="Admin Panel"
             >
-              <Settings size={16} strokeWidth={1.75} aria-hidden />
-              <span>Admin</span>
+              <Settings size={15} strokeWidth={1.75} aria-hidden />
+              <span>Admin Panel</span>
             </Link>
-          )}
+          ) : null}
 
           {user ? (
             <div className="site-nav-user">

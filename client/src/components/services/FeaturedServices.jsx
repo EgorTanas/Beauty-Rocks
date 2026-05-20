@@ -1,62 +1,73 @@
 import { useEffect, useState } from 'react';
+import { ChevronRight, Sparkles } from 'lucide-react';
+import ServicesCarousel from './ServicesCarousel';
 import ServiceListingCard from './ServiceListingCard';
+import { toListingCard } from './servicesData';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
 const FEATURED_COUNT = 4;
 
-export default function FeaturedServices() {
+/** Static featured row — not affected by category/search filters */
+export default function FeaturedServices({ searchQuery = '' }) {
   const [featured, setFeatured] = useState([]);
 
   useEffect(() => {
     let cancelled = false;
 
-    fetch(`${API}/api/services`)
-      .then((r) => r.json())
-      .then((json) => {
-        if (!cancelled) {
-          // Primele FEATURED_COUNT servicii active, sortate deja după `order` de server
-          setFeatured(json.data.slice(0, FEATURED_COUNT));
+    const load = async () => {
+      try {
+        const res = await fetch(`${API}/api/services`);
+        if (!res.ok) return;
+        const json = await res.json();
+        if (!cancelled && Array.isArray(json?.data)) {
+          setFeatured(json.data.slice(0, FEATURED_COUNT).map(toListingCard));
         }
-      })
-      .catch(console.error);
+      } catch {
+        /* hide on failure */
+      }
+    };
 
+    load();
     return () => { cancelled = true; };
   }, []);
 
-  // Nu afișa secțiunea dacă nu sunt servicii
   if (featured.length === 0) return null;
 
   return (
-    <section className="services-featured" aria-labelledby="services-featured-title">
-      <div className="services-container">
-        <header className="services-section-head services-section-head--row">
-          <div>
-            <p className="services-eyebrow">Featured services</p>
-            <h2 id="services-featured-title" className="services-section-title">
-              Our Most Loved
-            </h2>
-          </div>
-          <a href="#services-catalog" className="services-link">
-            View full menu
-          </a>
-        </header>
-
-        <div className="services-card-grid services-card-grid--4">
-          {featured.map((service) => (
-            <ServiceListingCard
-              key={service._id}
-              id={service._id}
-              title={service.name}
-              desc={service.description}
-              duration={service.duration}
-              price={service.price}
-              image={service.image || ''}
-              variant="light"
-            />
-          ))}
+    <div className="services-featured-block" aria-labelledby="services-featured-title">
+      <header className="services-featured__head">
+        <div className="services-featured__intro">
+          <p className="br-badge">
+            <Sparkles size={14} strokeWidth={1.5} className="br-badge-icon" aria-hidden />
+            <span>Featured services</span>
+          </p>
+          <h2 id="services-featured-title" className="services-featured__title">
+            Our Most Loved
+          </h2>
         </div>
-      </div>
-    </section>
+        <a href="#services-catalog" className="services-featured__link">
+          View all services
+          <ChevronRight size={15} strokeWidth={2.5} aria-hidden />
+        </a>
+      </header>
+
+      <ServicesCarousel
+        className="services-featured__carousel"
+        services={featured}
+        dotsLabel="Featured services"
+        renderCard={(service) => (
+          <ServiceListingCard
+            {...service}
+            variant="dark"
+            showWishlist={true}
+            showAddButton={true}
+            showCategoryTag={false}
+            interactive
+            highlightQuery={searchQuery}
+          />
+        )}
+      />
+    </div>
   );
 }
+

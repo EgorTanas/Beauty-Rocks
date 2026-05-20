@@ -21,14 +21,14 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const ADMIN_API = `${API}/api/admin/services`;
 
-const CATEGORIES = ['nails', 'hair', 'skincare', 'bridal', 'other'];
+const CATEGORIES = ['manicure', 'pedicure', 'hair-women', 'hair-men', 'other'];
 
 const EMPTY_FORM = {
   name:        '',
   description: '',
   price:       '',
   duration:    '',
-  category:    'nails',
+  category:    'manicure',
   image:       '',
   isActive:    true,
   order:       0,

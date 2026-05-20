@@ -1,4 +1,8 @@
+import { motion, useReducedMotion } from 'framer-motion';
+import { catalogItem, catalogStagger, sectionReveal } from '../common/motionVariants';
+
 export default function BenefitsSection() {
+  const reduceMotion = useReducedMotion();
   const benefits = [
     {
       title: 'Premium Products',
@@ -19,19 +23,35 @@ export default function BenefitsSection() {
   ];
 
   return (
-    <section className="services-benefits" aria-labelledby="services-benefits-title">
+    <motion.section
+      className="services-benefits"
+      aria-labelledby="services-benefits-title"
+      initial={reduceMotion ? false : 'hidden'}
+      whileInView="visible"
+      viewport={{ once: true, margin: '-12%' }}
+      variants={sectionReveal}
+      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+    >
       <div className="services-container">
-        <h2 id="services-benefits-title" className="visually-hidden">Why choose Beauty Rocks</h2>
-        <ul className="services-benefits__list">
+        <h2 id="services-benefits-title" className="visually-hidden">
+          Why choose Beauty Rocks
+        </h2>
+        <motion.ul
+          className="services-benefits__list"
+          variants={catalogStagger}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-8%' }}
+        >
           {benefits.map(({ title, desc }) => (
-            <li key={title} className="services-benefits__item">
+            <motion.li key={title} className="services-benefits__item" variants={catalogItem}>
               <span className="services-benefits__icon" aria-hidden />
               <h3 className="services-benefits__title">{title}</h3>
               <p className="services-benefits__desc">{desc}</p>
-            </li>
+            </motion.li>
           ))}
-        </ul>
+        </motion.ul>
       </div>
-    </section>
+    </motion.section>
   );
 }

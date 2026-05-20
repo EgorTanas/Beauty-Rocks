@@ -55,18 +55,36 @@ body {
   justify-content: center;
   padding: 10px max(clamp(14px, 4vw, 56px), env(safe-area-inset-right, 0px)) 10px
     max(clamp(14px, 4vw, 56px), env(safe-area-inset-left, 0px));
-  background: linear-gradient(180deg, rgba(15, 15, 16, 0.45), rgba(15, 15, 16, 0.15));
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(32px) saturate(1.2);
-  transition: background 0.3s ease, padding 0.3s ease, border-color 0.3s ease;
+  /* Glass — dark tint so cream/white sections don’t wash it out */
+  background: linear-gradient(
+    180deg,
+    rgba(10, 10, 12, 0.62) 0%,
+    rgba(10, 10, 12, 0.48) 100%
+  );
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(32px) saturate(1.35);
+  -webkit-backdrop-filter: blur(32px) saturate(1.35);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition:
+    background 0.35s ease,
+    padding 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.35s ease,
+    backdrop-filter 0.35s ease;
 }
 
+/* Over light content: denser glass (still blurred, not flat white) */
 .site-header--scrolled {
   padding-block: 6px;
-  background: rgba(8, 8, 9, 0.75);
-  backdrop-filter: blur(40px) saturate(1.2);
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.4);
+  background: rgba(8, 8, 10, 0.84);
+  backdrop-filter: blur(40px) saturate(1.4);
+  -webkit-backdrop-filter: blur(40px) saturate(1.4);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 14px 48px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .site-nav {
@@ -83,9 +101,10 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 14px;
-  color: var(--br-cream);
+  color: var(--br-white);
   text-decoration: none;
   width: max-content;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.45);
 }
 
 .site-logo-mark {
@@ -126,12 +145,13 @@ body {
 
 .site-nav-link {
   position: relative;
-  color: rgba(245, 241, 235, 0.78);
+  color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
-  font-size: 0.76rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0;
+  letter-spacing: 0.02em;
   padding: 10px 0;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.4);
   transition: color 0.2s ease;
 }
 
@@ -181,9 +201,9 @@ body {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  border: 1px solid rgba(245, 241, 235, 0.16);
-  background: rgba(255, 255, 255, 0.055);
-  color: var(--br-cream);
+  border: 1px solid rgba(245, 241, 235, 0.32);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--br-white);
   cursor: pointer;
   transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
@@ -213,17 +233,23 @@ body {
 }
 
 .site-btn-primary {
-  color: var(--br-white);
-  border: 1px solid rgba(255, 255, 255, 0.42);
-  background: rgba(255, 255, 255, 0.045);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
-  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  color: #0a0a0a;
+  border: 1px solid rgba(196, 165, 116, 0.75);
+  background: linear-gradient(135deg, #d4b88a, var(--br-lavender));
+  box-shadow:
+    0 4px 18px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
 }
 
 .site-btn-primary:hover {
   transform: translateY(-1px);
-  background: linear-gradient(135deg, var(--br-violet), var(--br-lavender));
-  box-shadow: 0 16px 42px rgba(196, 165, 116, 0.3);
+  color: #0a0a0a;
+  border-color: rgba(255, 255, 255, 0.5);
+  background: linear-gradient(135deg, #e8cfa0, #f0ddb8);
+  box-shadow:
+    0 10px 28px rgba(196, 165, 116, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
 .site-nav-user {
@@ -241,9 +267,9 @@ body {
   min-width: 0;
   max-width: min(220px, 42vw);
   padding: 5px 14px 5px 6px;
-  border: 1px solid rgba(245, 241, 235, 0.18);
+  border: 1px solid rgba(245, 241, 235, 0.32);
   border-radius: var(--br-radius-pill);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.1);
   color: inherit;
   text-decoration: none;
   transition: border-color 0.2s ease, background 0.2s ease;
@@ -279,9 +305,9 @@ body {
 .site-user-name {
   min-width: 0;
   overflow: hidden;
-  color: var(--br-cream);
-  font-size: 0.8rem;
-  font-weight: 600;
+  color: var(--br-white);
+  font-size: 0.82rem;
+  font-weight: 700;
   letter-spacing: 0.02em;
   line-height: 1.2;
   text-overflow: ellipsis;
@@ -292,14 +318,16 @@ body {
   flex-shrink: 0;
   min-height: 34px;
   padding-inline: 14px;
-  border: 1px solid rgba(245, 241, 235, 0.2);
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--br-cream);
+  border: 1px solid rgba(245, 241, 235, 0.38);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--br-white);
+  font-weight: 800;
 }
 
 .site-btn-ghost--signout:hover {
-  border-color: rgba(196, 165, 116, 0.45);
-  background: rgba(196, 165, 116, 0.14);
+  border-color: rgba(196, 165, 116, 0.65);
+  background: rgba(196, 165, 116, 0.22);
+  color: var(--br-white);
 }
 
 .site-menu-toggle,
@@ -493,11 +521,11 @@ body {
 .br-section {
   position: relative;
   scroll-margin-top: calc(var(--br-header-h) + 14px);
-  padding: clamp(72px, 11vw, 120px) 0;
+  padding: clamp(48px, 6vw, 78px) 0;
 }
 
 .br-section--tight {
-  padding-top: clamp(56px, 9vw, 88px);
+  padding-top: clamp(38px, 5vw, 56px);
 }
 
 /* Dark editorial — contrast with light services / team */
@@ -526,10 +554,10 @@ body {
 
 .br-section--team-preview {
   background:
-    radial-gradient(circle at 50% 0%, rgba(196, 165, 116, 0.06), transparent 26rem),
-    linear-gradient(180deg, #fefefe 0%, #f7f4ef 55%, #f3efe8 100%);
+    radial-gradient(circle at 50% 0%, rgba(196, 165, 116, 0.1), transparent 26rem),
+    linear-gradient(180deg, #fdfcfa 0%, #f7f4ef 48%, #ebe4d8 100%);
   color: var(--br-black);
-  border-block: 1px solid rgba(15, 15, 16, 0.06);
+  border-block: 1px solid rgba(15, 15, 16, 0.08);
 }
 
 .br-section--team-preview .br-section-title {
@@ -541,15 +569,11 @@ body {
 }
 
 .br-section--gallery-cinematic {
-  background:
-    radial-gradient(circle at 50% 0%, rgba(196, 165, 116, 0.08), transparent 24rem),
-    linear-gradient(180deg, #ffffff 0%, var(--br-cream) 100%);
-  color: var(--br-black);
-  border-block: 1px solid rgba(15, 15, 16, 0.08);
+  color: var(--br-cream);
 }
 
 .br-section--contact {
-  padding-bottom: clamp(88px, 13vw, 132px);
+  padding-bottom: clamp(64px, 9vw, 92px);
 }
 
 .br-section-head {
@@ -557,7 +581,7 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 14px;
-  margin-bottom: clamp(40px, 6vw, 68px);
+  margin-bottom: clamp(28px, 4vw, 42px);
   text-align: center;
 }
 
@@ -618,13 +642,16 @@ body {
   line-height: 0.98;
 }
 
-#services {
+/* Home bands (after dark hero): milk → dark → milk → dark → milk */
+.br-section--band-milk,
+#services.br-section--services-luxury {
   position: relative;
   z-index: 0;
-  background:
-    radial-gradient(circle at 50% 0%, rgba(196, 165, 116, 0.08), transparent 24rem),
-    linear-gradient(180deg, #ffffff 0%, var(--br-cream) 100%);
   color: var(--br-black);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(196, 165, 116, 0.14), transparent 26rem),
+    radial-gradient(circle at 90% 75%, rgba(154, 107, 82, 0.06), transparent 20rem),
+    linear-gradient(180deg, #fdfcfa 0%, #f7f4ef 48%, #ebe4d8 100%);
   border-block: 1px solid rgba(15, 15, 16, 0.08);
 }
 
@@ -636,56 +663,49 @@ body {
   color: var(--br-violet);
 }
 
+#services .br-services-error,
+#services .br-services-empty {
+  color: rgba(18, 17, 16, 0.55);
+}
+
 .br-section--services-luxury .br-section-head {
   margin-bottom: clamp(44px, 6vw, 76px);
 }
 
+/* Gallery — dark band */
 #gallery {
   background:
-    radial-gradient(circle at 82% 12%, rgba(196, 165, 116, 0.1), transparent 22rem),
-    linear-gradient(180deg, #ffffff 0%, var(--br-cream) 100%);
-  color: var(--br-black);
-  border-block: 1px solid rgba(15, 15, 16, 0.08);
+    radial-gradient(circle at 88% 18%, rgba(196, 165, 116, 0.22), transparent 28rem),
+    radial-gradient(circle at 12% 78%, rgba(214, 194, 168, 0.06), transparent 22rem),
+    linear-gradient(185deg, #1a1718 0%, var(--br-black) 52%, #050506 100%);
+  color: var(--br-cream);
+  border-block: 1px solid rgba(245, 241, 235, 0.07);
 }
 
 #gallery .br-section-title,
 .br-section--gallery-cinematic .br-section-title {
-  color: var(--br-black);
+  color: var(--br-cream);
 }
 
 #gallery .br-badge,
 .br-section--gallery-cinematic .br-badge {
-  color: var(--br-violet);
-}
-
-#gallery .br-gallery-cell,
-.br-section--gallery-cinematic .br-gallery-cell {
-  border: 1px solid rgba(18, 17, 16, 0.1);
-  background: #fdfcfa;
-  box-shadow: 0 16px 40px rgba(18, 17, 16, 0.07);
-}
-
-#gallery .br-gallery-cell:hover,
-.br-section--gallery-cinematic .br-gallery-cell:hover {
-  box-shadow:
-    0 24px 56px rgba(18, 17, 16, 0.1),
-    0 0 40px rgba(196, 165, 116, 0.18);
+  color: var(--br-lavender);
 }
 
 #gallery .br-btn--outline-dark,
 .br-section--gallery-cinematic .br-btn--outline-dark {
-  color: var(--br-black);
-  border: 1px solid rgba(18, 17, 16, 0.32);
-  background: transparent;
-  backdrop-filter: none;
+  color: var(--br-cream);
+  border: 1px solid rgba(245, 241, 235, 0.32);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(8px);
   box-shadow: none;
 }
 
 #gallery .br-btn--outline-dark:hover,
 .br-section--gallery-cinematic .br-btn--outline-dark:hover {
-  border-color: rgba(139, 115, 85, 0.55);
-  background: rgba(196, 165, 116, 0.12);
-  box-shadow: 0 8px 24px rgba(18, 17, 16, 0.08);
+  border-color: rgba(196, 165, 116, 0.55);
+  background: rgba(196, 165, 116, 0.14);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.28);
 }
 
 .br-section-title--left {
@@ -704,7 +724,7 @@ body {
   position: relative;
   z-index: 1;
   isolation: isolate;
-  min-height: max(75svh, 500px);
+  min-height: clamp(520px, 68vh, 680px);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -726,9 +746,9 @@ body {
   inset: 0;
   z-index: -2;
   background:
-    linear-gradient(90deg, rgba(10, 10, 11, 0.97) 0%, rgba(10, 10, 11, 0.86) 43%, rgba(10, 10, 11, 0.42) 100%),
-    radial-gradient(circle at 76% 40%, rgba(196, 165, 116, 0.35), transparent 30rem),
-    radial-gradient(circle at 52% 50%, rgba(214, 194, 168, 0.08), transparent 22rem),
+    linear-gradient(90deg, rgba(10, 10, 11, 0.97) 0%, rgba(10, 10, 11, 0.88) 45%, rgba(10, 10, 11, 0.45) 100%),
+    radial-gradient(circle at 76% 40%, rgba(196, 165, 116, 0.16), transparent 22rem),
+    radial-gradient(circle at 52% 50%, rgba(214, 194, 168, 0.05), transparent 18rem),
     var(--br-black);
 }
 
@@ -767,8 +787,8 @@ body {
 .br-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(50px);
-  opacity: 0.8;
+  filter: blur(80px);
+  opacity: 0.22;
 }
 
 .br-blob--a {
@@ -848,11 +868,11 @@ body {
   position: relative;
   z-index: 2;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(480px, 1.55fr);
+  grid-template-columns: 1.08fr 0.92fr;
   align-items: center;
-  gap: clamp(16px, 2vw, 24px);
+  gap: clamp(24px, 4vw, 48px);
   width: 100%;
-  max-width: 1240px;
+  max-width: 1140px;
   margin: 0 auto;
 }
 
@@ -861,7 +881,7 @@ body {
   flex-direction: column;
   align-items: flex-start;
   gap: clamp(12px, 2vw, 18px);
-  padding-left: clamp(36px, 4vw, 60px);
+  padding-left: clamp(12px, 2vw, 24px);
 }
 
 .br-hero-title {
@@ -1177,36 +1197,65 @@ body {
 
 /* ── Add this to your existing navbar CSS file ─────────────────────────────── */
 
-/* Admin Panel button — desktop */
+/* Admin — desktop only */
 .site-btn-admin {
-  display: inline-flex;
+  display: none;
   align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border-radius: 8px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--color-primary, #b08a6e);
-  background: color-mix(in srgb, var(--color-primary, #b08a6e) 10%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-primary, #b08a6e) 30%, transparent);
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #0a0a0a;
+  background: linear-gradient(135deg, rgba(212, 184, 138, 0.95), var(--br-lavender));
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28);
   text-decoration: none;
-  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s, transform 0.2s;
   white-space: nowrap;
 }
 
-.site-btn-admin:hover {
-  background: color-mix(in srgb, var(--color-primary, #b08a6e) 18%, transparent);
-  border-color: color-mix(in srgb, var(--color-primary, #b08a6e) 55%, transparent);
+@media (min-width: 1025px) {
+  .site-btn-admin {
+    display: inline-flex;
+  }
 }
 
-/* Admin link in mobile menu */
-.site-nav-link--admin {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--color-primary, #b08a6e);
-  font-weight: 600;
+.site-btn-admin:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, #edd9a8, #f5e6c4);
+  border-color: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 8px 22px rgba(196, 165, 116, 0.4);
+}
+
+/* Admin — mobile menu only */
+.site-nav-admin-mobile {
+  display: none !important;
+}
+
+@media (max-width: 1024px) {
+  .site-nav-admin-mobile {
+    display: flex !important;
+    align-items: center;
+    gap: 0.45rem;
+    margin-top: 8px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(196, 165, 116, 0.55);
+    background: linear-gradient(135deg, rgba(212, 184, 138, 0.95), var(--br-lavender));
+    color: #0a0a0a !important;
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+
+  .site-nav-admin-mobile--active {
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35);
+  }
 }
 
 /* ── ServicesSection DB cards — add to your existing services CSS ─────────── */

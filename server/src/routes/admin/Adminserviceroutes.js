@@ -10,7 +10,7 @@ const {
   deleteService,
   toggleServiceActive,
   uploadServiceImage,
-} = require('../../controllers/serviceController');
+} = require('../../controllers/Servicecontroller');
 
 const { uploadSingle } = require('../../middleware/uploadMiddleware');
 
