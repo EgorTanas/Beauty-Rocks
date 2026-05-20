@@ -17,19 +17,24 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(passport.initialize());
 
-//Auth
+// Auth
 app.use("/api/auth", authRoutes);
 
-
+// Services (public)
 app.use("/api/services", require("./routes/serviceRoutes"));
 
+// Team (public)
+app.use("/api/team", require("./routes/teamRoutes"));
 
+// Admin routes
 app.use("/api/admin", require("./routes/adminRoutes"));
 
-
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found." });
 });
+
+// Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(err.status || 500).json({ message: err.message || "Internal server error." });

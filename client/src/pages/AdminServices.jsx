@@ -1,6 +1,5 @@
-
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import '../style/AdminServices.css';
 import {
   ChevronLeft,
@@ -12,6 +11,7 @@ import {
   Plus,
   Trash2,
   Upload,
+  Users,
   X,
 } from 'lucide-react';
 import { useImageUpload } from '../hooks/useImageUpload';
@@ -280,11 +280,19 @@ export default function AdminServices() {
           <ChevronLeft size={18} />
           Back
         </button>
+
         <h1 className="adm-title">Manage Services</h1>
-        <button className="adm-btn adm-btn--primary" onClick={openCreate}>
-          <Plus size={16} />
-          Add service
-        </button>
+
+        <div className="adm-header-actions">
+          <Link to="/admin/team" className="adm-btn adm-btn--ghost">
+            <Users size={16} />
+            Manage Team
+          </Link>
+          <button className="adm-btn adm-btn--primary" onClick={openCreate}>
+            <Plus size={16} />
+            Add service
+          </button>
+        </div>
       </header>
 
       {loading && (

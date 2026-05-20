@@ -805,3 +805,129 @@
   color: #94a3b8;
   flex-shrink: 0;
 }
+
+/* ── Paste these rules at the bottom of AdminServices.css ── */
+
+/* Wide modal (team form has tabs) */
+.adm-modal--wide {
+  max-width: 680px;
+  width: 100%;
+}
+
+/* Tabs */
+.adm-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--adm-border, #e5e7eb);
+  margin-bottom: 0;
+}
+.adm-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--adm-muted, #6b7280);
+  cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+.adm-tab:hover { color: var(--adm-text, #111); }
+.adm-tab--active {
+  color: var(--adm-primary, #111);
+  border-bottom-color: var(--adm-primary, #111);
+}
+
+/* Section label inside form */
+.adm-section-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--adm-muted, #6b7280);
+  margin: 0 0 10px;
+}
+
+/* Schedule grid */
+.adm-schedule-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Day row */
+.adm-day-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--adm-surface-alt, #f9fafb);
+}
+.adm-day-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  min-width: 110px;
+}
+.adm-day-toggle input[type="checkbox"] { cursor: pointer; }
+.adm-day-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--adm-text, #111);
+}
+.adm-day-times {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.adm-input--time {
+  width: 110px;
+  padding: 6px 10px;
+}
+.adm-day-sep {
+  color: var(--adm-muted, #6b7280);
+  font-weight: 600;
+}
+.adm-day-off-label {
+  font-size: 0.8rem;
+  color: var(--adm-muted, #6b7280);
+  font-style: italic;
+}
+
+/* Days off */
+.adm-daysoff { display: flex; flex-direction: column; gap: 10px; }
+.adm-daysoff-input-row { display: flex; gap: 8px; align-items: center; }
+.adm-btn--sm { padding: 6px 12px; font-size: 0.8rem; }
+.adm-daysoff-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.adm-daysoff-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--adm-surface-alt, #f3f4f6);
+  font-size: 0.8rem;
+  color: var(--adm-text, #111);
+}
+.adm-daysoff-tag button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  color: var(--adm-muted, #6b7280);
+}
+.adm-daysoff-tag button:hover { color: #ef4444; }
+
+.adm-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

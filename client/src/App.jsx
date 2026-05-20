@@ -7,6 +7,7 @@ import Team from './pages/Team';
 import Booking from './pages/Booking';
 import Profile from './pages/Profile';
 import AdminServices from './pages/AdminServices';
+import AdminTeam from './pages/AdminTeam';
 
 
 const API_BASE_URL = 'http://localhost:5000';
@@ -60,7 +61,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-         {/**Rute publice */}
+        {/* Rute publice */}
         <Route path="/" element={<Home />} />
         <Route path="/home" element={<Home />} />
         <Route path="/services" element={<Services />} />
@@ -86,18 +87,22 @@ function App() {
         <Route path="/profile"
           element={<ProtectedRoute><Profile /></ProtectedRoute>}
         />
-        
+
         <Route path="/dashboard" element={<Navigate to="/home" replace />} />
         <Route path="*"          element={<Navigate to="/"    replace />} />
-        
-      
-         <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
 
-         <Route path="/admin/services"
+        <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
+
+        {/* Rute admin */}
+        <Route path="/admin/services"
           element={<AdminRoute><AdminServices /></AdminRoute>}
+        />
+        <Route path="/admin/team"
+          element={<AdminRoute><AdminTeam /></AdminRoute>}
         />
       </Routes>
     </BrowserRouter>
   );
 }
+
 export default App;
