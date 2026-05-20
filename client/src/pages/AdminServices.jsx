@@ -3,9 +3,12 @@ import { useNavigate, Link } from 'react-router-dom';
 import '../style/AdminServices.css';
 import {
   ChevronLeft,
+  ChevronDown,
+  ChevronUp,
   Edit2,
   Eye,
   EyeOff,
+  FlaskConical,
   Image as ImageIcon,
   Loader2,
   Plus,
@@ -131,6 +134,222 @@ function ImageUploader({ endpoint, initialUrl, onChange }) {
           <X size={14} />
           Remove image
         </button>
+      )}
+    </div>
+  );
+}
+
+// ── Appointment Tester ───────────────────────────────────────────────────────
+function AppointmentTester({ services }) {
+  const [open,       setOpen]       = useState(false);
+  const [workers,    setWorkers]    = useState([]);
+  const [slots,      setSlots]      = useState([]);
+  const [loading,    setLoading]    = useState(false);
+  const [booking,    setBooking]    = useState(false);
+  const [result,     setResult]     = useState(null); // { ok, message, data }
+
+  const [tService,   setTService]   = useState('');
+  const [tWorker,    setTWorker]    = useState('');
+  const [tDate,      setTDate]      = useState('');
+  const [tSlot,      setTSlot]      = useState('');
+
+  // Load workers once panel opens
+  useEffect(() => {
+    if (!open || workers.length) return;
+    fetch(`${API}/api/team`, { credentials: 'include' })
+      .then((r) => r.json())
+      .then((j) => setWorkers(j.data || []))
+      .catch(console.error);
+  }, [open]);
+
+  // Fetch slots when worker + date + service are all set
+  useEffect(() => {
+    setSlots([]);
+    setTSlot('');
+    setResult(null);
+    if (!tWorker || !tDate || !tService) return;
+
+    setLoading(true);
+    fetch(
+      `${API}/api/appointments/available-slots?worker=${tWorker}&date=${tDate}&service=${tService}`,
+      { credentials: 'include' }
+    )
+      .then((r) => r.json())
+      .then((j) => setSlots(j.data || []))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [tWorker, tDate, tService]);
+
+  const handleBook = async () => {
+    if (!tService || !tWorker || !tDate || !tSlot) {
+      setResult({ ok: false, message: 'Complete all fields first.' });
+      return;
+    }
+    setBooking(true);
+    setResult(null);
+    try {
+      const res = await fetch(`${API}/api/appointments`, {
+        method:      'POST',
+        credentials: 'include',
+        headers:     { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          service:    tService,
+          teamMember: tWorker,
+          date:       tDate,
+          startTime:  tSlot,
+          notes:      'Test booking from admin panel',
+        }),
+      });
+      const json = await res.json();
+      if (res.ok) {
+        setResult({
+          ok:      true,
+          message: `✅ Appointment created!`,
+          data:    json.data,
+        });
+        setSlots((prev) => prev.filter((s) => s !== tSlot));
+        setTSlot('');
+      } else {
+        setResult({ ok: false, message: `❌ ${json.message}` });
+      }
+    } catch (err) {
+      setResult({ ok: false, message: `❌ ${err.message}` });
+    } finally {
+      setBooking(false);
+    }
+  };
+
+  const reset = () => {
+    setTService(''); setTWorker(''); setTDate(''); setTSlot('');
+    setSlots([]); setResult(null);
+  };
+
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  return (
+    <div className="apt-tester">
+      <button
+        className="apt-tester-toggle"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <FlaskConical size={16} />
+        Appointment Tester
+        {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+      </button>
+
+      {open && (
+        <div className="apt-tester-body">
+          <p className="apt-tester-desc">
+            Test the full booking flow — select a service, worker and date to see available slots, then book one.
+          </p>
+
+          <div className="apt-tester-grid">
+            {/* Service */}
+            <label className="apt-tester-label">
+              1. Service
+              <select
+                className="adm-input adm-select"
+                value={tService}
+                onChange={(e) => { setTService(e.target.value); setTSlot(''); }}
+              >
+                <option value="">— pick a service —</option>
+                {services.map((s) => (
+                  <option key={s._id} value={s._id}>
+                    {s.name} ({s.duration})
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {/* Worker */}
+            <label className="apt-tester-label">
+              2. Team member
+              <select
+                className="adm-input adm-select"
+                value={tWorker}
+                onChange={(e) => { setTWorker(e.target.value); setTSlot(''); }}
+              >
+                <option value="">— pick a worker —</option>
+                {workers.map((w) => (
+                  <option key={w._id} value={w._id}>{w.name} — {w.role}</option>
+                ))}
+              </select>
+            </label>
+
+            {/* Date */}
+            <label className="apt-tester-label">
+              3. Date
+              <input
+                type="date"
+                className="adm-input"
+                min={todayStr}
+                value={tDate}
+                onChange={(e) => { setTDate(e.target.value); setTSlot(''); }}
+              />
+            </label>
+
+            {/* Slots */}
+            <div className="apt-tester-label">
+              4. Available slots
+              {loading && (
+                <span className="apt-tester-loading">
+                  <Loader2 size={14} className="adm-spinner" /> Fetching…
+                </span>
+              )}
+              {!loading && tWorker && tDate && tService && slots.length === 0 && (
+                <p className="apt-tester-empty">No slots available for this day.</p>
+              )}
+              {slots.length > 0 && (
+                <div className="apt-slots">
+                  {slots.map((s) => (
+                    <button
+                      key={s}
+                      className={`apt-slot ${tSlot === s ? 'apt-slot--active' : ''}`}
+                      onClick={() => setTSlot(s)}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="apt-tester-actions">
+            <button className="adm-btn adm-btn--ghost" onClick={reset}>
+              <X size={14} /> Reset
+            </button>
+            <button
+              className="adm-btn adm-btn--primary"
+              onClick={handleBook}
+              disabled={booking || !tSlot}
+            >
+              {booking && <Loader2 size={14} className="adm-spinner" />}
+              Book {tSlot || '…'}
+            </button>
+          </div>
+
+          {/* Result */}
+          {result && (
+            <div className={`apt-tester-result ${result.ok ? 'apt-tester-result--ok' : 'apt-tester-result--err'}`}>
+              <strong>{result.message}</strong>
+              {result.data && (
+                <pre className="apt-tester-json">
+                  {JSON.stringify({
+                    id:        result.data._id,
+                    service:   result.data.service?.name,
+                    worker:    result.data.teamMember?.name,
+                    date:      result.data.date,
+                    startTime: result.data.startTime,
+                    endTime:   result.data.endTime,
+                    status:    result.data.status,
+                  }, null, 2)}
+                </pre>
+              )}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
@@ -294,6 +513,9 @@ export default function AdminServices() {
           </button>
         </div>
       </header>
+
+      {/* ── Appointment Tester ── */}
+      <AppointmentTester services={services} />
 
       {loading && (
         <div className="adm-loading" aria-live="polite">

@@ -15,4 +15,8 @@ router.use('/services', adminServicesRouter);
 const adminTeamRouter = require('./admin/adminTeamRoutes');
 router.use('/team', adminTeamRouter);
 
+// Admin appointment routes
+const adminAppointmentRouter = require('./admin/adminAppointmentRoutes');
+router.use('/appointments', adminAppointmentRouter);
+
 module.exports = router;
