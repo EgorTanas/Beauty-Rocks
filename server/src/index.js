@@ -17,6 +17,8 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(passport.initialize());
 
+// ─── Public Routes 
+
 // Auth
 app.use("/api/auth", authRoutes);
 
@@ -26,8 +28,20 @@ app.use("/api/services", require("./routes/serviceRoutes"));
 // Team (public)
 app.use("/api/team", require("./routes/teamRoutes"));
 
-// Admin routes
+// Appointments (public + protected)
+app.use("/api/appointments", require("./routes/appointmentRoutes"));
+
+// ─── Protected Routes
+
+// User profile & settings
+app.use("/api/user", require("./routes/userRoutes"));
+
+// ─── Admin Routes 
+
+// Admin routes (services + team + appointments)
 app.use("/api/admin", require("./routes/adminRoutes"));
+
+// ─── Error Handlers 
 
 // 404 handler
 app.use((req, res) => {
