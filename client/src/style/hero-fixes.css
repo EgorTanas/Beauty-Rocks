@@ -1,0 +1,405 @@
+/* Hero — mockup: cerc mare + halou auriu + fundal nebula */
+
+.br-hero-ring--1,
+.br-hero-ring--2 {
+  display: none !important;
+}
+
+.br-hero-photo-frame::before {
+  display: none !important;
+}
+
+/* Fundal hero: nebula aurie + mov discret */
+.br-hero.br-hero--luxury::before {
+  background:
+    linear-gradient(
+      100deg,
+      rgba(5, 5, 6, 0.98) 0%,
+      rgba(5, 5, 6, 0.92) 42%,
+      rgba(5, 5, 6, 0.55) 68%,
+      rgba(5, 5, 6, 0.35) 100%
+    ),
+    radial-gradient(ellipse 55% 65% at 78% 42%, rgba(196, 165, 116, 0.28), transparent 62%),
+    radial-gradient(ellipse 40% 50% at 68% 55%, rgba(120, 90, 160, 0.14), transparent 58%),
+    radial-gradient(circle at 52% 48%, rgba(214, 194, 168, 0.06), transparent 18rem),
+    #030304 !important;
+}
+
+.br-hero.br-hero--luxury .br-blob--a {
+  opacity: 0.32 !important;
+  background: rgba(196, 165, 116, 0.55) !important;
+}
+
+.br-hero.br-hero--luxury .br-blob--c {
+  opacity: 0.2 !important;
+  background: rgba(140, 100, 180, 0.35) !important;
+}
+
+.br-hero.br-hero--luxury .br-hero-bg-photo {
+  opacity: 0.35 !important;
+  mix-blend-mode: soft-light !important;
+}
+
+/* ── Desktop & tablet: SVG portret + cercuri decorative separate ── */
+@media (min-width: 721px) {
+  .br-hero.br-hero--luxury {
+    overflow-x: visible !important;
+  }
+
+  .br-hero-grid {
+    overflow: visible;
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 1.05fr) !important;
+    gap: clamp(52px, 7vw, 96px) !important;
+    max-width: 1180px;
+  }
+
+  .br-hero-copy {
+    padding-left: 0 !important;
+    margin-left: clamp(-12px, -1.5vw, 0);
+    padding-right: clamp(8px, 2vw, 24px);
+  }
+
+  .br-hero-visual {
+    justify-content: flex-end;
+    align-items: center;
+    min-height: 0;
+    padding-right: 0;
+    overflow: visible !important;
+  }
+
+  .br-hero-photo-frame--mobile {
+    display: none !important;
+  }
+
+  .br-hero-portrait-stack--desktop {
+    position: relative;
+    display: block;
+    width: auto;
+    max-width: none;
+    overflow: visible;
+    margin-right: max(-56px, -5vw);
+    margin-left: auto;
+    transform: translateX(clamp(20px, 3vw, 48px));
+    flex-shrink: 0;
+  }
+
+  /* Cercuri / halou — doar decor, fără portret în interior */
+  .br-hero-portrait-deco {
+    position: absolute;
+    top: 42%;
+    left: 56%;
+    z-index: 0;
+    width: min(360px, 34vw);
+    max-width: 380px;
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .br-hero-portrait-deco .br-hero-photo-aura {
+    position: absolute;
+    inset: -18%;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 50% 44%, rgba(232, 207, 160, 0.38) 0%, rgba(196, 165, 116, 0.16) 32%, transparent 68%),
+      radial-gradient(circle at 55% 58%, rgba(130, 95, 175, 0.1) 0%, transparent 58%);
+    filter: blur(36px);
+    animation: br-hero-aura-breathe 9s ease-in-out infinite;
+  }
+
+  .br-hero-portrait-deco .br-hero-photo-orbit--outer {
+    position: absolute;
+    inset: -8%;
+    border-radius: 50%;
+    border: 1px solid rgba(196, 165, 116, 0.12);
+  }
+
+  /* Portret SVG — proporție reală 1536×1024, întreg */
+  .br-hero-portrait-svg {
+    position: relative;
+    z-index: 2;
+    display: block;
+    width: auto;
+    height: min(400px, 48vh);
+    max-height: 430px;
+    max-width: none;
+    overflow: visible;
+    filter: saturate(1.1) contrast(1.05) drop-shadow(0 24px 56px rgba(0, 0, 0, 0.55));
+  }
+
+  .br-hero-cta .br-btn--solid {
+    background: linear-gradient(90deg, #a88452 0%, #c4a574 42%, #e8cfa0 100%) !important;
+    border-color: rgba(232, 207, 160, 0.5) !important;
+    color: #1a1410 !important;
+    box-shadow: 0 8px 28px rgba(196, 165, 116, 0.35) !important;
+  }
+}
+
+@media (min-width: 1025px) {
+  .br-hero-grid {
+    gap: clamp(64px, 8vw, 112px) !important;
+  }
+
+  .br-hero-copy {
+    margin-left: clamp(-20px, -2vw, -8px);
+  }
+
+  .br-hero-portrait-stack--desktop {
+    margin-right: max(-64px, -5.5vw);
+    transform: translateX(clamp(28px, 4vw, 56px));
+  }
+
+  .br-hero-portrait-svg {
+    height: min(430px, 50vh);
+    max-height: 460px;
+  }
+
+  .br-hero-portrait-deco {
+    width: min(380px, 36vw);
+    max-width: 400px;
+    left: 56%;
+  }
+}
+
+@media (min-width: 721px) and (max-width: 1024px) {
+  .br-hero-grid {
+    gap: clamp(40px, 5vw, 64px) !important;
+  }
+
+  .br-hero-portrait-stack--desktop {
+    margin-right: max(-32px, -3vw);
+    transform: translateX(clamp(12px, 2vw, 28px));
+  }
+
+  .br-hero-portrait-svg {
+    height: min(360px, 46vh);
+    max-height: 390px;
+  }
+
+  .br-hero-portrait-deco {
+    width: min(320px, 38vw);
+    max-width: 340px;
+    left: 54%;
+  }
+}
+
+@keyframes br-hero-aura-breathe {
+  0%,
+  100% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+/* ── Mobile: cerc compact (neschimbat) ── */
+@media (max-width: 720px) {
+  .br-hero-portrait-stack--desktop {
+    display: none !important;
+  }
+
+  .br-hero-mobile-accent {
+    display: none !important;
+  }
+
+  .br-hero,
+  .br-hero--luxury {
+    min-height: 0 !important;
+    padding-bottom: 40px !important;
+    overflow: hidden;
+  }
+
+  .br-hero-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    column-gap: 12px;
+    height: min(80vw, 380px);
+    row-gap: 0;
+  }
+
+  .br-hero-copy {
+    height: 100%;
+    min-height: 0;
+    justify-content: space-between;
+    gap: clamp(8px, 2.5vw, 12px);
+    padding-right: 0;
+  }
+
+  .br-hero-title {
+    font-size: clamp(1.9rem, 8.2vw, 2.45rem) !important;
+    line-height: 0.92 !important;
+    letter-spacing: -0.025em !important;
+  }
+
+  .br-hero-lead {
+    font-size: 0.85rem !important;
+    line-height: 1.5 !important;
+  }
+
+  .br-hero-cta {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 7px !important;
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+    align-items: center !important;
+  }
+
+  .br-hero-cta .br-btn {
+    height: 40px !important;
+    min-height: 40px !important;
+    padding: 0 13px !important;
+    font-size: 0.65rem !important;
+    letter-spacing: 0.04em !important;
+    border-radius: 5px !important;
+    white-space: nowrap !important;
+  }
+
+  .br-hero-cta .br-btn--solid {
+    background: linear-gradient(90deg, #a88452 0%, #c4a574 42%, #e8cfa0 100%) !important;
+    color: #1a1410 !important;
+  }
+
+  .br-hero-visual {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  .br-hero-photo-aura {
+    position: absolute;
+    inset: -12%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 40%, rgba(196, 165, 116, 0.32), transparent 70%);
+    filter: blur(16px);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .br-hero-photo-orbit--outer {
+    position: absolute;
+    inset: -8%;
+    border-radius: 50%;
+    border: 1px solid rgba(196, 165, 116, 0.1);
+    box-shadow: none;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .br-hero-photo-orbit--inner {
+    display: none !important;
+  }
+
+  .br-hero-photo-frame--mobile {
+    position: relative;
+    width: min(54vw, 220px) !important;
+    height: min(54vw, 220px) !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    aspect-ratio: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: visible !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    margin-right: -6px !important;
+    transform: none !important;
+  }
+
+  .br-hero-photo-crop {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    overflow: hidden !important;
+    border-radius: 50% !important;
+    border: 1px solid rgba(196, 165, 116, 0.35) !important;
+    outline: none !important;
+    box-shadow:
+      0 16px 40px rgba(0, 0, 0, 0.55),
+      0 0 32px rgba(196, 165, 116, 0.14) !important;
+    background: #0e0c0b !important;
+  }
+
+  .br-hero-photo {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: 50% 14% !important;
+    transform: scale(1.14) !important;
+    transform-origin: 50% 18% !important;
+    mix-blend-mode: normal !important;
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+    filter: saturate(1.1) contrast(1.05) brightness(1.03) !important;
+    display: block !important;
+  }
+
+  .br-hero-photo-shine {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: 50%;
+    pointer-events: none;
+    background: linear-gradient(140deg, rgba(255, 255, 255, 0.12), transparent 45%);
+    mix-blend-mode: soft-light;
+  }
+
+  .br-hero-photo-vignette {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    border-radius: 50%;
+    pointer-events: none;
+    background: radial-gradient(circle at 50% 36%, transparent 52%, rgba(8, 6, 5, 0.38) 100%);
+  }
+
+  .br-hero-photo-frame > * {
+    animation: none !important;
+  }
+
+  .br-hero-photo-crop > .br-hero-photo {
+    transform: scale(1.14) !important;
+  }
+
+  .br-deco-spark {
+    display: none !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .br-hero-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+    height: min(80vw, 310px);
+    column-gap: 8px;
+  }
+
+  .br-hero-photo-frame--mobile {
+    width: min(52vw, 200px) !important;
+    height: min(52vw, 200px) !important;
+  }
+
+  .br-hero-title {
+    font-size: clamp(1.7rem, 8vw, 2rem) !important;
+  }
+
+  .br-hero-cta .br-btn {
+    font-size: 0.6rem !important;
+    padding: 0 10px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .br-hero-photo-aura {
+    animation: none;
+  }
+}

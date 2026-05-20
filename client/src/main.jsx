@@ -4,6 +4,7 @@ import './index.css'
 import './style/home.css'
 import './style/sections.css'
 import './style/responsive.css'
+import './style/hero-fixes.css'
 import App from './App.jsx'
 
 createRoot(document.getElementById('root')).render(

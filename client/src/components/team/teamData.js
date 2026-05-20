@@ -1,0 +1,51 @@
+/** Fallback team roster when API is empty or unavailable */
+export const TEAM_PAGE_FALLBACK = [
+  {
+    name: 'Maya Chen',
+    role: 'Lead colorist',
+    initials: 'MC',
+    image: '/imgHome/team1.png',
+    bio: 'Editorial color and lived-in blondes with a calm, detail-first approach.',
+    specialties: ['Balayage', 'Color'],
+  },
+  {
+    name: 'Jordan Lee',
+    role: 'Nail director',
+    initials: 'JL',
+    image: '/imgHome/team2.png',
+    bio: 'Structured nail art and gel sculpting for clients who want polish that lasts.',
+    specialties: ['Gel', 'Nail art'],
+  },
+  {
+    name: 'Sofia Reyes',
+    role: 'Bridal specialist',
+    initials: 'SR',
+    image: '/imgHome/team3.png',
+    bio: 'Soft glam and timeless bridal looks tailored to your features and dress code.',
+    specialties: ['Bridal', 'Makeup'],
+  },
+  {
+    name: 'Elena Vasile',
+    role: 'Senior stylist',
+    initials: 'EV',
+    image: '/imgHome/hair.png',
+    bio: 'Precision cuts and blowouts with a focus on healthy, glossy finishes.',
+    specialties: ['Cut', 'Styling'],
+  },
+  {
+    name: 'Alex Morgan',
+    role: 'Skin & brows',
+    initials: 'AM',
+    image: '/imgHome/salonimage.jpeg',
+    bio: 'Brow shaping and skin prep rituals that frame the face before any event.',
+    specialties: ['Brows', 'Skin prep'],
+  },
+  {
+    name: 'Rina Popescu',
+    role: 'Nail artist',
+    initials: 'RP',
+    image: '/imgHome/nail1.jpg',
+    bio: 'Minimal luxe manicures and detailed nail care for everyday elegance.',
+    specialties: ['Manicure', 'Care'],
+  },
+];
