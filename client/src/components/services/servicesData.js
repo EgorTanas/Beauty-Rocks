@@ -75,15 +75,16 @@ export function slugifyServiceName(name) {
 }
 
 export function resolveServiceImage(service) {
-  const slug = slugifyServiceName(service.name);
-  if (SLUG_IMAGE_OVERRIDES[slug]) return SLUG_IMAGE_OVERRIDES[slug];
-
+  // 1. Dacă există imagine din DB, folosește-o cu prioritate
   const raw = service.image?.trim();
-  if (raw && (raw.startsWith('/') || raw.startsWith('http://') || raw.startsWith('https://'))) {
-    const hasExtension = /\.(jpe?g|png|gif|webp|avif)(\?|$)/i.test(raw);
-    if (hasExtension || raw.startsWith('/img')) return raw;
+  if (raw) {
+    // URL absolut (Cloudinary, orice CDN, sau path local)
+    if (raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('/')) {
+      return raw;
+    }
   }
 
+  // 2. Fallback la imaginea locală pe baza categoriei
   const cat = normalizeCategory(service.category);
   return CATEGORY_IMAGES[cat] || DEFAULT_SERVICE_IMAGE;
 }

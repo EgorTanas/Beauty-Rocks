@@ -13,7 +13,7 @@ const {
   getAppointmentStats,
   changePassword,
   deleteAccount,
-} = require('../controllers/userController');
+} = require('../controllers/UserController');
 
 router.use(protect);
 
@@ -25,9 +25,8 @@ router.post('/avatar', uploadSingle('avatar', 'default'), uploadAvatar);
 
 router.delete('/avatar', deleteAvatar);
 
+router.get('/appointments/stats', getAppointmentStats); 
 router.get('/appointments', getMyAppointments);
-
-router.get('/appointments/stats', getAppointmentStats);
 
 router.patch('/password', changePassword);
 
