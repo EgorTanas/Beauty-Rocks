@@ -121,7 +121,10 @@ export default function Footer() {
             <h3 className="site-footer-heading">Account</h3>
             <ul className="site-footer-list">
               <li>
-                <Link to="/login">Sign in</Link>
+                <Link to="/login">Log in</Link>
+              </li>
+              <li>
+                <Link to="/register">Sign up</Link>
               </li>
               <li>
                 <Link to="/booking">Book appointment</Link>

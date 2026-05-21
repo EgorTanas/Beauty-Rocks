@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Menu, Settings, X } from 'lucide-react';
+import { Menu, Settings, UserRound, X } from 'lucide-react';
 import { getUserDisplayName } from '../../utils/userDisplay';
 import UserAvatar from '../UserAvatar';
 
@@ -58,6 +58,7 @@ export default function Navbar() {
   const handleSignOut = () => {
     localStorage.removeItem('user');
     setUser(null);
+    window.dispatchEvent(new Event('br-auth-change'));
     closeMenu();
     navigate('/', { replace: true });
   };
@@ -97,6 +98,39 @@ export default function Navbar() {
             Booking
           </NavLink>
 
+          {!user ? (
+            <div className="site-nav-auth-mobile">
+              <Link
+                to="/login"
+                className="site-nav-auth-mobile__login"
+                onClick={closeMenu}
+                state={{ from: pathname }}
+              >
+                Log in
+              </Link>
+              <Link
+                to="/register"
+                className="site-nav-auth-mobile__signup"
+                onClick={closeMenu}
+              >
+                Sign up
+              </Link>
+            </div>
+          ) : null}
+
+          {user && !isDesktopNav ? (
+            <NavLink
+              to="/profile"
+              className={({ isActive }) =>
+                `site-nav-link site-nav-link--profile${isActive ? ' site-nav-link--active' : ''}`
+              }
+              onClick={closeMenu}
+            >
+              <UserRound size={16} strokeWidth={1.75} aria-hidden />
+              My profile
+            </NavLink>
+          ) : null}
+
           {isAdmin && !isDesktopNav ? (
             <NavLink
               to="/admin/services"
@@ -108,6 +142,16 @@ export default function Navbar() {
               <Settings size={15} strokeWidth={1.75} aria-hidden />
               Admin Panel
             </NavLink>
+          ) : null}
+
+          {user && !isDesktopNav ? (
+            <button
+              type="button"
+              className="site-nav-signout-mobile"
+              onClick={handleSignOut}
+            >
+              Sign out
+            </button>
           ) : null}
         </div>
 
@@ -124,7 +168,19 @@ export default function Navbar() {
             </Link>
           ) : null}
 
-          {user ? (
+          {user && !isDesktopNav && pathname !== '/profile' ? (
+            <Link
+              to="/profile"
+              className="site-nav-profile-btn"
+              aria-label="My profile"
+              title="My profile"
+              onClick={closeMenu}
+            >
+              <UserRound size={18} strokeWidth={1.75} aria-hidden />
+            </Link>
+          ) : null}
+
+          {user && isDesktopNav ? (
             <div className="site-nav-user">
               <Link to="/profile" className="site-user-pill" onClick={closeMenu}>
                 <UserAvatar user={user} />
@@ -139,9 +195,18 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <Link to="/login" className="site-btn-primary site-btn-primary--nav">
-              Sign In
-            </Link>
+            <div className="site-nav-guest">
+              <Link
+                to="/login"
+                className="site-btn-ghost site-btn-ghost--login"
+                state={{ from: pathname }}
+              >
+                Log in
+              </Link>
+              <Link to="/register" className="site-btn-primary site-btn-primary--nav">
+                Sign up
+              </Link>
+            </div>
           )}
 
           <button

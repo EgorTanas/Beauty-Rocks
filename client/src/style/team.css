@@ -2,35 +2,12 @@
 
 .br-page.team-page {
   background: #fdfcfa;
-  color: var(--br-cream);
+  color: var(--br-ink, #1a1816);
   min-height: 100svh;
 }
 
-.team-page .site-header {
-  background: linear-gradient(180deg, rgba(8, 8, 10, 0.85) 0%, rgba(8, 8, 10, 0.7) 100%) !important;
-  backdrop-filter: blur(32px) saturate(1.35) !important;
-  -webkit-backdrop-filter: blur(32px) saturate(1.35) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35) !important;
-}
-
-.team-page .site-header--scrolled {
-  background: rgba(6, 6, 8, 0.92) !important;
-}
-
-.team-page .site-logo,
-.team-page .site-logo-text,
-.team-page .site-nav-link,
-.team-page .site-user-name {
-  color: var(--br-white);
-}
-
-.team-page .site-nav-link {
-  color: rgba(255, 255, 255, 0.9);
-}
-
 .team-main {
-  padding-top: var(--br-header-h);
+  padding-top: 0;
   background: #fdfcfa;
 }
 
@@ -47,9 +24,10 @@
   isolation: isolate;
   overflow: hidden;
   background: var(--br-black);
+  color: var(--br-cream);
   padding-block: calc(var(--br-header-h) + clamp(20px, 4vw, 36px)) clamp(3rem, 7vw, 4.5rem);
   border-radius: 0;
-  margin-bottom: 0;
+  margin: 0;
 }
 
 /* Tăiere curată la trecerea spre secțiunea cream (fără colțuri „îndoite”) */

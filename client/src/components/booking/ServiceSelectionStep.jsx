@@ -1,31 +1,80 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, Sparkles } from 'lucide-react';
+import { Check, Clock, Heart } from 'lucide-react';
+import {
+  isFavoriteService,
+  subscribeFavorites,
+  toggleFavoriteService,
+} from '../../utils/favoriteServices';
 import {
   BOOKING_CATEGORIES,
+  BOOKING_SERVICES,
   groupBookingServicesByCategory,
 } from './bookingData';
 import { catalogItem, catalogStagger } from '../common/motionVariants';
 
 function ServiceCard({ service, selected, onSelect }) {
-  const isSelected = selected;
+  const [saved, setSaved] = useState(() => isFavoriteService(service.id));
+
+  useEffect(() => {
+    setSaved(isFavoriteService(service.id));
+    return subscribeFavorites(() => setSaved(isFavoriteService(service.id)));
+  }, [service.id]);
+
+  const handleFavorite = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFavoriteService({
+      id: service.id,
+      title: service.title,
+      desc: '',
+      duration: service.duration,
+      price: service.price,
+      image: service.image,
+      category: service.categoryId,
+    });
+  };
+
+  const handleCardKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onSelect(service);
+    }
+  };
+
   return (
     <motion.li variants={catalogItem} role="listitem">
-      <button
-        type="button"
+      <div
         className={[
           'booking-service-card',
-          isSelected ? 'booking-service-card--selected' : '',
+          selected ? 'booking-service-card--selected' : '',
         ]
           .filter(Boolean)
           .join(' ')}
+        role="button"
+        tabIndex={0}
+        aria-pressed={selected}
         onClick={() => onSelect(service)}
-        aria-pressed={isSelected}
+        onKeyDown={handleCardKeyDown}
       >
-        <span className="booking-service-card__media">
+        <div className="booking-service-card__media">
           <img src={service.image} alt="" loading="lazy" />
-        </span>
-        <span className="booking-service-card__body">
+          <button
+            type="button"
+            className={`booking-service-card__wishlist${saved ? ' booking-service-card__wishlist--active' : ''}`}
+            aria-label={saved ? `Remove ${service.title} from favorites` : `Save ${service.title}`}
+            aria-pressed={saved}
+            onClick={handleFavorite}
+          >
+            <Heart size={14} strokeWidth={1.75} fill={saved ? 'currentColor' : 'none'} aria-hidden />
+          </button>
+          {selected ? (
+            <span className="booking-service-card__check" aria-hidden>
+              <Check size={14} strokeWidth={2.5} />
+            </span>
+          ) : null}
+        </div>
+        <div className="booking-service-card__body">
           <span className="booking-service-card__title">{service.title}</span>
           <span className="booking-service-card__meta">
             <span className="booking-service-card__duration">
@@ -34,20 +83,19 @@ function ServiceCard({ service, selected, onSelect }) {
             </span>
             <span className="booking-service-card__price">{service.price}</span>
           </span>
-        </span>
-        {isSelected ? (
-          <span className="booking-service-card__check" aria-hidden>
-            <Sparkles size={16} strokeWidth={1.75} />
-          </span>
-        ) : null}
-      </button>
+        </div>
+      </div>
     </motion.li>
   );
 }
 
-export default function ServiceSelectionStep({ selectedId, onSelect }) {
+export default function ServiceSelectionStep({
+  selectedId,
+  onSelect,
+  services = BOOKING_SERVICES,
+}) {
   const [activeCategoryId, setActiveCategoryId] = useState('all');
-  const groups = groupBookingServicesByCategory(activeCategoryId);
+  const groups = groupBookingServicesByCategory(activeCategoryId, services);
 
   const handleCategoryChange = (categoryId) => {
     setActiveCategoryId(categoryId);

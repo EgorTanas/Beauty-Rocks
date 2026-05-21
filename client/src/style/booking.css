@@ -377,10 +377,17 @@
   border-radius: calc(var(--br-radius-panel) - 4px);
   background: rgba(12, 12, 14, 0.55);
   overflow: hidden;
+  outline: none;
   transition:
     transform 0.35s ease,
     border-color 0.35s ease,
     box-shadow 0.35s ease;
+}
+
+.booking-service-card:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--br-black),
+    0 0 0 4px rgba(196, 165, 116, 0.55);
 }
 
 .booking-service-card:hover {
@@ -429,7 +436,64 @@
 }
 
 .booking-service-card__body {
+  display: block;
+  width: 100%;
   padding: 14px 16px 16px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.booking-service-card__check {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(196, 165, 116, 0.95);
+  color: var(--br-black);
+  box-shadow: 0 4px 14px rgba(196, 165, 116, 0.4);
+}
+
+.booking-service-card__wishlist {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--br-white);
+  cursor: pointer;
+  transition: transform 0.25s ease, background 0.25s ease, color 0.25s ease;
+}
+
+.booking-service-card__wishlist:hover {
+  transform: scale(1.08);
+  background: rgba(196, 165, 116, 0.75);
+  border-color: transparent;
+}
+
+.booking-service-card__wishlist--active {
+  background: rgba(196, 165, 116, 0.92);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: var(--br-black);
+  box-shadow: 0 4px 14px rgba(196, 165, 116, 0.35);
 }
 
 .booking-service-card__title {
@@ -460,19 +524,7 @@
   color: var(--br-lavender);
 }
 
-.booking-service-card__check {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  color: var(--br-black);
-  background: linear-gradient(135deg, var(--br-lavender), #e8d4b8);
-  box-shadow: 0 0 16px rgba(196, 165, 116, 0.5);
-}
+/* Selection shown via border only — favorite uses heart on image */
 
 /* ── Specialist step hints & filtering ── */
 .booking-specialist-hint {
@@ -1311,8 +1363,15 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 10px 36px 10px 10px;
+    padding: 10px 12px 10px 10px;
     min-width: 0;
+  }
+
+  .booking-service-card__wishlist {
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
   }
 
   .booking-service-card__title {
@@ -1328,14 +1387,6 @@
   .booking-service-card__duration svg {
     width: 12px;
     height: 12px;
-  }
-
-  .booking-service-card__check {
-    top: 50%;
-    right: 10px;
-    transform: translateY(-50%);
-    width: 26px;
-    height: 26px;
   }
 
   .booking-service-card--selected {

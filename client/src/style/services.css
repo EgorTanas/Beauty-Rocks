@@ -1193,6 +1193,18 @@
   color: var(--br-white);
 }
 
+.services-card__wishlist--active {
+  background: rgba(196, 165, 116, 0.92);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: var(--br-black);
+  box-shadow: 0 4px 14px rgba(196, 165, 116, 0.35);
+}
+
+.services-card__wishlist--active:hover {
+  background: rgba(212, 184, 140, 0.95);
+  color: var(--br-black);
+}
+
 /* Category Badge Tag inside card */
 .services-card__tag {
   position: absolute;

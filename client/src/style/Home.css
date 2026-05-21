@@ -126,7 +126,7 @@ body {
 
 .site-logo-text {
   font-family: var(--br-serif);
-  font-size: clamp(0.75rem, 1.2vw, 0.9rem);
+  font-size: clamp(0.82rem, 1.2vw, 1rem);
   font-weight: 800;
   letter-spacing: 0.34em;
   text-transform: uppercase;
@@ -147,7 +147,7 @@ body {
   position: relative;
   color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
-  font-size: 0.78rem;
+  font-size: 0.9rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   padding: 10px 0;
@@ -252,6 +252,34 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.45);
 }
 
+.site-nav-auth-mobile {
+  display: none;
+}
+
+.site-nav-guest {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.site-btn-ghost--login {
+  min-height: 42px;
+  padding-inline: 16px;
+}
+
+.site-btn-ghost--login:hover {
+  border-color: rgba(196, 165, 116, 0.55);
+  background: rgba(196, 165, 116, 0.14);
+  color: var(--br-white);
+}
+
+.site-nav-link--profile {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .site-nav-user {
   display: inline-flex;
   align-items: center;
@@ -328,6 +356,10 @@ body {
   border-color: rgba(196, 165, 116, 0.65);
   background: rgba(196, 165, 116, 0.22);
   color: var(--br-white);
+}
+
+.site-nav-profile-btn {
+  display: none;
 }
 
 .site-menu-toggle,
@@ -733,6 +765,12 @@ body {
   overflow-y: visible;
   border-radius: 0 0 clamp(22px, 5vw, 40px) clamp(22px, 5vw, 40px);
   margin-bottom: clamp(-18px, -3vw, -28px);
+}
+
+@media (min-width: 1025px) {
+  .br-hero {
+    min-height: clamp(600px, 78vh, 820px);
+  }
 }
 
 .br-hero::before,

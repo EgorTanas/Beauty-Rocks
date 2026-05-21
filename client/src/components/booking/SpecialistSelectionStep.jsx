@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check } from 'lucide-react';
 import {
@@ -25,14 +25,6 @@ export default function SpecialistSelectionStep({
   );
 
   const filterKey = service?.id ?? 'none';
-
-  useEffect(() => {
-    if (!service || specialists.length !== 1) return;
-    const only = specialists[0];
-    if (selectedId !== only.id) {
-      onSelect(only);
-    }
-  }, [service, specialists, selectedId, onSelect]);
 
   if (!service) {
     return (
@@ -64,12 +56,7 @@ export default function SpecialistSelectionStep({
         </p>
       </header>
 
-      <p className="booking-specialist-hint">
-        Available specialists for this service
-        {specialists.length === 1 ? (
-          <span className="booking-specialist-hint__note"> — one match, pre-selected for you</span>
-        ) : null}
-      </p>
+      <p className="booking-specialist-hint">Available specialists for this service</p>
 
       <AnimatePresence mode="wait">
         <motion.div key={filterKey} {...listFade}>

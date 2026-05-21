@@ -1,4 +1,9 @@
-import { CATEGORY_FILTERS, CATEGORY_META } from '../services/servicesData';
+import {
+  CATEGORY_FILTERS,
+  CATEGORY_META,
+  normalizeCategory,
+  resolveServiceImage,
+} from '../services/servicesData';
 
 /** Static booking catalog — frontend only, aligned with salon categories */
 export const BOOKING_SERVICES = [
@@ -103,12 +108,41 @@ export function getCategoryLabel(categoryId) {
   return CATEGORY_META[categoryId]?.label ?? categoryId;
 }
 
+/** Map API / listing service into booking catalog shape */
+export function apiServiceToBooking(service) {
+  const categoryId = normalizeCategory(service?.category);
+  return {
+    id: String(service._id || service.id),
+    title: service.name || service.title || 'Service',
+    duration: service.duration || '',
+    price: service.price || '',
+    priceValue: Number.parseFloat(String(service.price || '').replace(/[^\d.]/g, '')) || undefined,
+    image: resolveServiceImage(service),
+    categoryId,
+  };
+}
+
+/** API services first; static demo entries fill gaps by id */
+export function mergeBookingCatalog(apiServices = [], staticServices = BOOKING_SERVICES) {
+  const map = new Map();
+  for (const s of apiServices) {
+    if (s?.id) map.set(String(s.id), s);
+  }
+  for (const s of staticServices) {
+    if (!map.has(String(s.id))) map.set(String(s.id), s);
+  }
+  return [...map.values()];
+}
+
 /** Groups for display — one section per category when viewing all */
-export function groupBookingServicesByCategory(activeCategoryId = 'all') {
+export function groupBookingServicesByCategory(
+  activeCategoryId = 'all',
+  catalog = BOOKING_SERVICES,
+) {
   const list =
     activeCategoryId === 'all'
-      ? BOOKING_SERVICES
-      : BOOKING_SERVICES.filter((s) => s.categoryId === activeCategoryId);
+      ? catalog
+      : catalog.filter((s) => s.categoryId === activeCategoryId);
 
   if (activeCategoryId !== 'all') {
     return [{ categoryId: activeCategoryId, services: list }];
@@ -194,6 +228,46 @@ export const BOOKING_SPECIALISTS = [
     image: '/imgHome/team3.png',
     bio: 'Soft glam and timeless bridal looks tailored to your features and dress code.',
     specialtyTypes: ['bridal', 'makeup', 'styling'],
+  },
+  {
+    id: 'ion-russu',
+    name: 'Ion Russu',
+    role: 'Senior stylist',
+    image: '/imgHome/team2.png',
+    bio: 'Precision cuts and finishes for everyday polish and special occasions.',
+    specialtyTypes: ['hair', 'styling'],
+  },
+  {
+    id: 'elena-marchetti',
+    name: 'Elena Marchetti',
+    role: 'Nail artist',
+    image: '/imgHome/team1.png',
+    bio: 'Gel, classic manicure, and detailed nail art with a clean studio finish.',
+    specialtyTypes: ['nails', 'pedicure'],
+  },
+  {
+    id: 'irina-kotova',
+    name: 'Irina Kotova',
+    role: 'Color specialist',
+    image: '/imgHome/team3.png',
+    bio: 'Balayage, gloss, and tone work tailored to your skin and lifestyle.',
+    specialtyTypes: ['hair', 'color'],
+  },
+  {
+    id: 'ana-popescu',
+    name: 'Ana Popescu',
+    role: 'Men\'s grooming',
+    image: '/imgHome/hair2.png',
+    bio: 'Men\'s cuts, beard shaping, and low-maintenance styling.',
+    specialtyTypes: ['hair'],
+  },
+  {
+    id: 'luca-vasile',
+    name: 'Luca Vasile',
+    role: 'Spa therapist',
+    image: '/imgHome/nails3.jpeg',
+    bio: 'Pedicure rituals and restorative foot care for long-lasting comfort.',
+    specialtyTypes: ['pedicure', 'nails'],
   },
 ];
 

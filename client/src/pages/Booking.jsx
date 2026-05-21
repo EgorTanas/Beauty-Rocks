@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Navbar from '../components/common/Navbar';
@@ -9,17 +9,66 @@ import ServiceSelectionStep from '../components/booking/ServiceSelectionStep';
 import SpecialistSelectionStep from '../components/booking/SpecialistSelectionStep';
 import DateTimeStep from '../components/booking/DateTimeStep';
 import ConfirmationStep from '../components/booking/ConfirmationStep';
-import { isSpecialistCompatibleWithService } from '../components/booking/bookingData';
+import {
+  BOOKING_SERVICES,
+  apiServiceToBooking,
+  mergeBookingCatalog,
+} from '../components/booking/bookingData';
+import { consumeBookingPrefill } from '../utils/bookingPrefill';
 import '../style/booking.css';
 
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const TOTAL_STEPS = 4;
 
 export default function Booking() {
   const [step, setStep] = useState(1);
+  const [catalog, setCatalog] = useState(BOOKING_SERVICES);
   const [service, setService] = useState(null);
   const [specialist, setSpecialist] = useState(null);
   const [date, setDate] = useState(null);
   const [time, setTime] = useState(null);
+  const prefillApplied = useRef(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadCatalog = async () => {
+      try {
+        const res = await fetch(`${API}/api/services`);
+        if (!res.ok) throw new Error('Failed');
+        const json = await res.json();
+        const apiList = Array.isArray(json?.data) ? json.data.map(apiServiceToBooking) : [];
+        if (!cancelled) setCatalog(mergeBookingCatalog(apiList, BOOKING_SERVICES));
+      } catch {
+        if (!cancelled) setCatalog(BOOKING_SERVICES);
+      }
+    };
+
+    loadCatalog();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (prefillApplied.current || catalog.length === 0) return;
+
+    const prefill = consumeBookingPrefill();
+    if (!prefill) return;
+
+    const match =
+      catalog.find((s) => String(s.id) === String(prefill.id)) ||
+      catalog.find(
+        (s) =>
+          s.title?.toLowerCase() === prefill.title?.toLowerCase() &&
+          s.categoryId === prefill.categoryId,
+      );
+
+    setService(match || prefill);
+    setSpecialist(null);
+    setStep(1);
+    prefillApplied.current = true;
+  }, [catalog]);
 
   const canProceed =
     (step === 1 && service) ||
@@ -42,9 +91,7 @@ export default function Booking() {
 
   const handleServiceSelect = (nextService) => {
     setService(nextService);
-    setSpecialist((prev) =>
-      prev && isSpecialistCompatibleWithService(prev, nextService) ? prev : null,
-    );
+    setSpecialist(null);
   };
 
   const showStickyCta = step < 4;
@@ -67,6 +114,7 @@ export default function Booking() {
                     {step === 1 && (
                       <ServiceSelectionStep
                         key="service"
+                        services={catalog}
                         selectedId={service?.id}
                         onSelect={handleServiceSelect}
                       />
@@ -100,7 +148,6 @@ export default function Booking() {
                   </AnimatePresence>
                 </div>
 
-                {/* Desktop / tablet inline footer */}
                 {step < 4 ? (
                   <footer className="booking-card__footer booking-card__footer--inline">
                     <button
@@ -140,7 +187,6 @@ export default function Booking() {
         </section>
       </main>
 
-      {/* Mobile sticky CTA — app-style checkout bar */}
       {showStickyCta ? (
         <div className="booking-sticky-bar" role="group" aria-label="Booking navigation">
           <div className="booking-sticky-bar__inner">
@@ -166,7 +212,11 @@ export default function Booking() {
           </div>
         </div>
       ) : (
-        <div className="booking-sticky-bar booking-sticky-bar--confirm" role="group" aria-label="Booking navigation">
+        <div
+          className="booking-sticky-bar booking-sticky-bar--confirm"
+          role="group"
+          aria-label="Booking navigation"
+        >
           <div className="booking-sticky-bar__inner">
             <button
               type="button"
