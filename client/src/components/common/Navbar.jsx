@@ -1,42 +1,19 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, Settings, UserRound, X } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import { getUserDisplayName } from '../../utils/userDisplay';
 import UserAvatar from '../UserAvatar';
-
-function readStoredUser() {
-  try {
-    const raw = localStorage.getItem('user');
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
 
 export default function Navbar() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const [user, setUser] = useState(() => readStoredUser());
+  const { user, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isDesktopNav, setIsDesktopNav] = useState(() =>
     typeof window !== 'undefined' && window.matchMedia('(min-width: 1025px)').matches,
   );
-
-  useEffect(() => {
-    const syncUser = () => setUser(readStoredUser());
-    window.addEventListener('storage', syncUser);
-    window.addEventListener('br-auth-change', syncUser);
-    return () => {
-      window.removeEventListener('storage', syncUser);
-      window.removeEventListener('br-auth-change', syncUser);
-    };
-  }, []);
-
-  useEffect(() => {
-    setUser(readStoredUser());
-  }, [pathname]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -55,10 +32,8 @@ export default function Navbar() {
 
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
-  const handleSignOut = () => {
-    localStorage.removeItem('user');
-    setUser(null);
-    window.dispatchEvent(new Event('br-auth-change'));
+  const handleSignOut = async () => {
+    await signOut();
     closeMenu();
     navigate('/', { replace: true });
   };

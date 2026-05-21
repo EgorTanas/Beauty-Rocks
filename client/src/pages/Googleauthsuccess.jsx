@@ -1,12 +1,15 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
+import { persistUser } from '../utils/api';
+import '../style/Auth.css';
 
 function getCallbackState(searchParams) {
   const error = searchParams.get('error');
   if (error) {
     return {
-      status: 'Google login failed. Redirecting...',
-      redirectTo: '/login?error=' + error,
+      status: 'Google login failed. Redirecting…',
+      redirectTo: `/login?error=${error}`,
       user: null,
     };
   }
@@ -14,7 +17,7 @@ function getCallbackState(searchParams) {
   const rawUser = searchParams.get('user');
   if (!rawUser) {
     return {
-      status: 'Something went wrong. Redirecting...',
+      status: 'Something went wrong. Redirecting…',
       redirectTo: '/login',
       user: null,
     };
@@ -22,13 +25,13 @@ function getCallbackState(searchParams) {
 
   try {
     return {
-      status: 'Processing your login...',
-      redirectTo: '/home', // temporary, will be overridden
+      status: 'Signing you in…',
+      redirectTo: '/home',
       user: JSON.parse(decodeURIComponent(rawUser)),
     };
   } catch {
     return {
-      status: 'Failed to process login data. Redirecting...',
+      status: 'Failed to process login. Redirecting…',
       redirectTo: '/login',
       user: null,
     };
@@ -38,50 +41,35 @@ function getCallbackState(searchParams) {
 export default function GoogleAuthSuccess() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [status, setStatus] = useState('Processing your login...');
   const callbackState = useMemo(() => getCallbackState(searchParams), [searchParams]);
 
   useEffect(() => {
+    document.body.classList.add('auth-page');
+    return () => document.body.classList.remove('auth-page');
+  }, []);
+
+  useEffect(() => {
     if (callbackState.user) {
-      localStorage.setItem('user', JSON.stringify(callbackState.user));
-      
-      // Recuperăm pagina de unde a venit userul înainte de Google OAuth
+      persistUser(callbackState.user);
       const redirectTo = sessionStorage.getItem('authRedirectFrom') || '/home';
       sessionStorage.removeItem('authRedirectFrom');
-      
-      // Replace current history entry so back-button doesn't return here
       navigate(redirectTo, { replace: true });
       return undefined;
     }
 
-    // Setăm statusul din callbackState
-    setStatus(callbackState.status);
-    
-    const redirectTimer = setTimeout(() => navigate(callbackState.redirectTo), 1500);
+    const redirectTimer = setTimeout(
+      () => navigate(callbackState.redirectTo, { replace: true }),
+      1500,
+    );
     return () => clearTimeout(redirectTimer);
   }, [callbackState, navigate]);
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      gap: '16px',
-      fontFamily: 'sans-serif',
-      color: '#555',
-    }}>
-      <div style={{
-        width: 40,
-        height: 40,
-        border: '3px solid #f3f3f3',
-        borderTop: '3px solid #d4497a',
-        borderRadius: '50%',
-        animation: 'spin 0.8s linear infinite',
-      }} />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      <p>{status}</p>
+    <div className="auth-oauth-callback">
+      <div className="auth-oauth-callback__card">
+        <Loader2 size={36} className="pf-spin auth-oauth-callback__spin" aria-hidden />
+        <p className="auth-oauth-callback__text">{callbackState.status}</p>
+      </div>
     </div>
   );
 }

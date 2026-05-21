@@ -817,3 +817,32 @@
     padding: 45px 18px 36px;
   }
 }
+
+.auth-oauth-callback {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #0a0a0b;
+}
+
+.auth-oauth-callback__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px 40px;
+  border-radius: 14px;
+  border: 1px solid rgba(245, 241, 235, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.auth-oauth-callback__text {
+  margin: 0;
+  font-size: 0.95rem;
+  color: rgba(245, 241, 235, 0.75);
+}
+
+.auth-oauth-callback__spin {
+  color: #c4a574;
+}

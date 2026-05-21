@@ -7,6 +7,8 @@ import ProfileHero from '../components/profile/ProfileHero';
 import ProfileDashboard from '../components/profile/ProfileDashboard';
 import ProfileSavedSection from '../components/profile/ProfileSavedSection';
 import ProfileEditModal from '../components/profile/ProfileEditModal';
+import ProfileAppointmentsHistory from '../components/profile/ProfileAppointmentsHistory';
+import { apiFetch, parseJson, persistUser } from '../utils/api';
 import {
   getFavoriteServices,
   removeFavoriteService,
@@ -20,20 +22,6 @@ import {
   getNextAppointment,
 } from '../utils/profileDashboardUtils';
 import '../style/Profile.css';
-
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
-const fetchOpts = (method = 'GET', body) => ({
-  method,
-  credentials: 'include',
-  headers: { 'Content-Type': 'application/json' },
-  ...(body ? { body: JSON.stringify(body) } : {}),
-});
-
-function persistUser(user) {
-  localStorage.setItem('user', JSON.stringify(user));
-  window.dispatchEvent(new Event('br-auth-change'));
-}
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -71,13 +59,13 @@ export default function Profile() {
   const loadProfile = useCallback(async () => {
     setLoadingUser(true);
     try {
-      const res = await fetch(`${API}/api/user/profile`, fetchOpts());
+      const res = await apiFetch('/api/user/profile');
       if (res.status === 401) {
         navigate('/login', { replace: true, state: { from: '/profile' } });
         return;
       }
       if (!res.ok) throw new Error('Could not load profile');
-      const json = await res.json();
+      const json = await parseJson(res);
       const profile = json.data || json.user;
       if (profile) {
         setUser(profile);
@@ -99,13 +87,13 @@ export default function Profile() {
   const loadBookings = useCallback(async () => {
     setBookingsLoading(true);
     try {
-      const res = await fetch(`${API}/api/user/appointments?limit=50&page=1`, fetchOpts());
+      const res = await apiFetch('/api/user/appointments?limit=50&page=1');
       if (res.status === 401) {
         navigate('/login', { replace: true });
         return;
       }
       if (!res.ok) throw new Error('Could not load bookings');
-      const json = await res.json();
+      const json = await parseJson(res);
       const list = Array.isArray(json.data) ? json.data.map(mapProfileAppointment) : [];
       setBookings(list);
     } catch {
@@ -118,9 +106,9 @@ export default function Profile() {
 
   const loadStats = useCallback(async () => {
     try {
-      const res = await fetch(`${API}/api/user/appointments/stats`, fetchOpts());
+      const res = await apiFetch('/api/user/appointments/stats');
       if (!res.ok) return;
-      const json = await res.json();
+      const json = await parseJson(res);
       if (json.data) setAptStats(json.data);
     } catch {
       /* optional */
@@ -153,8 +141,11 @@ export default function Profile() {
     setSaveMessage('');
     setSaveError('');
     try {
-      const res = await fetch(`${API}/api/user/profile`, fetchOpts('PATCH', { username, phone }));
-      const json = await res.json().catch(() => ({}));
+      const res = await apiFetch('/api/user/profile', {
+        method: 'PATCH',
+        body: { username, phone },
+      });
+      const json = await parseJson(res);
       if (!res.ok) throw new Error(json.message || 'Save failed');
       const updated = json.data || { ...user, username, phone };
       setUser(updated);
@@ -175,12 +166,11 @@ export default function Profile() {
     try {
       const formData = new FormData();
       formData.append('avatar', file);
-      const res = await fetch(`${API}/api/user/avatar`, {
+      const res = await apiFetch('/api/user/avatar', {
         method: 'POST',
-        credentials: 'include',
         body: formData,
       });
-      const json = await res.json().catch(() => ({}));
+      const json = await parseJson(res);
       if (!res.ok) throw new Error(json.message || 'Avatar upload failed');
       const updated = { ...user, avatar: json.data?.avatar || json.avatar };
       setUser(updated);
@@ -197,8 +187,8 @@ export default function Profile() {
     setSaveMessage('');
     setSaveError('');
     try {
-      const res = await fetch(`${API}/api/appointments/${bookingId}/cancel`, fetchOpts('PATCH'));
-      const json = await res.json().catch(() => ({}));
+      const res = await apiFetch(`/api/appointments/${bookingId}/cancel`, { method: 'PATCH' });
+      const json = await parseJson(res);
       if (!res.ok) throw new Error(json.message || 'Cancellation failed');
       setBookings((prev) =>
         prev.map((b) => (b.id === bookingId ? { ...b, status: 'cancelled' } : b)),
@@ -214,6 +204,16 @@ export default function Profile() {
       setSaveMessage('Appointment cancelled.');
     } catch (err) {
       setSaveError(err.message || 'Could not cancel booking');
+    }
+  };
+
+  const handleNotice = (message, isError = false) => {
+    if (isError) {
+      setSaveError(message);
+      setSaveMessage('');
+    } else {
+      setSaveMessage(message);
+      setSaveError('');
     }
   };
 
@@ -265,6 +265,12 @@ export default function Profile() {
             onEdit={() => setEditOpen(true)}
           />
 
+          <ProfileAppointmentsHistory
+            bookings={bookings}
+            loading={bookingsLoading}
+            onCancel={handleCancelBooking}
+          />
+
           <ProfileSavedSection favorites={favorites} onRemove={removeFavoriteService} />
         </div>
       </main>
@@ -276,6 +282,7 @@ export default function Profile() {
         onClose={() => setEditOpen(false)}
         onSave={handleSave}
         saving={saving}
+        onNotice={handleNotice}
       />
     </div>
   );

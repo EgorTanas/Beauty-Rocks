@@ -1,15 +1,25 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Clock3 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock3, Loader2 } from 'lucide-react';
 import {
   BOOKING_TIME_SLOTS,
   buildCalendarMonth,
   formatBookingDate,
 } from './bookingData';
+import { formatProfileTime } from '../../utils/profileBookingUtils';
 
 const WEEKDAY_HEADERS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export default function DateTimeStep({ selectedDate, selectedTime, onDateSelect, onTimeSelect }) {
+export default function DateTimeStep({
+  selectedDate,
+  selectedTime,
+  onDateSelect,
+  onTimeSelect,
+  slots = [],
+  slotsLoading = false,
+  slotsError = '',
+  slotsFallback = false,
+}) {
   const today = useMemo(() => new Date(), []);
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
@@ -18,6 +28,16 @@ export default function DateTimeStep({ selectedDate, selectedTime, onDateSelect,
     () => buildCalendarMonth(viewYear, viewMonth),
     [viewYear, viewMonth],
   );
+
+  const timeOptions = useMemo(() => {
+    if (slotsFallback) {
+      return BOOKING_TIME_SLOTS.map((label) => ({ value: label, label }));
+    }
+    return slots.map((slot24) => ({
+      value: slot24,
+      label: formatProfileTime(slot24),
+    }));
+  }, [slots, slotsFallback]);
 
   const shiftMonth = (delta) => {
     const next = new Date(viewYear, viewMonth + delta, 1);
@@ -44,7 +64,7 @@ export default function DateTimeStep({ selectedDate, selectedTime, onDateSelect,
         <p className="booking-step__eyebrow">Step 3</p>
         <h2 className="booking-step__title">Pick date &amp; time</h2>
         <p className="booking-step__lead">
-          Studio hours are shown below for illustration. Sundays are reserved for the team — choose any open day and slot.
+          Choose an open day and an available slot. Sundays are reserved for the team.
         </p>
       </header>
 
@@ -121,34 +141,48 @@ export default function DateTimeStep({ selectedDate, selectedTime, onDateSelect,
           <h3 className="booking-times__title">Available times</h3>
           <p className="booking-times__hint">
             {selectedDate
-              ? 'Select a preferred hour for your visit.'
+              ? slotsLoading
+                ? 'Checking availability…'
+                : slotsError
+                  ? slotsError
+                  : slotsFallback
+                    ? 'Showing sample hours — connect a live service and specialist for real slots.'
+                    : slots.length === 0
+                      ? 'No open slots this day. Try another date.'
+                      : 'Select a preferred hour for your visit.'
               : 'Choose a date first to view time slots.'}
           </p>
           <div className="booking-times__grid">
-            {BOOKING_TIME_SLOTS.map((slot) => {
-              const selected = selectedTime === slot;
-              const disabled = !selectedDate;
-              return (
-                <button
-                  key={slot}
-                  type="button"
-                  className={[
-                    'booking-time-slot',
-                    selected ? 'booking-time-slot--selected' : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  disabled={disabled}
-                  onClick={(e) => {
-                    onTimeSelect(slot);
-                    e.currentTarget.blur();
-                  }}
-                  aria-pressed={selected}
-                >
-                  {slot}
-                </button>
-              );
-            })}
+            {slotsLoading ? (
+              <p className="booking-times__loading">
+                <Loader2 size={20} className="pf-spin" aria-hidden />
+              </p>
+            ) : (
+              timeOptions.map((slot) => {
+                const selected = selectedTime === slot.value;
+                const disabled = !selectedDate;
+                return (
+                  <button
+                    key={slot.value}
+                    type="button"
+                    className={[
+                      'booking-time-slot',
+                      selected ? 'booking-time-slot--selected' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                    disabled={disabled}
+                    onClick={(e) => {
+                      onTimeSelect(slot.value);
+                      e.currentTarget.blur();
+                    }}
+                    aria-pressed={selected}
+                  >
+                    {slot.label}
+                  </button>
+                );
+              })
+            )}
           </div>
         </div>
       </div>

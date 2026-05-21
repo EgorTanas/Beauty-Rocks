@@ -1005,6 +1005,25 @@
   text-align: center;
 }
 
+.booking-summary__error {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #fca5a5;
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.28);
+}
+
+.booking-times__loading {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  color: var(--br-lavender, #c4a574);
+}
+
 /* ── Success modal ── */
 .booking-success-overlay {
   position: fixed;

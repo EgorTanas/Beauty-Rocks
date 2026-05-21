@@ -13,6 +13,7 @@ import {
   CheckCircle,
   ArrowLeft,
 } from 'lucide-react';
+import { persistUser } from '../utils/api';
 import '../style/Auth.css';
 
 /* ── easings & variants ─────────────────────────────────────── */
@@ -197,7 +198,7 @@ export default function Auth({ apiBaseUrl = 'http://localhost:5000' }) {
     setError('');
     try {
       const data = await authFetch('/api/auth/login', { email: form.email, password: form.password });
-      if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
+      if (data.user) persistUser(data.user);
       // Redirect înapoi pe pagina protejată de unde a venit, sau /home
       navigate(from, { replace: true });
     } catch (err) {
@@ -220,7 +221,7 @@ export default function Auth({ apiBaseUrl = 'http://localhost:5000' }) {
         email: form.email,
         password: form.password,
       });
-      if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
+      if (data.user) persistUser(data.user);
       navigate('/home', { replace: true });
     } catch (err) {
       setError(err.message || 'An error occurred during registration');
@@ -257,7 +258,7 @@ export default function Auth({ apiBaseUrl = 'http://localhost:5000' }) {
         token: resetToken,
         password: form.password,
       });
-      if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
+      if (data.user) persistUser(data.user);
       setSuccessMsg('Password reset successfully! Redirecting…');
       setTimeout(() => navigate('/home', { replace: true }), 1800);
     } catch (err) {

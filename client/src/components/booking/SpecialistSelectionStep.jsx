@@ -1,10 +1,6 @@
-import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check } from 'lucide-react';
-import {
-  filterSpecialistsForService,
-  getSpecialistDisplayTags,
-} from './bookingData';
+import { Check, Loader2 } from 'lucide-react';
+import { getSpecialistDisplayTags } from './bookingData';
 import { catalogItem, catalogStagger } from '../common/motionVariants';
 
 const listFade = {
@@ -16,14 +12,11 @@ const listFade = {
 
 export default function SpecialistSelectionStep({
   service,
+  specialists = [],
+  teamLoaded = true,
   selectedId,
   onSelect,
 }) {
-  const specialists = useMemo(
-    () => filterSpecialistsForService(service),
-    [service],
-  );
-
   const filterKey = service?.id ?? 'none';
 
   if (!service) {
@@ -60,10 +53,13 @@ export default function SpecialistSelectionStep({
 
       <AnimatePresence mode="wait">
         <motion.div key={filterKey} {...listFade}>
-          {specialists.length === 0 ? (
+          {!teamLoaded ? (
             <p className="booking-specialist-empty">
-              No specialists are listed for this service in the demo catalog. Go back and choose another
-              treatment.
+              <Loader2 size={18} className="pf-spin" aria-hidden /> Loading team…
+            </p>
+          ) : specialists.length === 0 ? (
+            <p className="booking-specialist-empty">
+              No specialists available for this service. Go back and choose another treatment.
             </p>
           ) : (
             <motion.ul

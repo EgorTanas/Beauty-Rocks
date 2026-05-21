@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Navbar from '../components/common/Navbar';
@@ -15,18 +16,33 @@ import {
   mergeBookingCatalog,
 } from '../components/booking/bookingData';
 import { consumeBookingPrefill } from '../utils/bookingPrefill';
+import {
+  createAppointment,
+  fetchAvailableSlots,
+  fetchBookingTeam,
+  mergeBookingSpecialists,
+} from '../utils/bookingApi';
+import { apiFetch, parseJson } from '../utils/api';
 import '../style/booking.css';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const TOTAL_STEPS = 4;
 
 export default function Booking() {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [catalog, setCatalog] = useState(BOOKING_SERVICES);
+  const [team, setTeam] = useState([]);
+  const [teamLoaded, setTeamLoaded] = useState(false);
   const [service, setService] = useState(null);
   const [specialist, setSpecialist] = useState(null);
   const [date, setDate] = useState(null);
   const [time, setTime] = useState(null);
+  const [slots, setSlots] = useState([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [slotsError, setSlotsError] = useState('');
+  const [slotsFallback, setSlotsFallback] = useState(false);
+  const [bookingBusy, setBookingBusy] = useState(false);
+  const [bookingError, setBookingError] = useState('');
   const prefillApplied = useRef(false);
 
   useEffect(() => {
@@ -34,9 +50,9 @@ export default function Booking() {
 
     const loadCatalog = async () => {
       try {
-        const res = await fetch(`${API}/api/services`);
+        const res = await apiFetch('/api/services');
         if (!res.ok) throw new Error('Failed');
-        const json = await res.json();
+        const json = await parseJson(res);
         const apiList = Array.isArray(json?.data) ? json.data.map(apiServiceToBooking) : [];
         if (!cancelled) setCatalog(mergeBookingCatalog(apiList, BOOKING_SERVICES));
       } catch {
@@ -45,6 +61,20 @@ export default function Booking() {
     };
 
     loadCatalog();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchBookingTeam()
+      .then((list) => {
+        if (!cancelled) setTeam(list);
+      })
+      .finally(() => {
+        if (!cancelled) setTeamLoaded(true);
+      });
     return () => {
       cancelled = true;
     };
@@ -70,6 +100,39 @@ export default function Booking() {
     prefillApplied.current = true;
   }, [catalog]);
 
+  const specialists = mergeBookingSpecialists(team, service);
+
+  useEffect(() => {
+    setTime(null);
+    setSlots([]);
+    setSlotsError('');
+    setSlotsFallback(false);
+
+    if (!service || !specialist || !date) return;
+
+    let cancelled = false;
+    setSlotsLoading(true);
+
+    fetchAvailableSlots({
+      teamMemberId: specialist.id,
+      serviceId: service.id,
+      date,
+    })
+      .then(({ slots: nextSlots, error, useFallback }) => {
+        if (cancelled) return;
+        setSlots(nextSlots);
+        setSlotsError(error || '');
+        setSlotsFallback(useFallback);
+      })
+      .finally(() => {
+        if (!cancelled) setSlotsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [service, specialist, date]);
+
   const canProceed =
     (step === 1 && service) ||
     (step === 2 && specialist) ||
@@ -92,6 +155,42 @@ export default function Booking() {
   const handleServiceSelect = (nextService) => {
     setService(nextService);
     setSpecialist(null);
+    setDate(null);
+    setTime(null);
+  };
+
+  const handleSpecialistSelect = (nextSpecialist) => {
+    setSpecialist(nextSpecialist);
+    setDate(null);
+    setTime(null);
+  };
+
+  const handleConfirmBooking = useCallback(async () => {
+    setBookingBusy(true);
+    setBookingError('');
+    try {
+      const result = await createAppointment({
+        serviceId: service?.id,
+        teamMemberId: specialist?.id,
+        date,
+        startTime: time,
+      });
+      if (!result.ok) {
+        setBookingError(result.message);
+        return { ok: false, message: result.message };
+      }
+      return { ok: true, data: result.data };
+    } catch (err) {
+      const message = err.message || 'Booking failed';
+      setBookingError(message);
+      return { ok: false, message };
+    } finally {
+      setBookingBusy(false);
+    }
+  }, [service, specialist, date, time]);
+
+  const handleBookingSuccess = () => {
+    navigate('/profile', { replace: false });
   };
 
   const showStickyCta = step < 4;
@@ -123,8 +222,10 @@ export default function Booking() {
                       <SpecialistSelectionStep
                         key={`specialist-${service?.id ?? 'none'}`}
                         service={service}
+                        specialists={specialists}
+                        teamLoaded={teamLoaded}
                         selectedId={specialist?.id}
-                        onSelect={setSpecialist}
+                        onSelect={handleSpecialistSelect}
                       />
                     )}
                     {step === 3 && (
@@ -134,6 +235,10 @@ export default function Booking() {
                         selectedTime={time}
                         onDateSelect={handleDateSelect}
                         onTimeSelect={setTime}
+                        slots={slots}
+                        slotsLoading={slotsLoading}
+                        slotsError={slotsError}
+                        slotsFallback={slotsFallback}
                       />
                     )}
                     {step === 4 && (
@@ -143,6 +248,10 @@ export default function Booking() {
                         specialist={specialist}
                         date={date}
                         time={time}
+                        onConfirm={handleConfirmBooking}
+                        bookingBusy={bookingBusy}
+                        bookingError={bookingError}
+                        onSuccess={handleBookingSuccess}
                       />
                     )}
                   </AnimatePresence>

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CalendarCheck, CheckCircle2, Clock, Sparkles, UserRound, X } from 'lucide-react';
+import { CalendarCheck, CheckCircle2, Clock, Loader2, Sparkles, UserRound, X } from 'lucide-react';
 import ReusableButton from '../common/ReusableButton';
 import { formatBookingDate } from './bookingData';
+import { formatProfileTime } from '../../utils/profileBookingUtils';
 
 function SummaryRow({ icon: Icon, label, value }) {
   return (
@@ -16,21 +17,41 @@ function SummaryRow({ icon: Icon, label, value }) {
   );
 }
 
+function formatTimeDisplay(time) {
+  if (!time) return '—';
+  if (time.includes('AM') || time.includes('PM')) return time;
+  return formatProfileTime(time);
+}
+
 export default function ConfirmationStep({
   service,
   specialist,
   date,
   time,
   onConfirm,
+  bookingBusy = false,
+  bookingError = '',
+  onSuccess,
 }) {
   const [successOpen, setSuccessOpen] = useState(false);
+  const [confirmError, setConfirmError] = useState('');
 
-  const handleConfirm = () => {
-    onConfirm?.();
-    setSuccessOpen(true);
+  const handleConfirm = async () => {
+    setConfirmError('');
+    const result = await onConfirm?.();
+    if (result?.ok) {
+      setSuccessOpen(true);
+    } else if (result?.message) {
+      setConfirmError(result.message);
+    }
   };
 
-  const closeSuccess = () => setSuccessOpen(false);
+  const closeSuccess = () => {
+    setSuccessOpen(false);
+    onSuccess?.();
+  };
+
+  const displayError = bookingError || confirmError;
 
   return (
     <>
@@ -45,7 +66,7 @@ export default function ConfirmationStep({
           <p className="booking-step__eyebrow">Step 4</p>
           <h2 className="booking-step__title">Review &amp; confirm</h2>
           <p className="booking-step__lead">
-            A final glance at your curated visit. Confirm to reserve — this demo completes instantly on your device.
+            A final glance at your visit. Confirm to reserve your appointment at Beauty Rocks.
           </p>
         </header>
 
@@ -67,7 +88,7 @@ export default function ConfirmationStep({
               <div className="booking-summary__rows">
                 <SummaryRow icon={UserRound} label="Specialist" value={specialist?.name} />
                 <SummaryRow icon={CalendarCheck} label="Date" value={formatBookingDate(date)} />
-                <SummaryRow icon={Clock} label="Time" value={time} />
+                <SummaryRow icon={Clock} label="Time" value={formatTimeDisplay(time)} />
                 <SummaryRow icon={Sparkles} label="Duration" value={service?.duration} />
               </div>
             </div>
@@ -78,6 +99,12 @@ export default function ConfirmationStep({
                 <strong>{service?.price}</strong>
               </div>
 
+              {displayError ? (
+                <p className="booking-summary__error" role="alert">
+                  {displayError}
+                </p>
+              ) : null}
+
               <ReusableButton
                 type="button"
                 variant="solid"
@@ -85,12 +112,20 @@ export default function ConfirmationStep({
                 block
                 className="booking-summary__confirm"
                 onClick={handleConfirm}
+                disabled={bookingBusy}
               >
-                Confirm booking
+                {bookingBusy ? (
+                  <>
+                    <Loader2 size={18} className="pf-spin" aria-hidden />
+                    Booking…
+                  </>
+                ) : (
+                  'Confirm booking'
+                )}
               </ReusableButton>
 
               <p className="booking-summary__note">
-                No payment is processed here. Your confirmation is saved only in this session for demonstration.
+                No payment is processed here. You can manage or cancel from your profile.
               </p>
             </div>
           </div>
@@ -132,13 +167,14 @@ export default function ConfirmationStep({
               </h3>
               <p className="booking-success-modal__text">
                 Your {service?.title} with {specialist?.name} is reserved for{' '}
-                <strong>{formatBookingDate(date)}</strong> at <strong>{time}</strong>.
+                <strong>{formatBookingDate(date)}</strong> at{' '}
+                <strong>{formatTimeDisplay(time)}</strong>.
               </p>
               <p className="booking-success-modal__sub">
-                A studio concierge would send a confirmation email in production. Enjoy your Beauty Rocks experience.
+                View or cancel anytime from your profile.
               </p>
               <ReusableButton type="button" variant="solid" block onClick={closeSuccess}>
-                Done
+                View profile
               </ReusableButton>
             </motion.div>
           </motion.div>
