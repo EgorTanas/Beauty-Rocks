@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import '../style/AdminServices.css';
 import '../style/AdminDashboard.css';
 import {
-  CalendarDays,
   ChevronLeft,
   ChevronDown,
   ChevronUp,
@@ -17,11 +16,11 @@ import {
   Plus,
   Trash2,
   Upload,
-  Users,
   X,
 } from 'lucide-react';
 import { useImageUpload } from '../hooks/useImageUpload';
 import AdminServiceCard from '../components/admin/AdminServiceCard';
+import { AdminHeaderActions, AdminNav } from '../components/admin/AdminNav';
 import { AdminHeader } from '../components/admin/AdminMotion';
 import { adminStagger, adminTableRow } from '../components/admin/adminMotionVariants';
 
@@ -364,6 +363,7 @@ function AppointmentTester({ services }) {
 // ── Main component   ─────────────
 export default function AdminServices() {
   const navigate = useNavigate();
+  const location = useLocation();
   const reduceMotion = useReducedMotion();
   const TableRow = reduceMotion ? 'tr' : motion.tr;
 
@@ -410,6 +410,14 @@ export default function AdminServices() {
     setFormError(null);
     setModalOpen(true);
   };
+
+  useEffect(() => {
+    if (location.state?.openCreate) {
+      openCreate();
+      navigate('/admin/services', { replace: true, state: {} });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state?.openCreate]);
 
   const openEdit = (service) => {
     setEditingId(service._id);
@@ -498,15 +506,15 @@ export default function AdminServices() {
   // ── Render   ────────────────────
   return (
     <div className="adm-page adm-dash">
-      <AdminHeader>
+      <AdminHeader className="adm-dash-header adm-dash-header--sub">
         <button
           type="button"
           className="adm-dash-back"
-          onClick={() => navigate('/home')}
-          aria-label="Back to home"
+          onClick={() => navigate('/admin')}
+          aria-label="Back to dashboard"
         >
           <ChevronLeft size={18} />
-          Back
+          Overview
         </button>
 
         <div className="adm-dash-header__copy">
@@ -517,20 +525,13 @@ export default function AdminServices() {
           </p>
         </div>
 
-        <div className="adm-dash-header__actions">
-          <Link to="/admin/bookings" className="adm-dash-link-btn">
-            <CalendarDays size={16} />
-            Bookings
-          </Link>
-          <Link to="/admin/team" className="adm-dash-link-btn">
-            <Users size={16} />
-            Team
-          </Link>
-          <button type="button" className="adm-btn adm-btn--primary" onClick={openCreate}>
-            <Plus size={16} />
+        <AdminHeaderActions>
+          <AdminNav />
+          <button type="button" className="adm-btn adm-btn--primary adm-dash-header__cta" onClick={openCreate}>
+            <Plus size={16} aria-hidden />
             Add service
           </button>
-        </div>
+        </AdminHeaderActions>
       </AdminHeader>
 
       {/* ── Appointment Tester ── */}

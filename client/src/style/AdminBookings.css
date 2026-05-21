@@ -206,40 +206,81 @@
   color: var(--adm-gold);
 }
 
-/* Status badges */
+/* Status badges — glow + shadow; pending pulses */
 .adm-bk-badge {
   display: inline-block;
   padding: 4px 10px;
   font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   border-radius: 9999px;
   border: 1px solid transparent;
+  line-height: 1.2;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
 }
 
 .adm-bk-badge--pending {
-  color: #fcd34d;
-  background: rgba(251, 191, 36, 0.12);
-  border-color: rgba(251, 191, 36, 0.3);
+  color: #fde68a;
+  background: rgba(251, 191, 36, 0.14);
+  border-color: rgba(251, 191, 36, 0.45);
+  box-shadow:
+    0 0 14px rgba(251, 191, 36, 0.35),
+    0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.adm-bk-badge--pulse {
+  animation: adm-badge-pulse-pending 2.4s ease-in-out infinite;
+}
+
+@keyframes adm-badge-pulse-pending {
+  0%,
+  100% {
+    box-shadow:
+      0 0 10px rgba(251, 191, 36, 0.28),
+      0 1px 3px rgba(0, 0, 0, 0.22);
+    opacity: 1;
+  }
+  50% {
+    box-shadow:
+      0 0 22px rgba(251, 191, 36, 0.55),
+      0 0 6px rgba(251, 191, 36, 0.25),
+      0 1px 4px rgba(0, 0, 0, 0.28);
+    opacity: 0.92;
+  }
 }
 
 .adm-bk-badge--confirmed {
   color: #a7f3d0;
-  background: rgba(52, 211, 153, 0.12);
-  border-color: rgba(52, 211, 153, 0.3);
+  background: rgba(52, 211, 153, 0.14);
+  border-color: rgba(52, 211, 153, 0.4);
+  box-shadow:
+    0 0 12px rgba(52, 211, 153, 0.28),
+    0 1px 3px rgba(0, 0, 0, 0.22);
 }
 
 .adm-bk-badge--completed {
   color: #c4b5fd;
-  background: rgba(167, 139, 250, 0.12);
-  border-color: rgba(167, 139, 250, 0.3);
+  background: rgba(167, 139, 250, 0.14);
+  border-color: rgba(167, 139, 250, 0.38);
+  box-shadow:
+    0 0 10px rgba(167, 139, 250, 0.22),
+    0 1px 3px rgba(0, 0, 0, 0.22);
 }
 
 .adm-bk-badge--cancelled {
   color: #fca5a5;
   background: rgba(248, 113, 113, 0.12);
-  border-color: rgba(248, 113, 113, 0.3);
+  border-color: rgba(248, 113, 113, 0.38);
+  box-shadow:
+    0 0 10px rgba(248, 113, 113, 0.2),
+    0 1px 3px rgba(0, 0, 0, 0.22);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .adm-bk-badge--pulse {
+    animation: none;
+  }
 }
 
 /* Table / cards */

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
-import { CalendarDays, ChevronLeft, Loader2, Users } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { CalendarDays, ChevronLeft, Loader2 } from 'lucide-react';
 import '../style/AdminServices.css';
 import '../style/AdminDashboard.css';
 import '../style/AdminBookings.css';
@@ -12,6 +12,7 @@ import BookingCard from '../components/admin/bookings/BookingCard';
 import BookingDetailsModal from '../components/admin/bookings/BookingDetailsModal';
 import EmptyBookingsState from '../components/admin/bookings/EmptyBookingsState';
 import { MOCK_ADMIN_BOOKINGS } from '../components/admin/bookings/bookingAdminData';
+import { AdminHeaderActions, AdminNav } from '../components/admin/AdminNav';
 import { AdminHeader } from '../components/admin/AdminMotion';
 import { adminListSwap, adminStagger } from '../components/admin/adminMotionVariants';
 import {
@@ -35,6 +36,7 @@ const fetchOpts = (method = 'GET', body) => ({
 
 export default function AdminBookings() {
   const navigate = useNavigate();
+  const location = useLocation();
   const reduceMotion = useReducedMotion();
 
   const [bookings, setBookings] = useState([]);
@@ -104,6 +106,14 @@ export default function AdminBookings() {
   useEffect(() => {
     loadBookings();
   }, [loadBookings]);
+
+  useEffect(() => {
+    const id = location.state?.bookingId;
+    if (!id || bookings.length === 0) return;
+    const match = bookings.find((b) => b.id === id);
+    if (match) setSelected(match);
+    navigate('/admin/bookings', { replace: true, state: {} });
+  }, [bookings, location.state?.bookingId, navigate]);
 
   const specialists = useMemo(() => {
     const fromBookings = extractSpecialistsFromBookings(bookings);
@@ -196,10 +206,10 @@ export default function AdminBookings() {
 
   return (
     <div className="adm-page adm-dash adm-bookings-page">
-      <AdminHeader>
-        <button type="button" className="adm-dash-back" onClick={() => navigate('/home')} aria-label="Back to home">
+      <AdminHeader className="adm-dash-header adm-dash-header--sub">
+        <button type="button" className="adm-dash-back" onClick={() => navigate('/admin')} aria-label="Back to dashboard">
           <ChevronLeft size={18} />
-          Back
+          Overview
         </button>
         <div className="adm-dash-header__copy">
           <p className="adm-dash-header__eyebrow">
@@ -211,15 +221,9 @@ export default function AdminBookings() {
             Review appointments, confirm visits, and keep the studio schedule flowing.
           </p>
         </div>
-        <div className="adm-dash-header__actions">
-          <Link to="/admin/services" className="adm-dash-link-btn">
-            Services
-          </Link>
-          <Link to="/admin/team" className="adm-dash-link-btn">
-            <Users size={15} aria-hidden />
-            Team
-          </Link>
-        </div>
+        <AdminHeaderActions>
+          <AdminNav />
+        </AdminHeaderActions>
       </AdminHeader>
 
       {usedMock ? (
@@ -237,6 +241,13 @@ export default function AdminBookings() {
         </div>
       ) : null}
 
+      {loading ? (
+        <div className="adm-bk-loading" aria-live="polite">
+          <Loader2 size={28} className="adm-spinner" />
+          <p>Loading bookings…</p>
+        </div>
+      ) : (
+        <>
       <BookingStats stats={stats} />
 
       <BookingFilters
@@ -249,24 +260,11 @@ export default function AdminBookings() {
         specialists={specialists}
         date={dateFilter}
         onDateChange={setDateFilter}
-        resultCount={loading ? null : filtered.length}
+        resultCount={filtered.length}
       />
 
       <AnimatePresence mode="wait">
-        {loading ? (
-          <motion.div
-            key="loading"
-            className="adm-bk-loading"
-            aria-live="polite"
-            initial={reduceMotion ? false : { opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <Loader2 size={28} className="adm-spinner" />
-            <p>Loading bookings…</p>
-          </motion.div>
-        ) : filtered.length === 0 ? (
+        {filtered.length === 0 ? (
           <motion.div
             key="empty"
             initial={reduceMotion ? false : 'hidden'}
@@ -300,6 +298,8 @@ export default function AdminBookings() {
           </motion.div>
         )}
       </AnimatePresence>
+        </>
+      )}
 
       <AnimatePresence>
         {selected ? (

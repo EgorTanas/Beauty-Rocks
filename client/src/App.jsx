@@ -6,6 +6,7 @@ import Services from './pages/Services';
 import Team from './pages/Team';
 import Booking from './pages/Booking';
 import Profile from './pages/Profile';
+import AdminDashboard from './pages/AdminDashboard';
 import AdminServices from './pages/AdminServices';
 import AdminTeam from './pages/AdminTeam';
 import AdminBookings from './pages/AdminBookings';
@@ -90,11 +91,12 @@ function App() {
         />
 
         <Route path="/dashboard" element={<Navigate to="/home" replace />} />
-        <Route path="*"          element={<Navigate to="/"    replace />} />
 
         <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
 
         {/* Rute admin */}
+        <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+        <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />
         <Route path="/admin/services"
           element={<AdminRoute><AdminServices /></AdminRoute>}
         />
@@ -104,6 +106,8 @@ function App() {
         <Route path="/admin/bookings"
           element={<AdminRoute><AdminBookings /></AdminRoute>}
         />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

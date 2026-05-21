@@ -61,8 +61,8 @@ function TeamCardBody({ member, onEdit, onToggle, onDelete }) {
           className={`adm-toggle-btn adm-toggle-btn--compact ${member.isActive ? 'adm-toggle-btn--on' : 'adm-toggle-btn--off'}`}
           onClick={() => onToggle(member._id)}
         >
-          {member.isActive ? <Eye size={14} /> : <EyeOff size={14} />}
-          {member.isActive ? 'Active' : 'Hidden'}
+          {member.isActive ? <Eye size={14} aria-hidden /> : <EyeOff size={14} aria-hidden />}
+          <span className="adm-toggle-btn__label">{member.isActive ? 'Active' : 'Hidden'}</span>
         </button>
         <div className="adm-dash-card__actions">
           <button

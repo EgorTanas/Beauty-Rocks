@@ -3,10 +3,8 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import '../style/AdminServices.css';
 import '../style/AdminDashboard.css';
-import { Link } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import {
-  CalendarDays,
-  Scissors,
   ChevronLeft,
   Edit2,
   Eye,
@@ -22,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useImageUpload } from '../hooks/useImageUpload';
 import AdminTeamCard from '../components/admin/AdminTeamCard';
+import { AdminHeaderActions, AdminNav } from '../components/admin/AdminNav';
 import { AdminHeader } from '../components/admin/AdminMotion';
 import { adminStagger, adminTableRow } from '../components/admin/adminMotionVariants';
 
@@ -218,6 +217,7 @@ function DaysOffPicker({ daysOff, onChange }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function AdminTeam() {
   const navigate = useNavigate();
+  const location = useLocation();
   const reduceMotion = useReducedMotion();
   const TableRow = reduceMotion ? 'tr' : motion.tr;
 
@@ -261,6 +261,14 @@ export default function AdminTeam() {
     setActiveTab('info');
     setModalOpen(true);
   };
+
+  useEffect(() => {
+    if (location.state?.openCreate) {
+      openCreate();
+      navigate('/admin/team', { replace: true, state: {} });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state?.openCreate]);
 
   const openEdit = (m) => {
     setEditingId(m._id);
@@ -354,9 +362,9 @@ export default function AdminTeam() {
   // ─────────────────────────────────────────────────────────
   return (
     <div className="adm-page adm-dash">
-      <AdminHeader>
-        <button type="button" className="adm-dash-back" onClick={() => navigate('/home')}>
-          <ChevronLeft size={16} /> Back
+      <AdminHeader className="adm-dash-header adm-dash-header--sub">
+        <button type="button" className="adm-dash-back" onClick={() => navigate('/admin')}>
+          <ChevronLeft size={16} /> Overview
         </button>
         <div className="adm-dash-header__copy">
           <p className="adm-dash-header__eyebrow">Salon dashboard</p>
@@ -365,17 +373,13 @@ export default function AdminTeam() {
             Artists, schedules, and specialties shown on the team page and booking flow.
           </p>
         </div>
-        <div className="adm-dash-header__actions">
-          <Link to="/admin/services" className="adm-dash-link-btn">
-            <Scissors size={16} /> Services
-          </Link>
-          <Link to="/admin/bookings" className="adm-dash-link-btn">
-            <CalendarDays size={16} /> Bookings
-          </Link>
-          <button type="button" className="adm-btn adm-btn--primary" onClick={openCreate}>
-            <Plus size={16} /> Add member
+        <AdminHeaderActions>
+          <AdminNav />
+          <button type="button" className="adm-btn adm-btn--primary adm-dash-header__cta" onClick={openCreate}>
+            <Plus size={16} aria-hidden />
+            Add member
           </button>
-        </div>
+        </AdminHeaderActions>
       </AdminHeader>
 
       {loading && (

@@ -55,8 +55,8 @@ function CardBody({ service, onEdit, onToggle, onDelete }) {
           className={`adm-toggle-btn adm-toggle-btn--compact ${service.isActive ? 'adm-toggle-btn--on' : 'adm-toggle-btn--off'}`}
           onClick={() => onToggle(service._id)}
         >
-          {service.isActive ? <Eye size={14} /> : <EyeOff size={14} />}
-          {service.isActive ? 'Active' : 'Hidden'}
+          {service.isActive ? <Eye size={14} aria-hidden /> : <EyeOff size={14} aria-hidden />}
+          <span className="adm-toggle-btn__label">{service.isActive ? 'Active' : 'Hidden'}</span>
         </button>
         <div className="adm-dash-card__actions">
           <button
