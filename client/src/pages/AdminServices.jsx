@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import '../style/AdminServices.css';
+import '../style/AdminDashboard.css';
 import {
+  CalendarDays,
   ChevronLeft,
   ChevronDown,
   ChevronUp,
@@ -18,6 +21,9 @@ import {
   X,
 } from 'lucide-react';
 import { useImageUpload } from '../hooks/useImageUpload';
+import AdminServiceCard from '../components/admin/AdminServiceCard';
+import { AdminHeader } from '../components/admin/AdminMotion';
+import { adminStagger, adminTableRow } from '../components/admin/adminMotionVariants';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -91,11 +97,11 @@ function ImageUploader({ endpoint, initialUrl, onChange }) {
 
         {url ? (
           <div className="adm-uploader-preview">
-            <img src={url} alt="Service preview" className="adm-uploader-img" />
-            <div className="adm-uploader-overlay">
+            <img src={url} alt="" className="adm-uploader-img" />
+            <div className="adm-uploader-overlay adm-uploader-overlay--mobile">
               <span className="adm-uploader-change">
                 <Upload size={16} />
-                Change image
+                Tap to change
               </span>
             </div>
           </div>
@@ -358,6 +364,8 @@ function AppointmentTester({ services }) {
 // ── Main component   ─────────────
 export default function AdminServices() {
   const navigate = useNavigate();
+  const reduceMotion = useReducedMotion();
+  const TableRow = reduceMotion ? 'tr' : motion.tr;
 
   const [services, setServices] = useState([]);
   const [loading,  setLoading]  = useState(true);
@@ -489,10 +497,11 @@ export default function AdminServices() {
 
   // ── Render   ────────────────────
   return (
-    <div className="adm-page">
-      <header className="adm-header">
+    <div className="adm-page adm-dash">
+      <AdminHeader>
         <button
-          className="adm-back-btn"
+          type="button"
+          className="adm-dash-back"
           onClick={() => navigate('/home')}
           aria-label="Back to home"
         >
@@ -500,19 +509,29 @@ export default function AdminServices() {
           Back
         </button>
 
-        <h1 className="adm-title">Manage Services</h1>
+        <div className="adm-dash-header__copy">
+          <p className="adm-dash-header__eyebrow">Salon dashboard</p>
+          <h1 className="adm-dash-header__title">Manage Services</h1>
+          <p className="adm-dash-header__subtitle">
+            Curate the studio menu — pricing, duration, and categories clients see when booking.
+          </p>
+        </div>
 
-        <div className="adm-header-actions">
-          <Link to="/admin/team" className="adm-btn adm-btn--ghost">
-            <Users size={16} />
-            Manage Team
+        <div className="adm-dash-header__actions">
+          <Link to="/admin/bookings" className="adm-dash-link-btn">
+            <CalendarDays size={16} />
+            Bookings
           </Link>
-          <button className="adm-btn adm-btn--primary" onClick={openCreate}>
+          <Link to="/admin/team" className="adm-dash-link-btn">
+            <Users size={16} />
+            Team
+          </Link>
+          <button type="button" className="adm-btn adm-btn--primary" onClick={openCreate}>
             <Plus size={16} />
             Add service
           </button>
         </div>
-      </header>
+      </AdminHeader>
 
       {/* ── Appointment Tester ── */}
       <AppointmentTester services={services} />
@@ -532,7 +551,8 @@ export default function AdminServices() {
       )}
 
       {!loading && !error && (
-        <div className="adm-table-wrap">
+        <>
+        <div className="adm-table-wrap adm-dash-table">
           <table className="adm-table">
             <thead>
               <tr>
@@ -553,8 +573,12 @@ export default function AdminServices() {
                   </td>
                 </tr>
               )}
-              {services.map((s) => (
-                <tr key={s._id} className={s.isActive ? '' : 'adm-row--inactive'}>
+              {services.map((s, i) => (
+                <TableRow
+                  key={s._id}
+                  className={s.isActive ? '' : 'adm-row--inactive'}
+                  {...(reduceMotion ? {} : { variants: adminTableRow, custom: i, initial: 'hidden', animate: 'visible' })}
+                >
                   <td>{s.order}</td>
                   <td className="adm-cell-name">
                     {s.image
@@ -596,34 +620,57 @@ export default function AdminServices() {
                       <Trash2 size={16} />
                     </button>
                   </td>
-                </tr>
+                </TableRow>
               ))}
             </tbody>
           </table>
         </div>
+
+        <motion.div
+          className="adm-dash-cards"
+          variants={reduceMotion ? undefined : adminStagger}
+          initial={reduceMotion ? false : 'hidden'}
+          animate="visible"
+        >
+          {services.map((s) => (
+            <AdminServiceCard
+              key={s._id}
+              service={s}
+              onEdit={openEdit}
+              onToggle={handleToggle}
+              onDelete={setDeletingId}
+            />
+          ))}
+        </motion.div>
+        </>
       )}
 
       {/* ── Edit / Create Modal   */}
       {modalOpen && (
         <div
-          className="adm-overlay"
+          className="adm-overlay adm-dash-modal-overlay"
           role="dialog"
           aria-modal="true"
           aria-label={editingId ? 'Edit service' : 'Add service'}
+          onClick={closeModal}
         >
-          <div className="adm-modal">
+          <div
+            className="adm-modal adm-form-modal adm-dash-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="adm-modal-header">
               <h2>{editingId ? 'Edit service' : 'New service'}</h2>
-              <button className="adm-modal-close" onClick={closeModal} aria-label="Close">
+              <button type="button" className="adm-modal-close" onClick={closeModal} aria-label="Close">
                 <X size={20} />
               </button>
             </div>
 
-            {formError && (
-              <p className="adm-form-error" role="alert">{formError}</p>
-            )}
+            <div className="adm-form-modal__scroll">
+              {formError ? (
+                <p className="adm-form-error" role="alert">{formError}</p>
+              ) : null}
 
-            <div className="adm-form">
+              <div className="adm-form">
               <label className="adm-label">Service image</label>
               <ImageUploader
                 endpoint={`${ADMIN_API}/upload-image`}
@@ -659,9 +706,10 @@ export default function AdminServices() {
                   Price *
                   <input
                     className="adm-input"
+                    inputMode="decimal"
                     value={form.price}
                     onChange={(e) => setForm({ ...form, price: e.target.value })}
-                    placeholder="From $45"
+                    placeholder="e.g. 35"
                   />
                 </label>
                 <label className="adm-label">
@@ -670,7 +718,7 @@ export default function AdminServices() {
                     className="adm-input"
                     value={form.duration}
                     onChange={(e) => setForm({ ...form, duration: e.target.value })}
-                    placeholder="45 min"
+                    placeholder="e.g. 45 min"
                   />
                 </label>
               </div>
@@ -710,13 +758,15 @@ export default function AdminServices() {
                 />
                 Visible on homepage
               </label>
+              </div>
             </div>
 
-            <div className="adm-modal-footer">
-              <button className="adm-btn adm-btn--ghost" onClick={closeModal}>
+            <div className="adm-modal-footer adm-form-modal__footer">
+              <button type="button" className="adm-btn adm-btn--ghost" onClick={closeModal}>
                 Cancel
               </button>
               <button
+                type="button"
                 className="adm-btn adm-btn--primary"
                 onClick={handleSave}
                 disabled={saving}

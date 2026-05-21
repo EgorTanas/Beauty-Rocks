@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import '../style/AdminServices.css'; // reuse same stylesheet
+import '../style/AdminServices.css';
+import '../style/AdminDashboard.css';
+import { Link } from 'react-router-dom';
 import {
+  CalendarDays,
+  Scissors,
   ChevronLeft,
   Edit2,
   Eye,
@@ -16,6 +21,9 @@ import {
   User,
 } from 'lucide-react';
 import { useImageUpload } from '../hooks/useImageUpload';
+import AdminTeamCard from '../components/admin/AdminTeamCard';
+import { AdminHeader } from '../components/admin/AdminMotion';
+import { adminStagger, adminTableRow } from '../components/admin/adminMotionVariants';
 
 const API        = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const ADMIN_API  = `${API}/api/admin/team`;
@@ -210,6 +218,8 @@ function DaysOffPicker({ daysOff, onChange }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function AdminTeam() {
   const navigate = useNavigate();
+  const reduceMotion = useReducedMotion();
+  const TableRow = reduceMotion ? 'tr' : motion.tr;
 
   const [members,    setMembers]    = useState([]);
   const [loading,    setLoading]    = useState(true);
@@ -343,16 +353,30 @@ export default function AdminTeam() {
 
   // ─────────────────────────────────────────────────────────
   return (
-    <div className="adm-page">
-      <header className="adm-header">
-        <button className="adm-btn adm-btn--ghost" onClick={() => navigate(-1)}>
+    <div className="adm-page adm-dash">
+      <AdminHeader>
+        <button type="button" className="adm-dash-back" onClick={() => navigate('/home')}>
           <ChevronLeft size={16} /> Back
         </button>
-        <h1 className="adm-title">Manage Team</h1>
-        <button className="adm-btn adm-btn--primary" onClick={openCreate}>
-          <Plus size={16} /> Add member
-        </button>
-      </header>
+        <div className="adm-dash-header__copy">
+          <p className="adm-dash-header__eyebrow">Salon dashboard</p>
+          <h1 className="adm-dash-header__title">Manage Team</h1>
+          <p className="adm-dash-header__subtitle">
+            Artists, schedules, and specialties shown on the team page and booking flow.
+          </p>
+        </div>
+        <div className="adm-dash-header__actions">
+          <Link to="/admin/services" className="adm-dash-link-btn">
+            <Scissors size={16} /> Services
+          </Link>
+          <Link to="/admin/bookings" className="adm-dash-link-btn">
+            <CalendarDays size={16} /> Bookings
+          </Link>
+          <button type="button" className="adm-btn adm-btn--primary" onClick={openCreate}>
+            <Plus size={16} /> Add member
+          </button>
+        </div>
+      </AdminHeader>
 
       {loading && (
         <div className="adm-loading" aria-live="polite">
@@ -368,7 +392,8 @@ export default function AdminTeam() {
       )}
 
       {!loading && !error && (
-        <div className="adm-table-wrap">
+        <>
+        <div className="adm-table-wrap adm-dash-table">
           <table className="adm-table">
             <thead>
               <tr>
@@ -388,8 +413,12 @@ export default function AdminTeam() {
                   </td>
                 </tr>
               )}
-              {members.map((m) => (
-                <tr key={m._id} className={m.isActive ? '' : 'adm-row--inactive'}>
+              {members.map((m, i) => (
+                <TableRow
+                  key={m._id}
+                  className={m.isActive ? '' : 'adm-row--inactive'}
+                  {...(reduceMotion ? {} : { variants: adminTableRow, custom: i, initial: 'hidden', animate: 'visible' })}
+                >
                   <td>{m.order}</td>
                   <td className="adm-cell-name">
                     {m.avatar
@@ -425,22 +454,52 @@ export default function AdminTeam() {
                       <Trash2 size={16} />
                     </button>
                   </td>
-                </tr>
+                </TableRow>
               ))}
             </tbody>
           </table>
         </div>
+
+        <motion.div
+          className="adm-dash-cards"
+          variants={reduceMotion ? undefined : adminStagger}
+          initial={reduceMotion ? false : 'hidden'}
+          animate="visible"
+        >
+          {members.map((m) => (
+            <AdminTeamCard
+              key={m._id}
+              member={m}
+              onEdit={openEdit}
+              onToggle={handleToggle}
+              onDelete={setDeletingId}
+            />
+          ))}
+        </motion.div>
+        </>
       )}
 
       {/* ── Create / Edit Modal ── */}
       {modalOpen && (
-        <div className="adm-overlay" role="dialog" aria-modal="true" aria-label={editingId ? 'Edit member' : 'Add member'}>
-          <div className="adm-modal adm-modal--wide">
+        <div
+          className="adm-overlay adm-dash-modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label={editingId ? 'Edit member' : 'Add member'}
+          onClick={closeModal}
+        >
+          <div
+            className="adm-modal adm-modal--wide adm-form-modal adm-dash-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="adm-modal-header">
               <h2>{editingId ? 'Edit member' : 'New member'}</h2>
-              <button className="adm-modal-close" onClick={closeModal} aria-label="Close"><X size={20} /></button>
+              <button type="button" className="adm-modal-close" onClick={closeModal} aria-label="Close">
+                <X size={20} />
+              </button>
             </div>
 
+            <div className="adm-form-modal__scroll">
             {/* Tabs */}
             <div className="adm-tabs">
               <button
@@ -581,10 +640,11 @@ export default function AdminTeam() {
                 />
               </div>
             )}
+            </div>
 
-            <div className="adm-modal-footer">
-              <button className="adm-btn adm-btn--ghost" onClick={closeModal}>Cancel</button>
-              <button className="adm-btn adm-btn--primary" onClick={handleSave} disabled={saving}>
+            <div className="adm-modal-footer adm-form-modal__footer">
+              <button type="button" className="adm-btn adm-btn--ghost" onClick={closeModal}>Cancel</button>
+              <button type="button" className="adm-btn adm-btn--primary" onClick={handleSave} disabled={saving}>
                 {saving && <Loader2 size={16} className="adm-spinner" />}
                 {editingId ? 'Save changes' : 'Create member'}
               </button>

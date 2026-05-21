@@ -8,6 +8,7 @@ import Booking from './pages/Booking';
 import Profile from './pages/Profile';
 import AdminServices from './pages/AdminServices';
 import AdminTeam from './pages/AdminTeam';
+import AdminBookings from './pages/AdminBookings';
 
 
 const API_BASE_URL = 'http://localhost:5000';
@@ -99,6 +100,9 @@ function App() {
         />
         <Route path="/admin/team"
           element={<AdminRoute><AdminTeam /></AdminRoute>}
+        />
+        <Route path="/admin/bookings"
+          element={<AdminRoute><AdminBookings /></AdminRoute>}
         />
       </Routes>
     </BrowserRouter>
