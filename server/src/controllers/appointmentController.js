@@ -313,7 +313,7 @@ const createAppointmentAdmin = async (req, res) => {
 const updateAppointmentStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    const allowed = ['pending', 'confirmed', 'cancelled'];
+    const allowed = ['pending', 'confirmed', 'completed', 'cancelled'];
 
     if (!allowed.includes(status)) {
       return res.status(400).json({
