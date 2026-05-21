@@ -456,6 +456,51 @@
   border-bottom-color: rgba(255, 255, 255, 0.85);
 }
 
+.br-contact-meta-text a svg {
+  display: inline-block;
+  vertical-align: -2px;
+  margin-left: 4px;
+}
+
+.br-contact-map {
+  margin-top: clamp(36px, 5vw, 52px);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(196, 165, 116, 0.22);
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+.br-contact-map iframe {
+  display: block;
+  width: 100%;
+  height: clamp(220px, 32vw, 320px);
+  border: 0;
+  filter: grayscale(0.15) contrast(1.05);
+}
+
+.br-contact-map__cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, rgba(196, 165, 116, 0.2), rgba(139, 115, 85, 0.12));
+  border-top: 1px solid rgba(196, 165, 116, 0.2);
+  color: var(--br-cream);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+.br-contact-map__cta:hover {
+  background: linear-gradient(135deg, rgba(196, 165, 116, 0.32), rgba(139, 115, 85, 0.2));
+  color: #fff;
+}
+
 /* Legacy — kept for other surfaces */
 .br-form-hint {
   margin: 0 0 20px;
