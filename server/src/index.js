@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const rateLimit = require("express-rate-limit");
 const connectDB = require("./config/db");
 const passport = require("./config/passport");
 const authRoutes = require("./routes/authRoutes");
@@ -10,12 +11,15 @@ const app = express();
 connectDB();
 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: process.env.CLIENT_URL || "http://localhost:5173",
   credentials: true,
 }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(passport.initialize());
+
+// ─── Health check
+app.get("/health", (req, res) => res.json({ status: "ok", timestamp: new Date().toISOString() }));
 
 // ─── Public Routes 
 
@@ -26,7 +30,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/services", require("./routes/serviceRoutes"));
 
 // Team (public)
-app.use("/api/team", require("./routes/teamRoutes"));
+app.use("/api/team", require("./routes/TeamRoutes"));
 
 // Appointments (public + protected)
 app.use("/api/appointments", require("./routes/appointmentRoutes"));
@@ -34,7 +38,7 @@ app.use("/api/appointments", require("./routes/appointmentRoutes"));
 // ─── Protected Routes
 
 // User profile & settings
-app.use("/api/user", require("./routes/userRoutes"));
+app.use("/api/user", require("./routes/UserRoutes"));
 
 // ─── Admin Routes 
 

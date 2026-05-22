@@ -54,9 +54,7 @@ const getAvailableSlots = async (req, res) => {
       return res.json({ success: true, data: [], message: 'Team member does not work on this day' });
     }
 
-    let durationMin = typeof svc.duration === 'number'
-      ? svc.duration
-      : parseInt(svc.duration, 10);
+    let durationMin = svc.durationMinutes || (typeof svc.duration === 'number' ? svc.duration : parseInt(svc.duration, 10));
 
     if (!durationMin || durationMin <= 0) {
       return res.status(400).json({ success: false, message: 'Service has an invalid duration' });
@@ -112,9 +110,7 @@ const createAppointment = async (req, res) => {
     const svc = await Service.findById(service);
     if (!svc) return res.status(404).json({ success: false, message: 'Service not found' });
 
-    let durationMin = typeof svc.duration === 'number'
-      ? svc.duration
-      : parseInt(svc.duration, 10);
+    let durationMin = svc.durationMinutes || (typeof svc.duration === 'number' ? svc.duration : parseInt(svc.duration, 10));
 
     if (!durationMin || durationMin <= 0) {
       return res.status(400).json({ success: false, message: 'Service has an invalid duration' });
@@ -281,9 +277,7 @@ const createAppointmentAdmin = async (req, res) => {
     const svc = await Service.findById(service);
     if (!svc) return res.status(404).json({ success: false, message: 'Service not found' });
 
-    let durationMin = typeof svc.duration === 'number'
-      ? svc.duration
-      : parseInt(svc.duration, 10);
+    let durationMin = svc.durationMinutes || (typeof svc.duration === 'number' ? svc.duration : parseInt(svc.duration, 10));
 
     const endTime = toTime(toMinutes(startTime) + durationMin);
 
@@ -325,7 +319,7 @@ const updateAppointmentStatus = async (req, res) => {
     const appointment = await Appointment.findByIdAndUpdate(
       req.params.id,
       { status },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     ).populate(['user', 'service', 'teamMember']);
 
     if (!appointment) {
@@ -349,9 +343,7 @@ const rescheduleAppointment = async (req, res) => {
 
     if (startTime) {
       const svc = await Service.findById(appointment.service);
-      let durationMin = typeof svc.duration === 'number'
-        ? svc.duration
-        : parseInt(svc.duration, 10);
+      let durationMin = svc.durationMinutes || (typeof svc.duration === 'number' ? svc.duration : parseInt(svc.duration, 10));
       appointment.endTime = toTime(toMinutes(startTime) + durationMin);
       appointment.startTime = startTime;
     }

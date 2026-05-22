@@ -11,6 +11,7 @@ import ProfileAppointmentsHistory from '../components/profile/ProfileAppointment
 import { apiFetch, parseJson, persistUser } from '../utils/api';
 import {
   getFavoriteServices,
+  loadFavoritesFromDB,
   removeFavoriteService,
   subscribeFavorites,
 } from '../utils/favoriteServices';
@@ -126,6 +127,12 @@ export default function Profile() {
   useEffect(() => {
     loadStats();
   }, [loadStats]);
+
+  // ─── Încarcă favorites din DB după ce user-ul e disponibil ───────────────
+  useEffect(() => {
+    if (!user) return;
+    loadFavoritesFromDB().then((list) => setFavorites(list));
+  }, [user]);
 
   useEffect(() => {
     return subscribeFavorites(setFavorites);

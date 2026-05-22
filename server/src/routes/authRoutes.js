@@ -1,6 +1,26 @@
 const express = require("express");
 const { body, query, validationResult } = require("express-validator");
 const passport = require("../config/passport");
+const rateLimit = require("express-rate-limit");
+
+// Max 10 încercări login / 15 minute per IP
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { message: "Prea multe încercări de autentificare. Încearcă din nou în 15 minute." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Max 5 cereri forgot-password / oră per IP
+const forgotPasswordLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: { message: "Prea multe cereri de resetare parolă. Încearcă din nou mai târziu." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 const {
   register,
   login,
@@ -49,11 +69,11 @@ const resetPasswordRules = [
 ];
 
 router.post("/register",  registerRules,       validate, register);
-router.post("/login",     loginRules,          validate, login);
+router.post("/login",     loginLimiter, loginRules, validate, login);
 router.post("/logout",    protect,                       logout);
 router.get("/me",         protect,                       getMe);
 router.post("/refresh",                                  refreshTokens);
-router.post("/forgot-password", forgotPasswordRules, validate, forgotPassword);
+router.post("/forgot-password", forgotPasswordLimiter, forgotPasswordRules, validate, forgotPassword);
 router.post("/reset-password",  resetPasswordRules,  validate, resetPassword);
 router.get("/verify-email",           verifyEmail);
 router.post("/resend-verification",   protect, resendVerification);

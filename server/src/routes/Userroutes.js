@@ -13,7 +13,10 @@ const {
   getAppointmentStats,
   changePassword,
   deleteAccount,
-} = require('../controllers/UserController');
+  getFavorites,
+  addFavorite,
+  removeFavorite,
+} = require('../controllers/Usercontroller');
 
 router.use(protect);
 
@@ -31,5 +34,10 @@ router.get('/appointments', getMyAppointments);
 router.patch('/password', changePassword);
 
 router.delete('/account', deleteAccount);
+
+// ─── Favorites ───────────────────────────────────────────────────────────────
+router.get('/favorites', getFavorites);
+router.post('/favorites', addFavorite);
+router.delete('/favorites/:serviceId', removeFavorite);
 
 module.exports = router;

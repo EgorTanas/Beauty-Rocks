@@ -11,7 +11,34 @@ const { deleteFromCloudinary, extractPublicId } = require('../middleware/uploadM
  */
 const getTeamMembers = async (req, res) => {
   try {
-    const members = await TeamMember.find({ isActive: true }).sort({ order: 1, createdAt: 1 });
+    const filter = { isActive: true };
+
+    // Filtrare opțională după serviciu: GET /api/team?service=<serviceId>
+    if (req.query.service) {
+      const Service = require('../models/Service');
+      const svc = await Service.findById(req.query.service).select('category');
+      if (!svc) {
+        return res.status(404).json({ success: false, message: 'Service not found' });
+      }
+      // Mapare categorie serviciu → valori specialties acceptate
+      const categoryMap = {
+        'manicure':    ['manicure', 'nails'],
+        'pedicure':    ['pedicure', 'nails'],
+        'hair-women':  ['hair', 'hair-women', 'color'],
+        'hair-men':    ['hair', 'hair-men'],
+        'bridal':      ['bridal', 'hair', 'manicure'],
+        'nails':       ['manicure', 'pedicure', 'nails'],
+        'hair':        ['hair', 'hair-women', 'hair-men', 'color'],
+        'skincare':    ['skincare'],
+        'other':       [],
+      };
+      const relevantSpecialties = categoryMap[svc.category] || [];
+      if (relevantSpecialties.length > 0) {
+        filter.specialties = { $in: relevantSpecialties };
+      }
+    }
+
+    const members = await TeamMember.find(filter).sort({ order: 1, createdAt: 1 });
     res.json({ success: true, count: members.length, data: members });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error', error: err.message });

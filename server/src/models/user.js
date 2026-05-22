@@ -119,6 +119,13 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+
+    favorites: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Service',
+      },
+    ],
   },
   {
     timestamps: true,
@@ -183,6 +190,7 @@ userSchema.methods.toPublicJSON = function () {
     isEmailVerified: this.isEmailVerified,
     lastLoginAt: this.lastLoginAt,
     createdAt: this.createdAt,
+    favorites: this.favorites || [],
   };
 };
 

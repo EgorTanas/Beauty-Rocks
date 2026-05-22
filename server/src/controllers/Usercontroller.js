@@ -248,6 +248,61 @@ const deleteAccount = async (req, res) => {
   }
 };
 
+// ─── Favorites ───────────────────────────────────────────────────────────────
+
+const getFavorites = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).populate('favorites', 'name price duration category image isActive');
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    res.json({ success: true, data: user.favorites });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error', error: err.message });
+  }
+};
+
+const addFavorite = async (req, res) => {
+  try {
+    const { serviceId } = req.body;
+    if (!serviceId) return res.status(400).json({ success: false, message: 'serviceId is required' });
+
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    if (user.favorites.map(String).includes(String(serviceId))) {
+      return res.status(409).json({ success: false, message: 'Service already in favorites' });
+    }
+
+    user.favorites.push(serviceId);
+    await user.save({ validateBeforeSave: false });
+
+    res.status(201).json({ success: true, message: 'Added to favorites', data: user.favorites });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error', error: err.message });
+  }
+};
+
+const removeFavorite = async (req, res) => {
+  try {
+    const { serviceId } = req.params;
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+    const before = user.favorites.length;
+    user.favorites = user.favorites.filter((id) => String(id) !== String(serviceId));
+
+    if (user.favorites.length === before) {
+      return res.status(404).json({ success: false, message: 'Service not found in favorites' });
+    }
+
+    await user.save({ validateBeforeSave: false });
+    res.json({ success: true, message: 'Removed from favorites', data: user.favorites });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error', error: err.message });
+  }
+};
+
+// ─── Export (toate funcțiile definite ÎNAINTE de export) ─────────────────────
+
 module.exports = {
   getProfile,
   updateProfile,
@@ -257,4 +312,7 @@ module.exports = {
   getAppointmentStats,
   changePassword,
   deleteAccount,
+  getFavorites,
+  addFavorite,
+  removeFavorite,
 };
