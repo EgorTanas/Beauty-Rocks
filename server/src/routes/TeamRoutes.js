@@ -5,7 +5,7 @@ const {
   getTeamMembers,
   getTeamMemberById,
   checkAvailability,
-} = require('../controllers/Teamcontroller');
+} = require('../controllers/teamController');
 
 // GET /api/team              
 router.get('/', getTeamMembers);
