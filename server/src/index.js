@@ -30,7 +30,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/services", require("./routes/Serviceroutes"));
 
 // Team (public)
-app.use("/api/team", require("./routes/Teamroutes"));
+app.use("/api/team", require("./routes/TeamRoutes"));
 
 // Appointments (public + protected)
 app.use("/api/appointments", require("./routes/appointmentRoutes"));
@@ -38,7 +38,7 @@ app.use("/api/appointments", require("./routes/appointmentRoutes"));
 // ─── Protected Routes
 
 // User profile & settings
-app.use("/api/user", require("./routes/Userroutes"));
+app.use("/api/user", require("./routes/UserRoutes"));
 
 // ─── Admin Routes 
 
