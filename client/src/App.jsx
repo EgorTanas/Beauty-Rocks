@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { Loader2 } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Auth from './pages/Auth';
-import GoogleAuthSuccess from './pages/GoogleAuthSuccess';
+import GoogleAuthSuccess from "./pages/Googleauthsuccess";
 import Home from './pages/Home';
 import Services from './pages/Services';
 import Team from './pages/Team';

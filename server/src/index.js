@@ -4,7 +4,7 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 const connectDB = require("./config/db");
-const passport = require("./config/passport");
+const passport = require("./config/Passport");
 const authRoutes = require("./routes/authRoutes");
 
 const app = express();

@@ -130,7 +130,7 @@ function getOAuthErrorMessage(searchParams) {
    AUTH COMPONENT - with Forgot & Reset Password views
    and ProtectedRoute redirect support
 ════════════════════════════════════════════════════════════ */
-export default function Auth({ apiBaseUrl = 'http://localhost:5000' }) {
+export default function Auth({ apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000' }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
