@@ -10,11 +10,7 @@ import ServiceSelectionStep from '../components/booking/ServiceSelectionStep';
 import SpecialistSelectionStep from '../components/booking/SpecialistSelectionStep';
 import DateTimeStep from '../components/booking/DateTimeStep';
 import ConfirmationStep from '../components/booking/ConfirmationStep';
-import {
-  BOOKING_SERVICES,
-  apiServiceToBooking,
-  mergeBookingCatalog,
-} from '../components/booking/bookingData';
+import { apiServiceToBooking } from '../components/booking/bookingData';
 import { consumeBookingPrefill } from '../utils/bookingPrefill';
 import {
   createAppointment,
@@ -23,6 +19,7 @@ import {
   mergeBookingSpecialists,
 } from '../utils/bookingApi';
 import { apiFetch, parseJson } from '../utils/api';
+import { mapProfileAppointment } from '../utils/profileBookingUtils';
 import '../style/booking.css';
 
 const TOTAL_STEPS = 4;
@@ -30,7 +27,9 @@ const TOTAL_STEPS = 4;
 export default function Booking() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
-  const [catalog, setCatalog] = useState(BOOKING_SERVICES);
+  // Catalog porneste gol — se populează DOAR din DB
+  const [catalog, setCatalog] = useState([]);
+  const [catalogLoading, setCatalogLoading] = useState(true);
   const [team, setTeam] = useState([]);
   const [teamLoaded, setTeamLoaded] = useState(false);
   const [service, setService] = useState(null);
@@ -45,25 +44,27 @@ export default function Booking() {
   const [bookingError, setBookingError] = useState('');
   const prefillApplied = useRef(false);
 
+  // Încarcă serviciile DOAR din DB, fără fallback la date hardcodate
   useEffect(() => {
     let cancelled = false;
 
     const loadCatalog = async () => {
+      setCatalogLoading(true);
       try {
         const res = await apiFetch('/api/services');
         if (!res.ok) throw new Error('Failed');
         const json = await parseJson(res);
         const apiList = Array.isArray(json?.data) ? json.data.map(apiServiceToBooking) : [];
-        if (!cancelled) setCatalog(mergeBookingCatalog(apiList, BOOKING_SERVICES));
+        if (!cancelled) setCatalog(apiList);
       } catch {
-        if (!cancelled) setCatalog(BOOKING_SERVICES);
+        if (!cancelled) setCatalog([]);
+      } finally {
+        if (!cancelled) setCatalogLoading(false);
       }
     };
 
     loadCatalog();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -75,9 +76,7 @@ export default function Booking() {
       .finally(() => {
         if (!cancelled) setTeamLoaded(true);
       });
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -128,9 +127,7 @@ export default function Booking() {
         if (!cancelled) setSlotsLoading(false);
       });
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [service, specialist, date]);
 
   const canProceed =
@@ -189,9 +186,14 @@ export default function Booking() {
     }
   }, [service, specialist, date, time]);
 
-  const handleBookingSuccess = () => {
-    navigate('/profile', { replace: false });
-  };
+  // Navigăm la profile și trimitem booking-ul nou prin state
+  const handleBookingSuccess = useCallback((appointmentData) => {
+    const newBooking = appointmentData ? mapProfileAppointment(appointmentData) : null;
+    navigate('/profile', {
+      replace: false,
+      state: { newBooking, refreshBookings: true },
+    });
+  }, [navigate]);
 
   const showStickyCta = step < 4;
 
@@ -214,6 +216,7 @@ export default function Booking() {
                       <ServiceSelectionStep
                         key="service"
                         services={catalog}
+                        loading={catalogLoading}
                         selectedId={service?.id}
                         onSelect={handleServiceSelect}
                       />

@@ -1,10 +1,6 @@
 import { apiFetch, isMongoId, parseJson, toISODateString } from './api';
-import { resolveTeamAvatar, getMemberInitials } from '../components/team/teamUtils';
-import {
-  BOOKING_SPECIALISTS,
-  filterSpecialistsForService,
-  getServiceSpecialistTypes,
-} from '../components/booking/bookingData';
+import { resolveTeamAvatar } from '../components/team/teamUtils';
+import { getServiceSpecialistTypes } from '../components/booking/bookingData';
 
 const SPECIALTY_KEYWORDS = [
   ['manicure', 'nails'],
@@ -58,6 +54,10 @@ export async function fetchBookingTeam() {
     .map(mapApiMemberToBookingSpecialist);
 }
 
+/**
+ * Filtrează specialiștii din API după serviciul selectat.
+ * Dacă niciun specialist nu corespunde, returnează toată lista (fără fallback hardcodat).
+ */
 export function mergeBookingSpecialists(apiList, service) {
   const required = service ? getServiceSpecialistTypes(service) : [];
   const apiFiltered = service
@@ -66,9 +66,8 @@ export function mergeBookingSpecialists(apiList, service) {
       )
     : apiList;
 
-  if (apiFiltered.length > 0) return apiFiltered;
-
-  return filterSpecialistsForService(service);
+  // Dacă niciun specialist nu se potrivește strict, arată toți (mai util decât lista goală)
+  return apiFiltered.length > 0 ? apiFiltered : apiList;
 }
 
 export async function fetchAvailableSlots({ teamMemberId, serviceId, date }) {
@@ -103,7 +102,7 @@ export async function createAppointment({ serviceId, teamMemberId, date, startTi
     return {
       ok: false,
       message:
-        'This service is from the demo catalog. Choose a service from the live menu to book online.',
+        'Serviciul sau specialistul selectat nu este valid. Alege un serviciu din catalogul live.',
     };
   }
 
@@ -128,4 +127,4 @@ export async function createAppointment({ serviceId, teamMemberId, date, startTi
   return { ok: true, data: json.data };
 }
 
-export { BOOKING_SPECIALISTS, isMongoId };
+export { isMongoId };

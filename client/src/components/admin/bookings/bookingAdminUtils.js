@@ -1,5 +1,5 @@
-/** Statuses the current admin API accepts on PATCH /status (until backend adds more) */
-export const BOOKING_API_STATUSES = ['pending', 'confirmed', 'cancelled'];
+/** Statuses the admin API accepts on PATCH /status */
+export const BOOKING_API_STATUSES = ['pending', 'confirmed', 'completed', 'cancelled'];
 
 export function isApiPatchableStatus(status) {
   return BOOKING_API_STATUSES.includes(String(status).trim().toLowerCase());

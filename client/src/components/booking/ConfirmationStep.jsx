@@ -35,11 +35,13 @@ export default function ConfirmationStep({
 }) {
   const [successOpen, setSuccessOpen] = useState(false);
   const [confirmError, setConfirmError] = useState('');
+  const [appointmentData, setAppointmentData] = useState(null);
 
   const handleConfirm = async () => {
     setConfirmError('');
     const result = await onConfirm?.();
     if (result?.ok) {
+      setAppointmentData(result.data ?? null);
       setSuccessOpen(true);
     } else if (result?.message) {
       setConfirmError(result.message);
@@ -48,7 +50,7 @@ export default function ConfirmationStep({
 
   const closeSuccess = () => {
     setSuccessOpen(false);
-    onSuccess?.();
+    onSuccess?.(appointmentData);
   };
 
   const displayError = bookingError || confirmError;

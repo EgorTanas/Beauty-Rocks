@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Clock, Heart } from 'lucide-react';
+import { Check, Clock, Heart, Loader2 } from 'lucide-react';
 import {
   isFavoriteService,
   subscribeFavorites,
@@ -8,7 +8,6 @@ import {
 } from '../../utils/favoriteServices';
 import {
   BOOKING_CATEGORIES,
-  BOOKING_SERVICES,
   groupBookingServicesByCategory,
 } from './bookingData';
 import { catalogItem, catalogStagger } from '../common/motionVariants';
@@ -92,7 +91,8 @@ function ServiceCard({ service, selected, onSelect }) {
 export default function ServiceSelectionStep({
   selectedId,
   onSelect,
-  services = BOOKING_SERVICES,
+  services = [],
+  loading = false,
 }) {
   const [activeCategoryId, setActiveCategoryId] = useState('all');
   const groups = groupBookingServicesByCategory(activeCategoryId, services);
@@ -145,48 +145,65 @@ export default function ServiceSelectionStep({
         })}
       </div>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeCategoryId}
-          className="booking-service-sections"
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-        >
-          {groups.map(({ categoryId, services }) => (
-            <section
-              key={categoryId}
-              className="booking-service-section"
-              aria-labelledby={`booking-cat-${categoryId}`}
-            >
-              {activeCategoryId === 'all' ? (
-                <h3 id={`booking-cat-${categoryId}`} className="booking-service-section__title">
-                  {BOOKING_CATEGORIES.find((c) => c.id === categoryId)?.label ??
-                    categoryId}
-                </h3>
-              ) : null}
-
-              <motion.ul
-                className="booking-service-grid"
-                variants={catalogStagger}
-                initial="hidden"
-                animate="visible"
-                role="list"
+      {loading ? (
+        <div className="pf-loading pf-loading--inline" style={{ padding: '2rem 0' }}>
+          <Loader2 size={24} className="pf-spin" />
+          <p>Loading services…</p>
+        </div>
+      ) : services.length === 0 ? (
+        <p style={{ padding: '2rem 0', color: 'var(--br-muted, #888)', textAlign: 'center' }}>
+          No services available at the moment.
+        </p>
+      ) : (
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeCategoryId}
+            className="booking-service-sections"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {groups.map(({ categoryId, services: catServices }) => (
+              <section
+                key={categoryId}
+                className="booking-service-section"
+                aria-labelledby={`booking-cat-${categoryId}`}
               >
-                {services.map((service) => (
-                  <ServiceCard
-                    key={service.id}
-                    service={service}
-                    selected={selectedId === service.id}
-                    onSelect={onSelect}
-                  />
-                ))}
-              </motion.ul>
-            </section>
-          ))}
-        </motion.div>
-      </AnimatePresence>
+                {activeCategoryId === 'all' ? (
+                  <h3 id={`booking-cat-${categoryId}`} className="booking-service-section__title">
+                    {BOOKING_CATEGORIES.find((c) => c.id === categoryId)?.label ??
+                      categoryId}
+                  </h3>
+                ) : null}
+
+                <motion.ul
+                  className="booking-service-grid"
+                  variants={catalogStagger}
+                  initial="hidden"
+                  animate="visible"
+                  role="list"
+                >
+                  {catServices.map((service) => (
+                    <ServiceCard
+                      key={service.id}
+                      service={service}
+                      selected={selectedId === service.id}
+                      onSelect={onSelect}
+                    />
+                  ))}
+                </motion.ul>
+              </section>
+            ))}
+
+            {groups.length === 0 ? (
+              <p style={{ color: 'var(--br-muted, #888)', padding: '1rem 0' }}>
+                No services in this category.
+              </p>
+            ) : null}
+          </motion.div>
+        </AnimatePresence>
+      )}
     </motion.div>
   );
 }

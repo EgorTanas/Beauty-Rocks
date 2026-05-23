@@ -5,9 +5,11 @@ import { getUpcomingBookings } from '../../utils/profileDashboardUtils';
 import { catalogItem, catalogStagger } from '../common/motionVariants';
 
 function partitionBookings(bookings) {
-  const upcoming = getUpcomingBookings(bookings);
+  // Excludem cancelled complet din afișare în profil
+  const visible = bookings.filter((b) => b.status !== 'cancelled');
+  const upcoming = getUpcomingBookings(visible);
   const upcomingIds = new Set(upcoming.map((b) => b.id));
-  const past = bookings
+  const past = visible
     .filter((b) => !upcomingIds.has(b.id))
     .sort((a, b) => new Date(b.date) - new Date(a.date));
   return { upcoming: upcoming.slice(1), past };

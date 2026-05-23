@@ -121,13 +121,16 @@ const deleteService = async (req, res) => {
 
 const toggleServiceActive = async (req, res) => {
   try {
-    const service = await Service.findById(req.params.id);
+    const service = await Service.findById(req.params.id).select('isActive');
     if (!service) {
       return res.status(404).json({ success: false, message: 'Service not found' });
     }
-    service.isActive = !service.isActive;
-    await service.save();
-    res.json({ success: true, data: service });
+    const updated = await Service.findByIdAndUpdate(
+      req.params.id,
+      { isActive: !service.isActive },
+      { new: true, runValidators: false }
+    );
+    res.json({ success: true, data: updated });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error', error: err.message });
   }

@@ -27,10 +27,10 @@ app.get("/health", (req, res) => res.json({ status: "ok", timestamp: new Date().
 app.use("/api/auth", authRoutes);
 
 // Services (public)
-app.use("/api/services", require("./routes/serviceRoutes"));
+app.use("/api/services", require("./routes/Serviceroutes"));
 
 // Team (public)
-app.use("/api/team", require("./routes/TeamRoutes"));
+app.use("/api/team", require("./routes/Teamroutes"));
 
 // Appointments (public + protected)
 app.use("/api/appointments", require("./routes/appointmentRoutes"));
@@ -38,12 +38,12 @@ app.use("/api/appointments", require("./routes/appointmentRoutes"));
 // ─── Protected Routes
 
 // User profile & settings
-app.use("/api/user", require("./routes/UserRoutes"));
+app.use("/api/user", require("./routes/Userroutes"));
 
 // ─── Admin Routes 
 
 // Admin routes (services + team + appointments)
-app.use("/api/admin", require("./routes/adminRoutes"));
+app.use("/api/admin", require("./routes/Adminroutes"));
 
 // ─── Error Handlers 
 

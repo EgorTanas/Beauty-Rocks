@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
@@ -26,6 +26,7 @@ import '../style/Profile.css';
 
 export default function Profile() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
@@ -120,6 +121,37 @@ export default function Profile() {
     loadProfile();
   }, [loadProfile]);
 
+  // Dacă venim de la Booking cu un booking nou, îl adăugăm imediat și re-fetch-uim
+  useEffect(() => {
+    const state = location.state;
+    if (!state) return;
+
+    if (state.newBooking) {
+      // Adaugă booking-ul nou imediat în lista locală (optimistic update)
+      setBookings((prev) => {
+        const alreadyExists = prev.some((b) => b.id === state.newBooking.id);
+        if (alreadyExists) return prev;
+        return [state.newBooking, ...prev];
+      });
+      setBookingsLoaded(true);
+      // Actualizează și stats
+      setAptStats((prev) =>
+        prev
+          ? { ...prev, upcoming: (prev.upcoming ?? 0) + 1, total: (prev.total ?? 0) + 1 }
+          : null,
+      );
+    }
+
+    if (state.refreshBookings) {
+      // Re-fetch complet pentru a sincroniza cu serverul
+      setBookingsLoaded(false);
+    }
+
+    // Curăță state-ul din history ca să nu se repete la refresh
+    navigate(location.pathname, { replace: true, state: null });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (!bookingsLoaded && !bookingsLoading) loadBookings();
   }, [bookingsLoaded, bookingsLoading, loadBookings]);
@@ -128,7 +160,7 @@ export default function Profile() {
     loadStats();
   }, [loadStats]);
 
-  // ─── Încarcă favorites din DB după ce user-ul e disponibil ───────────────
+  // Încarcă favorites din DB după ce user-ul e disponibil
   useEffect(() => {
     if (!user) return;
     loadFavoritesFromDB().then((list) => setFavorites(list));
