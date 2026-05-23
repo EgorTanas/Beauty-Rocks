@@ -1,6 +1,6 @@
 const express = require("express");
 const { body, query, validationResult } = require("express-validator");
-const passport = require("../config/passport");
+const passport = require("../config/Passport");
 const rateLimit = require("express-rate-limit");
 
 // Max 10 încercări login / 15 minute per IP
