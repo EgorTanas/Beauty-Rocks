@@ -50,7 +50,7 @@ const verifyRefreshToken = (token) => {
 const COOKIE_BASE = {
   httpOnly: true,                                  // JS cannot read
   secure: process.env.NODE_ENV === "production",   // HTTPS only in prod
-  sameSite: process.env.NODE_ENV === "production" ? "Strict" : "Lax",
+  sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
   path: "/",
 };
 
