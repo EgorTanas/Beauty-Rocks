@@ -1,14 +1,9 @@
 // ─── favoriteServices.js ─────────────────────────────────────────────────────
-// Favorites sunt sincronizate cu DB-ul prin API.
-// localStorage rămâne doar ca cache local pentru guest sau fallback rapid.
+
+import { apiFetch as apiFetchBase } from './api';
 
 const GUEST_KEY = 'br_favorite_services_guest';
 const CHANGE_EVENT = 'br:favorites-changed';
-
-function getToken() {
-  // token-ul nu e necesar — autentificarea se face prin cookie (httpOnly)
-  return null;
-}
 
 function getUserId() {
   try {
@@ -25,7 +20,7 @@ function isLoggedIn() {
   return !!getUserId();
 }
 
-// ─── Cache local (doar pentru UI reactiv instant) ────────────────────────────
+// ─── Cache ───────────────────────────────────────────────────────────────────
 
 function cacheKey() {
   const id = getUserId();
@@ -48,24 +43,35 @@ function writeCache(list) {
   window.dispatchEvent(new CustomEvent(CHANGE_EVENT));
 }
 
-// ─── API calls ───────────────────────────────────────────────────────────────
-
-async function apiFetch(path, options = {}) {
-  return fetch(path, {
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
-    ...options,
-  });
+/**
+ * Șterge cache-ul userului curent la delogare.
+ * Apelat automat când se primește evenimentul 'br-auth-change'.
+ */
+export function clearFavoritesCache() {
+  // Șterge toate cheile de cache din localStorage
+  const keys = Object.keys(localStorage).filter(
+    (k) => k.startsWith('br_fav_cache_') || k === GUEST_KEY
+  );
+  keys.forEach((k) => localStorage.removeItem(k));
+  window.dispatchEvent(new CustomEvent(CHANGE_EVENT));
 }
 
-/**
- * Încarcă favorites din DB și actualizează cache-ul local.
- * Returnează array-ul de obiecte favorite normalizate.
- */
+// Ascultă delogarea și curăță cache-ul automat
+window.addEventListener('br-auth-change', () => {
+  // Dacă după eveniment nu mai e user logat, curăță cache-ul
+  if (!getUserId()) {
+    const keys = Object.keys(localStorage).filter((k) => k.startsWith('br_fav_cache_'));
+    keys.forEach((k) => localStorage.removeItem(k));
+    window.dispatchEvent(new CustomEvent(CHANGE_EVENT));
+  }
+});
+
+// ─── API calls ───────────────────────────────────────────────────────────────
+
 export async function loadFavoritesFromDB() {
-  if (!isLoggedIn()) return readCache();
+  if (!isLoggedIn()) return [];
   try {
-    const res = await apiFetch('/api/user/favorites');
+    const res = await apiFetchBase('/api/user/favorites');
     if (!res.ok) return readCache();
     const json = await res.json();
     const list = (json.data || []).map(normalizeDBItem);
@@ -90,47 +96,43 @@ function normalizeDBItem(item) {
 
 // ─── Public API ──────────────────────────────────────────────────────────────
 
-/** @returns {FavoriteService[]} — din cache (sincron, pentru render instant) */
 export function getFavoriteServices() {
+  if (!isLoggedIn()) return [];
   return readCache().filter((item) => item?.id);
 }
 
-/** @param {string} id */
 export function isFavoriteService(id) {
-  if (!id) return false;
+  if (!id || !isLoggedIn()) return false;
   return readCache().some((item) => String(item.id) === String(id));
 }
 
 /**
- * Toggle favorite: salvează în DB dacă user-ul e autentificat,
- * altfel doar în localStorage (guest).
- * @param {{ id: string, title?: string, name?: string, desc?: string, description?: string, duration?: string, price?: string, image?: string, category?: string }} service
- * @returns {Promise<boolean>} — true dacă a fost adăugat, false dacă a fost eliminat
+ * Toggle favorite.
+ * Dacă userul nu e logat, dispatch event 'br:auth-required' și returnează false.
  */
 export async function toggleFavoriteService(service) {
   if (!service?.id) return false;
+
+  if (!isLoggedIn()) {
+    window.dispatchEvent(new CustomEvent('br:auth-required', { detail: { action: 'favorite' } }));
+    return false;
+  }
 
   const list = readCache();
   const idx = list.findIndex((item) => String(item.id) === String(service.id));
   const isCurrentlyFav = idx >= 0;
 
   if (isCurrentlyFav) {
-    // ── Remove ──
     const newList = list.filter((_, i) => i !== idx);
     writeCache(newList);
-
-    if (isLoggedIn()) {
-      try {
-        await apiFetch(`/api/user/favorites/${service.id}`, { method: 'DELETE' });
-      } catch {
-        // revert cache dacă request-ul a eșuat
-        writeCache(list);
-        return true;
-      }
+    try {
+      await apiFetchBase(`/api/user/favorites/${service.id}`, { method: 'DELETE' });
+    } catch {
+      writeCache(list);
+      return true;
     }
     return false;
   } else {
-    // ── Add ──
     const newItem = {
       id: String(service.id),
       title: service.title || service.name || 'Service',
@@ -142,38 +144,31 @@ export async function toggleFavoriteService(service) {
     };
     const newList = [newItem, ...list];
     writeCache(newList);
-
-    if (isLoggedIn()) {
-      try {
-        const res = await apiFetch('/api/user/favorites', {
-          method: 'POST',
-          body: JSON.stringify({ serviceId: service.id }),
-        });
-        if (!res.ok && res.status !== 409) {
-          // revert dacă a eșuat (409 = deja exista, e ok)
-          writeCache(list);
-          return false;
-        }
-      } catch {
+    try {
+      const res = await apiFetchBase('/api/user/favorites', {
+        method: 'POST',
+        body: { serviceId: service.id },
+      });
+      if (!res.ok && res.status !== 409) {
         writeCache(list);
         return false;
       }
+    } catch {
+      writeCache(list);
+      return false;
     }
     return true;
   }
 }
 
-/** @param {string} id */
 export async function removeFavoriteService(id) {
+  if (!isLoggedIn()) return;
   const list = readCache().filter((item) => String(item.id) !== String(id));
   writeCache(list);
-
-  if (isLoggedIn()) {
-    try {
-      await apiFetch(`/api/user/favorites/${id}`, { method: 'DELETE' });
-    } catch {
-      // silent fail — cache deja actualizat
-    }
+  try {
+    await apiFetchBase(`/api/user/favorites/${id}`, { method: 'DELETE' });
+  } catch {
+    // silent fail
   }
 }
 
@@ -186,7 +181,3 @@ export function subscribeFavorites(callback) {
     window.removeEventListener('br-auth-change', handler);
   };
 }
-
-/**
- * @typedef {{ id: string, title: string, desc?: string, duration?: string, price?: string, image?: string, category?: string }} FavoriteService
- */

@@ -92,7 +92,7 @@ export function resolveServiceImage(service) {
 export function toListingCard(service) {
   const category = normalizeCategory(service.category);
   return {
-    id: service._id,
+    id: String(service._id),
     title: service.name,
     desc: service.description,
     duration: service.duration,

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Clock, Heart, Plus } from 'lucide-react';
 import { buildBookingServiceFromCard, setBookingPrefill } from '../../utils/bookingPrefill';
 import HighlightText from '../../utils/highlightText';
@@ -9,6 +9,7 @@ import {
   toggleFavoriteService,
 } from '../../utils/favoriteServices';
 import { CATEGORY_IMAGES, CATEGORY_META } from './servicesData';
+import { useAuth } from '../../context/AuthContext';
 
 const FALLBACK_IMAGE = '/imgHome/image.png';
 
@@ -32,6 +33,8 @@ export default function ServiceListingCard({
   const initialSrc = image || categoryFallback;
   const [imgSrc, setImgSrc] = useState(initialSrc);
   const [saved, setSaved] = useState(() => isFavoriteService(id));
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     setImgSrc(image || categoryFallback);
@@ -49,6 +52,19 @@ export default function ServiceListingCard({
       if (current !== FALLBACK_IMAGE) return FALLBACK_IMAGE;
       return current;
     });
+  };
+
+  const handleWishlistClick = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Dacă nu e autentificat, redirect la pagina de login
+    if (!user) {
+      navigate('/auth?redirect=/services');
+      return;
+    }
+
+    await toggleFavoriteService({ id, title, desc, duration, price, image, category });
   };
 
   const categoryLabel = CATEGORY_META[category]?.label ?? category;
@@ -75,11 +91,8 @@ export default function ServiceListingCard({
             className={`services-card__wishlist${saved ? ' services-card__wishlist--active' : ''}`}
             aria-label={saved ? `Remove ${title} from favorites` : `Save ${title}`}
             aria-pressed={saved}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              toggleFavoriteService({ id, title, desc, duration, price, image, category });
-            }}
+            onClick={handleWishlistClick}
+            title={!user ? 'Autentifică-te pentru a salva la favorite' : undefined}
           >
             <Heart size={14} strokeWidth={1.75} fill={saved ? 'currentColor' : 'none'} aria-hidden />
           </button>
