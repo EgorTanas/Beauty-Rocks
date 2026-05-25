@@ -1,6 +1,6 @@
 import { TEAM_PAGE_FALLBACK } from './teamData';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000').trim().replace(/\/$/, '');
 
 export function getMemberInitials(name) {
   if (!name || typeof name !== 'string') return '?';

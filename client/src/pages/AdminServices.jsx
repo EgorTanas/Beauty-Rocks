@@ -24,7 +24,7 @@ import { AdminHeaderActions, AdminNav } from '../components/admin/AdminNav';
 import { AdminHeader } from '../components/admin/AdminMotion';
 import { adminStagger, adminTableRow } from '../components/admin/adminMotionVariants';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API = (import.meta.env.VITE_API_URL || 'http://localhost:5000').trim().replace(/\/$/, '');
 
 
 const ADMIN_API = `${API}/api/admin/services`;

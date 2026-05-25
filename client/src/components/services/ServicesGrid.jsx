@@ -13,7 +13,7 @@ import {
   toListingCard,
 } from './servicesData';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API = (import.meta.env.VITE_API_URL || 'http://localhost:5000').trim().replace(/\/$/, '');
 const PAGE_SIZE = 8;
 
 function groupByCategory(services) {

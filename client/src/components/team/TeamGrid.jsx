@@ -4,7 +4,7 @@ import { Users } from 'lucide-react';
 import TeamMemberCard from './TeamMemberCard';
 import { FALLBACK_TEAM, mapApiMember } from './teamUtils';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API = (import.meta.env.VITE_API_URL || 'http://localhost:5000').trim().replace(/\/$/, '');
 
 export default function TeamGrid() {
   const reduceMotion = useReducedMotion();

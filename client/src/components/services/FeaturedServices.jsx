@@ -4,7 +4,7 @@ import ServicesCarousel from './ServicesCarousel';
 import ServiceListingCard from './ServiceListingCard';
 import { toListingCard } from './servicesData';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API = (import.meta.env.VITE_API_URL || 'http://localhost:5000').trim().replace(/\/$/, '');
 const FEATURED_COUNT = 4;
 
 /** Static featured row — not affected by category/search filters */

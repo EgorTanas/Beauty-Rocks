@@ -7,7 +7,7 @@ import ServiceListingCard from '../services/ServiceListingCard';
 import { toListingCard } from '../services/servicesData';
 import '../../style/services.css';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API = (import.meta.env.VITE_API_URL || 'http://localhost:5000').trim().replace(/\/$/, '');
 const HOME_LIMIT = 6;
 
 export default function ServicesSection() {

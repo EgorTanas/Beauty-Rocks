@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Clock, Heart, Plus } from 'lucide-react';
 import { buildBookingServiceFromCard, setBookingPrefill } from '../../utils/bookingPrefill';
 import HighlightText from '../../utils/highlightText';
@@ -34,7 +34,6 @@ export default function ServiceListingCard({
   const [imgSrc, setImgSrc] = useState(initialSrc);
   const [saved, setSaved] = useState(() => isFavoriteService(id));
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   useEffect(() => {
     setImgSrc(image || categoryFallback);
@@ -58,11 +57,8 @@ export default function ServiceListingCard({
     e.preventDefault();
     e.stopPropagation();
 
-    // Dacă nu e autentificat, redirect la pagina de login
-    if (!user) {
-      navigate('/auth?redirect=/services');
-      return;
-    }
+    // Dacă nu e autentificat, nu face nimic — butonul e dezactivat vizual
+    if (!user) return;
 
     await toggleFavoriteService({ id, title, desc, duration, price, image, category });
   };
@@ -88,11 +84,12 @@ export default function ServiceListingCard({
         {showWishlist && id ? (
           <button
             type="button"
-            className={`services-card__wishlist${saved ? ' services-card__wishlist--active' : ''}`}
-            aria-label={saved ? `Remove ${title} from favorites` : `Save ${title}`}
+            className={`services-card__wishlist${saved ? ' services-card__wishlist--active' : ''}${!user ? ' services-card__wishlist--disabled' : ''}`}
+            aria-label={!user ? 'Autentifică-te pentru a salva la favorite' : saved ? `Remove ${title} from favorites` : `Save ${title}`}
             aria-pressed={saved}
             onClick={handleWishlistClick}
             title={!user ? 'Autentifică-te pentru a salva la favorite' : undefined}
+            style={!user ? { opacity: 0.45, cursor: 'not-allowed', pointerEvents: 'none' } : undefined}
           >
             <Heart size={14} strokeWidth={1.75} fill={saved ? 'currentColor' : 'none'} aria-hidden />
           </button>
