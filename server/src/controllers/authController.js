@@ -192,15 +192,23 @@ exports.forgotPassword = async (req, res) => {
 }
     const rawToken = user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
+
+    // Trimite emailul cu timeout de 10s — nu lasam requestul sa stea blocat la infinit
+    const emailTimeout = (ms) => new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Email timeout after ' + ms + 'ms')), ms)
+    );
+
     try {
-      await sendPasswordResetEmail(user, rawToken);
+      await Promise.race([
+        sendPasswordResetEmail(user, rawToken),
+        emailTimeout(10000),
+      ]);
+      console.log('Reset email sent to', user.email);
     } catch (emailErr) {
-      user.passwordResetToken = undefined;
-      user.passwordResetExpires = undefined;
-      await user.save({ validateBeforeSave: false });
       console.error("Failed to send reset email:", emailErr.message);
-      return res.status(500).json({ message: "Failed to send reset email. Please try again later." });
+      // Raspundem cu succes oricum — nu dezvaluim daca emailul exista sau SMTP-ul a picat
     }
+
     return res.status(200).json({ message: successMsg });
   } catch (error) {
     console.error("ForgotPassword error:", error);
