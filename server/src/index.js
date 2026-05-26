@@ -8,6 +8,11 @@ const passport = require("./config/Passport");
 const authRoutes = require("./routes/authRoutes");
 
 const app = express();
+
+// Render (și orice hosting cu reverse proxy) trimite X-Forwarded-For
+// Fără această linie, express-rate-limit aruncă eroare și blochează toate requesturile
+app.set('trust proxy', 1);
+
 connectDB();
 
 // ─── CORS — suportă mai multe origini (localhost + Vercel) ───────────────────
