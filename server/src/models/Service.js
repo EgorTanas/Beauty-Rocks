@@ -45,7 +45,10 @@ const serviceSchema = new mongoose.Schema(
 serviceSchema.index({ isActive: 1, order: 1 });
 serviceSchema.index({ category: 1 });
 
-serviceSchema.pre('save', function (next) {
+
+// Auto-populează durationMinutes din string-ul duration (ex: "75 min", "1h 15min", "60")
+serviceSchema.pre('save', function () {
+  
   if (this.isModified('duration') || !this.durationMinutes) {
     const raw = String(this.duration || '');
     const hoursMatch = raw.match(/(\d+)\s*h/i);
@@ -59,7 +62,6 @@ serviceSchema.pre('save', function (next) {
       if (!isNaN(num) && num > 0) this.durationMinutes = num;
     }
   }
-  next();
 });
 
 module.exports = mongoose.model('Service', serviceSchema);

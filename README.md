@@ -14,6 +14,17 @@ Beauty Rocks este o aplicație web full-stack pentru un salon de înfrumusețare
 	-   Token-urile sunt stocate în cookie-uri securizate, `httpOnly` pentru protecție împotriva atacurilor XSS.
 -   **Gestionarea Profilului Utilizatorului**:
 	-   Utilizatorii autentificați pot vizualiza și actualiza informațiile profilului lor.
+	-   Încărcarea și ștergerea avatarului de profil.
+	-   Schimbarea parolei și ștergerea contului.
+	-   Gestionarea serviciilor favorite.
+-   **Sistem de Programări**:
+	-   Flux de rezervare în mai mulți pași (serviciu → specialist → dată/oră → confirmare).
+	-   Verificare în timp real a sloturilor disponibile în funcție de programul specialistului.
+	-   Istoricul programărilor și posibilitatea de anulare.
+-   **Panou de Administrare**:
+	-   Gestionarea completă a serviciilor (creare, editare, ștergere, activare/dezactivare).
+	-   Gestionarea echipei (adăugare membri, program de lucru, zile libere).
+	-   Gestionarea și monitorizarea tuturor programărilor.
 -   **Frontend Dinamic**:
 	-   Construit cu React și Vite pentru o experiență de utilizator rapidă și modernă.
 	-   Stilizat cu Tailwind CSS pentru un design curat și responsiv.
@@ -47,8 +58,35 @@ Repository-ul este organizat într-o structură monorepo cu două pachete princi
 
 ```
 /
-├── client/     # Aplicația frontend React (Vite)
-└── server/     # API backend Node.js (Express)
+├── client/                         # Aplicația frontend React (Vite)
+│   ├── public/
+│   │   ├── img/                    # Imagini pentru autentificare și logo
+│   │   └── imgHome/                # Imagini pentru pagina principală
+│   └── src/
+│       ├── components/
+│       │   ├── admin/              # Componente panou de administrare
+│       │   │   └── bookings/       # Componente gestionare programări admin
+│       │   ├── booking/            # Componente flux de rezervare
+│       │   ├── common/             # Componente reutilizabile (Navbar, Footer etc.)
+│       │   ├── profile/            # Componente pagina de profil
+│       │   ├── sections/           # Secțiuni pagina principală
+│       │   ├── services/           # Componente pagina servicii
+│       │   └── team/               # Componente pagina echipă
+│       ├── constants/              # Constante globale (linkuri sociale, locație)
+│       ├── context/                # Context React (AuthContext)
+│       ├── hooks/                  # Hook-uri personalizate
+│       ├── pages/                  # Paginile aplicației
+│       └── utils/                  # Funcții utilitare și API helpers
+└── server/                         # API backend Node.js (Express)
+	└── src/
+		├── config/                 # Configurare DB și Passport
+		├── controllers/            # Logica de business pentru fiecare resursă
+		├── middleware/             # Middleware autentificare și upload
+		├── models/                 # Modele Mongoose (User, Service, TeamMember, Appointment)
+		├── routes/
+		│   ├── admin/              # Rute protejate pentru admin
+		│   └── ...                 # Rute publice și protejate
+		└── utils/                  # Utilitare (email, JWT)
 ```
 
 ## Începerea Lucrului
@@ -136,17 +174,96 @@ EMAIL_FROM_ADDRESS=<adresă_email_expeditor>
 
 ## Endpoint-uri API
 
-Backend-ul expune următoarele endpoint-uri de autentificare sub prefixul `/api/auth`:
+### Autentificare — `/api/auth`
 
-| Metodă | Endpoint                 | Descriere                                  |
-| :----- | :----------------------- | :----------------------------------------- |
-| `POST` | `/register`              | Creează un cont nou de utilizator.         |
-| `POST` | `/login`                 | Autentifică un utilizator și emite JWT-uri.|
-| `POST` | `/logout`                | Deconectează și șterge cookie-urile de sesiune. |
-| `GET`  | `/me`                    | Obține profilul utilizatorului autentificat.|
-| `POST` | `/refresh`               | Emite un nou token de acces folosind un token de refresh. |
-| `POST` | `/forgot-password`       | Trimite un link de resetare a parolei la email-ul utilizatorului. |
-| `POST` | `/reset-password`        | Resetează parola folosind un token valid.  |
-| `GET`  | `/verify-email`          | Verifică adresa de email a utilizatorului. |
-| `GET`  | `/google`                | Inițiază fluxul de autentificare Google OAuth 2.0. |
-| `GET`  | `/google/callback`       | Gestionează callback-ul de la Google OAuth.|
+| Metodă | Endpoint                 | Descriere                                           | Acces  |
+| :----- | :----------------------- | :-------------------------------------------------- | :----- |
+| `POST` | `/register`              | Creează un cont nou de utilizator.                  | Public |
+| `POST` | `/login`                 | Autentifică un utilizator și emite JWT-uri.         | Public |
+| `POST` | `/logout`                | Deconectează și șterge cookie-urile de sesiune.     | Public |
+| `GET`  | `/me`                    | Obține profilul utilizatorului autentificat.        | Public |
+| `POST` | `/refresh`               | Emite un nou token de acces folosind un token de refresh. | Public |
+| `POST` | `/forgot-password`       | Trimite un link de resetare a parolei la email-ul utilizatorului. | Public |
+| `POST` | `/reset-password`        | Resetează parola folosind un token valid.           | Public |
+| `GET`  | `/verify-email`          | Verifică adresa de email a utilizatorului.          | Public |
+| `GET`  | `/google`                | Inițiază fluxul de autentificare Google OAuth 2.0.  | Public |
+| `GET`  | `/google/callback`       | Gestionează callback-ul de la Google OAuth.         | Public |
+
+### Utilizator — `/api/user`
+
+Toate endpoint-urile necesită autentificare (JWT).
+
+| Metodă   | Endpoint                    | Descriere                                          |
+| :------- | :-------------------------- | :------------------------------------------------- |
+| `GET`    | `/profile`                  | Obține datele profilului utilizatorului curent.    |
+| `PATCH`  | `/profile`                  | Actualizează informațiile profilului.              |
+| `POST`   | `/avatar`                   | Încarcă un avatar nou de profil.                   |
+| `DELETE` | `/avatar`                   | Șterge avatarul de profil.                         |
+| `GET`    | `/appointments`             | Obține lista programărilor utilizatorului.         |
+| `GET`    | `/appointments/stats`       | Obține statistici despre programările utilizatorului. |
+| `PATCH`  | `/password`                 | Schimbă parola contului.                           |
+| `DELETE` | `/account`                  | Șterge permanent contul utilizatorului.            |
+| `GET`    | `/favorites`                | Obține lista serviciilor favorite.                 |
+| `POST`   | `/favorites`                | Adaugă un serviciu la favorite.                    |
+| `DELETE` | `/favorites/:serviceId`     | Elimină un serviciu din favorite.                  |
+
+### Servicii — `/api/services`
+
+| Metodă | Endpoint  | Descriere                              | Acces  |
+| :----- | :-------- | :------------------------------------- | :----- |
+| `GET`  | `/`       | Obține lista serviciilor active.       | Public |
+| `GET`  | `/:id`    | Obține detaliile unui serviciu.        | Public |
+
+### Echipă — `/api/team`
+
+| Metodă | Endpoint                   | Descriere                                               | Acces  |
+| :----- | :------------------------- | :------------------------------------------------------ | :----- |
+| `GET`  | `/`                        | Obține lista membrilor activi ai echipei.               | Public |
+| `GET`  | `/:id`                     | Obține detaliile unui membru al echipei.                | Public |
+| `GET`  | `/:id/availability/:date`  | Verifică disponibilitatea unui specialist la o dată.    | Public |
+
+### Programări — `/api/appointments`
+
+| Metodă  | Endpoint             | Descriere                                              | Acces          |
+| :------ | :------------------- | :----------------------------------------------------- | :------------- |
+| `GET`   | `/available-slots`   | Obține sloturile disponibile (parametri: `worker`, `date`, `service`). | Public  |
+| `GET`   | `/`                  | Obține programările utilizatorului autentificat.       | Autentificat   |
+| `POST`  | `/`                  | Creează o programare nouă.                             | Autentificat   |
+| `GET`   | `/:id`               | Obține detaliile unei programări.                      | Autentificat   |
+| `PATCH` | `/:id/cancel`        | Anulează o programare existentă.                       | Autentificat   |
+
+### Admin — `/api/admin`
+
+Toate endpoint-urile necesită autentificare și rol de `admin`.
+
+#### Servicii Admin — `/api/admin/services`
+
+| Metodă   | Endpoint            | Descriere                                    |
+| :------- | :------------------ | :------------------------------------------- |
+| `GET`    | `/`                 | Obține toate serviciile (inclusiv inactive). |
+| `POST`   | `/`                 | Creează un serviciu nou.                     |
+| `POST`   | `/upload-image`     | Încarcă o imagine pentru un serviciu.        |
+| `PUT`    | `/:id`              | Actualizează un serviciu existent.           |
+| `DELETE` | `/:id`              | Șterge definitiv un serviciu.                |
+| `PATCH`  | `/:id/toggle`       | Activează sau dezactivează un serviciu.      |
+
+#### Echipă Admin — `/api/admin/team`
+
+| Metodă   | Endpoint            | Descriere                                          |
+| :------- | :------------------ | :------------------------------------------------- |
+| `GET`    | `/`                 | Obține toți membrii echipei (inclusiv inactivi).   |
+| `POST`   | `/`                 | Adaugă un membru nou în echipă.                    |
+| `POST`   | `/upload-image`     | Încarcă un avatar pentru un membru al echipei.     |
+| `PUT`    | `/:id`              | Actualizează datele unui membru al echipei.        |
+| `DELETE` | `/:id`              | Șterge un membru al echipei.                       |
+| `PATCH`  | `/:id/toggle`       | Activează sau dezactivează un membru al echipei.   |
+
+#### Programări Admin — `/api/admin/appointments`
+
+| Metodă   | Endpoint          | Descriere                                               |
+| :------- | :---------------- | :------------------------------------------------------ |
+| `GET`    | `/`               | Obține toate programările (cu filtrare și paginare).    |
+| `POST`   | `/`               | Creează o programare din panoul de admin.               |
+| `PATCH`  | `/:id/status`     | Actualizează statusul unei programări.                  |
+| `PUT`    | `/:id`            | Reprogramează o programare existentă.                   |
+| `DELETE` | `/:id`            | Șterge definitiv o programare.                          |
