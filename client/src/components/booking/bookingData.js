@@ -1,6 +1,7 @@
 import {
   CATEGORY_FILTERS,
   CATEGORY_META,
+  getCategoryDisplayLabel,
   normalizeCategory,
   resolveServiceImage,
 } from '../services/servicesData';
@@ -8,7 +9,7 @@ import {
 /** Categoriile pentru filtrare în booking — aceleași ca la pagina Services */
 export const BOOKING_CATEGORIES = CATEGORY_FILTERS;
 
-const CATEGORY_ORDER = ['manicure', 'pedicure', 'hair-women', 'hair-men', 'other'];
+const CATEGORY_ORDER = ['manicure', 'pedicure', 'hair-women', 'hair-men', 'beard', 'other'];
 
 export function getCategoryLabel(categoryId) {
   return CATEGORY_META[categoryId]?.label ?? categoryId;
@@ -65,6 +66,7 @@ const CATEGORY_TO_SPECIALIST_TYPES = {
   pedicure: ['pedicure', 'nails'],
   'hair-women': ['hair', 'color', 'styling'],
   'hair-men': ['hair'],
+  beard: ['hair'],
   other: ['bridal', 'makeup', 'styling'],
 };
 
@@ -77,9 +79,15 @@ export function getServiceSpecialistTypes(service) {
 }
 
 export function getSpecialistDisplayTags(specialist) {
-  return specialist.specialtyTypes.map(
-    (type) => BOOKING_SPECIALIST_TYPE_LABELS[type] ?? type,
-  );
+  if (Array.isArray(specialist.serviceCategories) && specialist.serviceCategories.length > 0) {
+    return specialist.serviceCategories.map((id) => getCategoryDisplayLabel(id));
+  }
+  if (specialist.specialtyTypes?.length) {
+    return specialist.specialtyTypes.map(
+      (type) => BOOKING_SPECIALIST_TYPE_LABELS[type] ?? type,
+    );
+  }
+  return [];
 }
 
 export function isSpecialistCompatibleWithService(specialist, service) {

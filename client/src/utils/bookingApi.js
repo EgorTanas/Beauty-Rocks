@@ -29,11 +29,14 @@ function inferSpecialtyTypes(specialties = []) {
       if (lower.includes(keyword)) types.add(type);
     }
   }
-  return types.size ? [...types] : ['hair', 'nails', 'styling', 'pedicure'];
+  return types.size ? [...types] : [];
 }
 
 export function mapApiMemberToBookingSpecialist(member) {
   const specialtyTypes = inferSpecialtyTypes(member.specialties);
+  const serviceCategories = Array.isArray(member.serviceCategories)
+    ? member.serviceCategories.map((c) => String(c).toLowerCase())
+    : [];
   return {
     id: String(member._id || member.id),
     name: member.name,
@@ -41,12 +44,14 @@ export function mapApiMemberToBookingSpecialist(member) {
     image: resolveTeamAvatar(member.avatar) || '/imgHome/team1.png',
     bio: member.bio || '',
     specialtyTypes,
+    serviceCategories,
     fromApi: true,
   };
 }
 
-export async function fetchBookingTeam() {
-  const res = await apiFetch('/api/team');
+export async function fetchBookingTeam(serviceId) {
+  const path = serviceId ? `/api/team?service=${encodeURIComponent(serviceId)}` : '/api/team';
+  const res = await apiFetch(path);
   const json = await parseJson(res);
   if (!res.ok || !Array.isArray(json.data)) return [];
   return json.data
@@ -54,20 +59,21 @@ export async function fetchBookingTeam() {
     .map(mapApiMemberToBookingSpecialist);
 }
 
-/**
- * Filtrează specialiștii din API după serviciul selectat.
- * Dacă niciun specialist nu corespunde, returnează toată lista (fără fallback hardcodat).
- */
-export function mergeBookingSpecialists(apiList, service) {
-  const required = service ? getServiceSpecialistTypes(service) : [];
-  const apiFiltered = service
-    ? apiList.filter((s) =>
-        s.specialtyTypes.some((type) => required.includes(type)),
-      )
-    : apiList;
+/** Client-side filter fallback when full team list was loaded */
+export function filterSpecialistsForService(apiList, service) {
+  if (!service) return apiList;
+  const categoryId = String(service.categoryId || '').toLowerCase();
+  return apiList.filter(
+    (s) =>
+      Array.isArray(s.serviceCategories) &&
+      s.serviceCategories.length > 0 &&
+      s.serviceCategories.includes(categoryId),
+  );
+}
 
-  // Dacă niciun specialist nu se potrivește strict, arată toți (mai util decât lista goală)
-  return apiFiltered.length > 0 ? apiFiltered : apiList;
+export function mergeBookingSpecialists(apiList, service) {
+  if (!service) return apiList;
+  return filterSpecialistsForService(apiList, service);
 }
 
 export async function fetchAvailableSlots({ teamMemberId, serviceId, date }) {

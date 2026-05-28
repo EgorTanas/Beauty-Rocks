@@ -14,6 +14,8 @@ import {
   Image as ImageIcon,
   Loader2,
   Plus,
+  Star,
+  Home,
   Trash2,
   Upload,
   X,
@@ -23,13 +25,14 @@ import AdminServiceCard from '../components/admin/AdminServiceCard';
 import { AdminHeaderActions, AdminNav } from '../components/admin/AdminNav';
 import { AdminHeader } from '../components/admin/AdminMotion';
 import { adminStagger, adminTableRow } from '../components/admin/adminMotionVariants';
+import { buildCategoryOptions, normalizeCategory, slugifyCategory } from '../utils/categories';
+import { fetchSiteSettings } from '../utils/siteSettingsApi';
 
 const API = (import.meta.env.VITE_API_URL || 'http://localhost:5000').trim().replace(/\/$/, '');
 
-
 const ADMIN_API = `${API}/api/admin/services`;
 
-const CATEGORIES = ['manicure', 'pedicure', 'hair-women', 'hair-men', 'other'];
+const BUILTIN_IDS = new Set(['manicure', 'pedicure', 'hair-women', 'hair-men', 'beard']);
 
 const EMPTY_FORM = {
   name:        '',
@@ -37,9 +40,13 @@ const EMPTY_FORM = {
   price:       '',
   duration:    '',
   category:    'manicure',
+  customCategoryName: '',
+  customCategoryLabel: '',
   image:       '',
   isActive:    true,
   order:       0,
+  showOnHomepage: false,
+  featuredOnServicesPage: false,
 };
 
 const fetchOpts = (method = 'GET', body) => ({
@@ -378,6 +385,13 @@ export default function AdminServices() {
   const [formError,  setFormError]  = useState(null);
 
   const [deletingId, setDeletingId] = useState(null);
+  const [categoryOptions, setCategoryOptions] = useState(buildCategoryOptions());
+
+  useEffect(() => {
+    fetchSiteSettings()
+      .then((data) => setCategoryOptions(buildCategoryOptions(data.categories || [])))
+      .catch(() => {});
+  }, []);
 
   const fetchServices = async () => {
     try {
@@ -421,15 +435,21 @@ export default function AdminServices() {
 
   const openEdit = (service) => {
     setEditingId(service._id);
+    const cat = normalizeCategory(service.category);
+    const isCustom = !cat || cat === 'other' || !BUILTIN_IDS.has(cat);
     setForm({
       name:        service.name,
       description: service.description,
       price:       service.price,
       duration:    service.duration,
-      category:    service.category,
+      category:    isCustom ? '__custom__' : cat,
+      customCategoryName: isCustom ? cat : '',
+      customCategoryLabel: '',
       image:       service.image || '',
       isActive:    service.isActive,
       order:       service.order,
+      showOnHomepage: !!service.showOnHomepage,
+      featuredOnServicesPage: !!service.featuredOnServicesPage,
     });
     setFormError(null);
     setModalOpen(true);
@@ -455,7 +475,33 @@ export default function AdminServices() {
       const url    = editingId ? `${ADMIN_API}/${editingId}` : ADMIN_API;
       const method = editingId ? 'PUT' : 'POST';
 
-      const res = await fetch(url, fetchOpts(method, form));
+      let category = form.category;
+      let customCategoryLabel = '';
+      if (form.category === '__custom__') {
+        const slug = slugifyCategory(form.customCategoryName);
+        if (!slug) {
+          setFormError('Enter a name for the new category (e.g. beard, bridal).');
+          return;
+        }
+        category = slug;
+        customCategoryLabel = form.customCategoryLabel?.trim() || form.customCategoryName.trim();
+      }
+
+      const payload = {
+        name: form.name,
+        description: form.description,
+        price: form.price,
+        duration: form.duration,
+        category,
+        customCategoryLabel,
+        image: form.image,
+        isActive: form.isActive,
+        order: form.order,
+        showOnHomepage: form.showOnHomepage,
+        featuredOnServicesPage: form.featuredOnServicesPage,
+      };
+
+      const res = await fetch(url, fetchOpts(method, payload));
 
       if (res.status === 401 || res.status === 403) {
         navigate('/login');
@@ -474,6 +520,17 @@ export default function AdminServices() {
       setFormError(err.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handlePlacementToggle = async (id, field) => {
+    try {
+      const res = await fetch(`${ADMIN_API}/${id}/placement`, fetchOpts('PATCH', { field }));
+      if (!res.ok) throw new Error('Update failed');
+      const json = await res.json();
+      setServices((prev) => prev.map((s) => (s._id === id ? json.data : s)));
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -562,6 +619,8 @@ export default function AdminServices() {
                 <th>Category</th>
                 <th>Price</th>
                 <th>Duration</th>
+                <th>Home</th>
+                <th>Featured</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -569,7 +628,7 @@ export default function AdminServices() {
             <tbody>
               {services.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="adm-table-empty">
+                  <td colSpan={9} className="adm-table-empty">
                     No services yet. Click "Add service" to create one.
                   </td>
                 </tr>
@@ -595,6 +654,26 @@ export default function AdminServices() {
                   </td>
                   <td>{s.price}</td>
                   <td>{s.duration}</td>
+                  <td>
+                    <button
+                      type="button"
+                      className={`adm-pin-btn ${s.showOnHomepage ? 'adm-pin-btn--on' : ''}`}
+                      onClick={() => handlePlacementToggle(s._id, 'showOnHomepage')}
+                      title={s.showOnHomepage ? 'On homepage' : 'Add to homepage'}
+                    >
+                      <Home size={16} />
+                    </button>
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      className={`adm-pin-btn ${s.featuredOnServicesPage ? 'adm-pin-btn--on' : ''}`}
+                      onClick={() => handlePlacementToggle(s._id, 'featuredOnServicesPage')}
+                      title={s.featuredOnServicesPage ? 'In Our Most Loved' : 'Add to Our Most Loved'}
+                    >
+                      <Star size={16} />
+                    </button>
+                  </td>
                   <td>
                     <button
                       className={`adm-toggle-btn ${s.isActive ? 'adm-toggle-btn--on' : 'adm-toggle-btn--off'}`}
@@ -640,6 +719,8 @@ export default function AdminServices() {
               onEdit={openEdit}
               onToggle={handleToggle}
               onDelete={setDeletingId}
+              onToggleHome={(id) => handlePlacementToggle(id, 'showOnHomepage')}
+              onToggleFeatured={(id) => handlePlacementToggle(id, 'featuredOnServicesPage')}
             />
           ))}
         </motion.div>
@@ -732,13 +813,38 @@ export default function AdminServices() {
                     value={form.category}
                     onChange={(e) => setForm({ ...form, category: e.target.value })}
                   >
-                    {CATEGORIES.map((c) => (
-                      <option key={c} value={c}>
-                        {c.charAt(0).toUpperCase() + c.slice(1)}
-                      </option>
-                    ))}
+                    {categoryOptions
+                      .filter((c) => c.id !== 'other')
+                      .map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.label}
+                        </option>
+                      ))}
+                    <option value="__custom__">Other…</option>
                   </select>
                 </label>
+                {form.category === '__custom__' && (
+                  <>
+                    <label className="adm-label">
+                      New category slug
+                      <input
+                        className="adm-input"
+                        value={form.customCategoryName}
+                        onChange={(e) => setForm({ ...form, customCategoryName: e.target.value })}
+                        placeholder="e.g. beard, bridal, lashes"
+                      />
+                    </label>
+                    <label className="adm-label">
+                      Display label <span style={{ fontWeight: 400, opacity: 0.6 }}>(optional)</span>
+                      <input
+                        className="adm-input"
+                        value={form.customCategoryLabel}
+                        onChange={(e) => setForm({ ...form, customCategoryLabel: e.target.value })}
+                        placeholder="e.g. Beard & grooming"
+                      />
+                    </label>
+                  </>
+                )}
                 <label className="adm-label">
                   Display order
                   <input
@@ -748,6 +854,9 @@ export default function AdminServices() {
                     value={form.order}
                     onChange={(e) => setForm({ ...form, order: Number(e.target.value) })}
                   />
+                  <span className="adm-label-hint">
+                    Lower number = appears first in admin and on the public Services page (0, 1, 2…).
+                  </span>
                 </label>
               </div>
 
@@ -757,7 +866,23 @@ export default function AdminServices() {
                   checked={form.isActive}
                   onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
                 />
-                Visible on homepage
+                Active on site
+              </label>
+              <label className="adm-label adm-label--checkbox">
+                <input
+                  type="checkbox"
+                  checked={form.showOnHomepage}
+                  onChange={(e) => setForm({ ...form, showOnHomepage: e.target.checked })}
+                />
+                Show on homepage (Our services)
+              </label>
+              <label className="adm-label adm-label--checkbox">
+                <input
+                  type="checkbox"
+                  checked={form.featuredOnServicesPage}
+                  onChange={(e) => setForm({ ...form, featuredOnServicesPage: e.target.checked })}
+                />
+                Show in “Our Most Loved”
               </label>
               </div>
             </div>

@@ -16,7 +16,7 @@ import {
   createAppointment,
   fetchAvailableSlots,
   fetchBookingTeam,
-  mergeBookingSpecialists,
+
 } from '../utils/bookingApi';
 import { apiFetch, parseJson } from '../utils/api';
 import { mapProfileAppointment } from '../utils/profileBookingUtils';
@@ -68,8 +68,15 @@ export default function Booking() {
   }, []);
 
   useEffect(() => {
+    if (!service?.id) {
+      setTeam([]);
+      setTeamLoaded(true);
+      return undefined;
+    }
+
     let cancelled = false;
-    fetchBookingTeam()
+    setTeamLoaded(false);
+    fetchBookingTeam(service.id)
       .then((list) => {
         if (!cancelled) setTeam(list);
       })
@@ -77,7 +84,7 @@ export default function Booking() {
         if (!cancelled) setTeamLoaded(true);
       });
     return () => { cancelled = true; };
-  }, []);
+  }, [service?.id]);
 
   useEffect(() => {
     if (prefillApplied.current || catalog.length === 0) return;
@@ -99,7 +106,7 @@ export default function Booking() {
     prefillApplied.current = true;
   }, [catalog]);
 
-  const specialists = mergeBookingSpecialists(team, service);
+  const specialists = team;
 
   useEffect(() => {
     setTime(null);

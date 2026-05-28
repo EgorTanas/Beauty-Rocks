@@ -64,6 +64,20 @@ const teamMemberSchema = new mongoose.Schema(
       type: String,
       trim: true,
     }],
+    /** Service category slugs this member can perform (e.g. manicure, beard, hair-men) */
+    serviceCategories: [{
+      type: String,
+      trim: true,
+      lowercase: true,
+    }],
+    showOnHomepage: {
+      type: Boolean,
+      default: false,
+    },
+    homeOrder: {
+      type: Number,
+      default: 0,
+    },
     workingHours: {
       monday:    { type: workingHoursSchema, default: () => ({}) },
       tuesday:   { type: workingHoursSchema, default: () => ({}) },

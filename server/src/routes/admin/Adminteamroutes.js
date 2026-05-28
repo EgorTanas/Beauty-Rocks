@@ -7,6 +7,7 @@ const {
   updateTeamMember,
   deleteTeamMember,
   toggleTeamMemberActive,
+  toggleTeamHomepage,
   uploadTeamAvatar,
 } = require('../../controllers/teamController');
 
@@ -29,5 +30,7 @@ router.delete('/:id', deleteTeamMember);
 
 // PATCH /api/admin/team/:id/toggle  
 router.patch('/:id/toggle', toggleTeamMemberActive);
+
+router.patch('/:id/homepage', toggleTeamHomepage);
 
 module.exports = router;

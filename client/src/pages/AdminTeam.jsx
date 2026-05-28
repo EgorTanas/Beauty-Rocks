@@ -9,6 +9,7 @@ import {
   Edit2,
   Eye,
   EyeOff,
+  Home,
   Image as ImageIcon,
   Loader2,
   Plus,
@@ -23,6 +24,8 @@ import AdminTeamCard from '../components/admin/AdminTeamCard';
 import { AdminHeaderActions, AdminNav } from '../components/admin/AdminNav';
 import { AdminHeader } from '../components/admin/AdminMotion';
 import { adminStagger, adminTableRow } from '../components/admin/adminMotionVariants';
+import { buildCategoryOptions, getCategoryLabel, slugifyCategory } from '../utils/categories';
+import { fetchSiteSettings } from '../utils/siteSettingsApi';
 
 const API        = (import.meta.env.VITE_API_URL || 'http://localhost:5000').trim().replace(/\/$/, '');
 const ADMIN_API  = `${API}/api/admin/team`;
@@ -42,10 +45,13 @@ const EMPTY_FORM = {
   email:        '',
   phone:        '',
   specialties:  '',   // comma-separated string → array on save
+  serviceCategories: [],
   workingHours: EMPTY_WORKING_HOURS,
   daysOff:      [],   // array of ISO date strings
   isActive:     true,
   order:        0,
+  showOnHomepage: false,
+  customCategoryName: '',
 };
 
 const fetchOpts = (method = 'GET', body) => ({
@@ -233,6 +239,14 @@ export default function AdminTeam() {
   const [activeTab,  setActiveTab]  = useState('info'); // 'info' | 'schedule'
 
   const [deletingId, setDeletingId] = useState(null);
+  const [categoryOptions, setCategoryOptions] = useState(buildCategoryOptions());
+  const [categoryPicker, setCategoryPicker] = useState('');
+
+  useEffect(() => {
+    fetchSiteSettings()
+      .then((data) => setCategoryOptions(buildCategoryOptions(data.categories || [])))
+      .catch(() => {});
+  }, []);
 
   // ── Fetch ─────────────────────────────────────────────────
   const fetchMembers = async () => {
@@ -257,6 +271,7 @@ export default function AdminTeam() {
   const openCreate = () => {
     setEditingId(null);
     setForm(EMPTY_FORM);
+    setCategoryPicker('');
     setFormError(null);
     setActiveTab('info');
     setModalOpen(true);
@@ -285,11 +300,15 @@ export default function AdminTeam() {
       email:        m.email        || '',
       phone:        m.phone        || '',
       specialties:  (m.specialties || []).join(', '),
+      serviceCategories: Array.isArray(m.serviceCategories) ? [...m.serviceCategories] : [],
       workingHours: wh,
       daysOff:      (m.daysOff || []).map((d) => new Date(d).toISOString().split('T')[0]),
       isActive:     m.isActive,
       order:        m.order,
+      showOnHomepage: !!m.showOnHomepage,
+      customCategoryName: '',
     });
+    setCategoryPicker('');
     setFormError(null);
     setActiveTab('info');
     setModalOpen(true);
@@ -310,11 +329,28 @@ export default function AdminTeam() {
       return;
     }
 
+    if (!form.serviceCategories?.length) {
+      setFormError('Add at least one service category (e.g. Manicure or Pedicure).');
+      setActiveTab('info');
+      return;
+    }
+
     const payload = {
-      ...form,
+      name: form.name,
+      role: form.role,
+      bio: form.bio,
+      avatar: form.avatar,
+      email: form.email,
+      phone: form.phone,
       specialties: form.specialties
         ? form.specialties.split(',').map((s) => s.trim()).filter(Boolean)
         : [],
+      serviceCategories: form.serviceCategories,
+      workingHours: form.workingHours,
+      daysOff: form.daysOff,
+      isActive: form.isActive,
+      order: form.order,
+      showOnHomepage: form.showOnHomepage,
     };
 
     try {
@@ -336,6 +372,55 @@ export default function AdminTeam() {
   };
 
   // ── Toggle active ─────────────────────────────────────────
+  const handleToggleHomepage = async (id) => {
+    try {
+      const res = await fetch(`${ADMIN_API}/${id}/homepage`, fetchOpts('PATCH'));
+      if (!res.ok) throw new Error('Toggle failed');
+      const json = await res.json();
+      setMembers((prev) => prev.map((m) => (m._id === id ? json.data : m)));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const addServiceCategory = () => {
+    if (categoryPicker === '__custom__') {
+      const slug = slugifyCategory(form.customCategoryName);
+      if (!slug) {
+        setFormError('Type a name for the custom category (e.g. lashes, bridal).');
+        return;
+      }
+      setForm((prev) => {
+        const list = prev.serviceCategories || [];
+        if (list.includes(slug)) return prev;
+        return {
+          ...prev,
+          serviceCategories: [...list, slug],
+          customCategoryName: '',
+        };
+      });
+      setCategoryPicker('');
+      setFormError(null);
+      return;
+    }
+
+    if (!categoryPicker) return;
+    setForm((prev) => {
+      const list = prev.serviceCategories || [];
+      if (list.includes(categoryPicker)) return prev;
+      return { ...prev, serviceCategories: [...list, categoryPicker] };
+    });
+    setCategoryPicker('');
+    setFormError(null);
+  };
+
+  const removeServiceCategory = (categoryId) => {
+    setForm((prev) => ({
+      ...prev,
+      serviceCategories: (prev.serviceCategories || []).filter((c) => c !== categoryId),
+    }));
+  };
+
   const handleToggle = async (id) => {
     try {
       const res = await fetch(`${ADMIN_API}/${id}/toggle`, fetchOpts('PATCH'));
@@ -404,7 +489,8 @@ export default function AdminTeam() {
                 <th>Order</th>
                 <th>Name</th>
                 <th>Role</th>
-                <th>Specialties</th>
+                <th>Categories</th>
+                <th>Home</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
@@ -412,7 +498,7 @@ export default function AdminTeam() {
             <tbody>
               {members.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="adm-table-empty">
+                  <td colSpan={7} className="adm-table-empty">
                     No team members yet. Click "Add member" to create one.
                   </td>
                 </tr>
@@ -433,12 +519,27 @@ export default function AdminTeam() {
                   </td>
                   <td>{m.role}</td>
                   <td>
-                    {(m.specialties || []).slice(0, 2).map((s) => (
-                      <span key={s} className="adm-badge adm-badge--other" style={{ marginRight: 4 }}>{s}</span>
+                    {(m.serviceCategories || []).slice(0, 3).map((cat) => (
+                      <span key={cat} className="adm-badge adm-badge--other" style={{ marginRight: 4 }}>
+                        {getCategoryLabel(cat)}
+                      </span>
                     ))}
-                    {(m.specialties || []).length > 2 && (
-                      <span className="adm-badge adm-badge--other">+{m.specialties.length - 2}</span>
+                    {(m.serviceCategories || []).length === 0 && (
+                      <span className="adm-badge" style={{ opacity: 0.5 }}>Not set</span>
                     )}
+                    {(m.serviceCategories || []).length > 3 && (
+                      <span className="adm-badge adm-badge--other">+{m.serviceCategories.length - 3}</span>
+                    )}
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      className={`adm-pin-btn ${m.showOnHomepage ? 'adm-pin-btn--on' : ''}`}
+                      onClick={() => handleToggleHomepage(m._id)}
+                      title={m.showOnHomepage ? 'On homepage' : 'Add to homepage'}
+                    >
+                      <Home size={16} />
+                    </button>
                   </td>
                   <td>
                     <button
@@ -477,6 +578,7 @@ export default function AdminTeam() {
               onEdit={openEdit}
               onToggle={handleToggle}
               onDelete={setDeletingId}
+              onToggleHomepage={handleToggleHomepage}
             />
           ))}
         </motion.div>
@@ -599,6 +701,81 @@ export default function AdminTeam() {
                   />
                 </label>
 
+                <div className="adm-fieldset">
+                  <p className="adm-section-label">Service categories they perform *</p>
+                  <p className="adm-fieldset-hint">
+                    Choose from the list — at booking, only members with the same category as the service are shown.
+                  </p>
+
+                  <div className="adm-category-picker-row">
+                    <label className="adm-label" style={{ flex: '1 1 200px', margin: 0 }}>
+                      Add category
+                      <select
+                        className="adm-input adm-select"
+                        value={categoryPicker}
+                        onChange={(e) => setCategoryPicker(e.target.value)}
+                      >
+                        <option value="">— select —</option>
+                        {categoryOptions
+                          .filter(
+                            (c) =>
+                              c.id !== 'all' &&
+                              c.id !== 'other' &&
+                              !(form.serviceCategories || []).includes(c.id),
+                          )
+                          .map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.label}
+                            </option>
+                          ))}
+                        <option value="__custom__">Other…</option>
+                      </select>
+                    </label>
+                    <button
+                      type="button"
+                      className="adm-btn adm-btn--ghost adm-btn--sm"
+                      onClick={addServiceCategory}
+                      disabled={!categoryPicker}
+                    >
+                      <Plus size={14} /> Add
+                    </button>
+                  </div>
+
+                  {categoryPicker === '__custom__' && (
+                    <label className="adm-label" style={{ marginTop: 10 }}>
+                      Category name
+                      <input
+                        className="adm-input"
+                        value={form.customCategoryName}
+                        onChange={(e) => setForm({ ...form, customCategoryName: e.target.value })}
+                        placeholder="e.g. lashes, bridal makeup"
+                        onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addServiceCategory())}
+                      />
+                    </label>
+                  )}
+
+                  {(form.serviceCategories || []).length > 0 ? (
+                    <div className="adm-category-tags">
+                      {form.serviceCategories.map((catId) => (
+                        <span key={catId} className="adm-category-tag">
+                          {getCategoryLabel(catId)}
+                          <button
+                            type="button"
+                            onClick={() => removeServiceCategory(catId)}
+                            aria-label={`Remove ${getCategoryLabel(catId)}`}
+                          >
+                            <X size={12} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="adm-fieldset-hint" style={{ marginTop: 8 }}>
+                      No categories yet — add Manicure, Pedicure, etc.
+                    </p>
+                  )}
+                </div>
+
                 <div className="adm-form-row">
                   <label className="adm-label">
                     Display order
@@ -609,6 +786,9 @@ export default function AdminTeam() {
                       value={form.order}
                       onChange={(e) => setForm({ ...form, order: Number(e.target.value) })}
                     />
+                    <span className="adm-label-hint">
+                      Lower number = appears first on the Team page and in admin lists (0, 1, 2…).
+                    </span>
                   </label>
                   <label className="adm-label adm-label--checkbox" style={{ justifyContent: 'flex-end', paddingTop: 28 }}>
                     <input
@@ -616,9 +796,17 @@ export default function AdminTeam() {
                       checked={form.isActive}
                       onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
                     />
-                    Visible on site
+                    Active on site
                   </label>
                 </div>
+                <label className="adm-label adm-label--checkbox">
+                  <input
+                    type="checkbox"
+                    checked={form.showOnHomepage}
+                    onChange={(e) => setForm({ ...form, showOnHomepage: e.target.checked })}
+                  />
+                  Show on homepage (Meet the artists)
+                </label>
               </div>
             )}
 

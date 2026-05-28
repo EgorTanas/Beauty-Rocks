@@ -1,5 +1,18 @@
 const TeamMember = require('../models/TeamMember');
+const Service = require('../models/Service');
 const { deleteFromCloudinary, extractPublicId } = require('../middleware/uploadMiddleware');
+const { normalizeCategory } = require('../constants/categories');
+const { registerCustomCategory } = require('./siteSettingsController');
+
+async function normalizeMemberCategories(categories = []) {
+  const normalized = [...new Set(categories.map(normalizeCategory).filter(Boolean))];
+  for (const slug of normalized) {
+    if (!['manicure', 'pedicure', 'hair-women', 'hair-men', 'beard', 'other'].includes(slug)) {
+      await registerCustomCategory(slug);
+    }
+  }
+  return normalized;
+}
 
 
 // PUBLIC ROUTES
@@ -9,33 +22,32 @@ const { deleteFromCloudinary, extractPublicId } = require('../middleware/uploadM
  * GET /api/team
  * Get all active team members (public)
  */
+/** Strict match: member must have the service category explicitly assigned in admin */
+const memberMatchesServiceCategory = (member, categorySlug) => {
+  const slug = normalizeCategory(categorySlug);
+  const assigned = (member.serviceCategories || []).map(normalizeCategory).filter(Boolean);
+  if (assigned.length === 0) return false;
+  return assigned.includes(slug);
+};
+
 const getTeamMembers = async (req, res) => {
   try {
     const filter = { isActive: true };
 
-    // Filtrare opțională după serviciu: GET /api/team?service=<serviceId>
+    if (req.query.homepage === 'true') {
+      filter.showOnHomepage = true;
+      const members = await TeamMember.find(filter).sort({ homeOrder: 1, order: 1, createdAt: 1 });
+      return res.json({ success: true, count: members.length, data: members });
+    }
+
     if (req.query.service) {
-      const Service = require('../models/Service');
       const svc = await Service.findById(req.query.service).select('category');
       if (!svc) {
         return res.status(404).json({ success: false, message: 'Service not found' });
       }
-      // Mapare categorie serviciu → valori specialties acceptate
-      const categoryMap = {
-        'manicure':    ['manicure', 'nails'],
-        'pedicure':    ['pedicure', 'nails'],
-        'hair-women':  ['hair', 'hair-women', 'color'],
-        'hair-men':    ['hair', 'hair-men'],
-        'bridal':      ['bridal', 'hair', 'manicure'],
-        'nails':       ['manicure', 'pedicure', 'nails'],
-        'hair':        ['hair', 'hair-women', 'hair-men', 'color'],
-        'skincare':    ['skincare'],
-        'other':       [],
-      };
-      const relevantSpecialties = categoryMap[svc.category] || [];
-      if (relevantSpecialties.length > 0) {
-        filter.specialties = { $in: relevantSpecialties };
-      }
+      const all = await TeamMember.find(filter).sort({ order: 1, createdAt: 1 });
+      const matched = all.filter((m) => memberMatchesServiceCategory(m, svc.category));
+      return res.json({ success: true, count: matched.length, data: matched });
     }
 
     const members = await TeamMember.find(filter).sort({ order: 1, createdAt: 1 });
@@ -132,24 +144,32 @@ const createTeamMember = async (req, res) => {
       email,
       phone,
       specialties,
+      serviceCategories,
       workingHours,
       daysOff,
       isActive,
       order,
+      showOnHomepage,
+      homeOrder,
     } = req.body;
+
+    const normalizedCategories = await normalizeMemberCategories(serviceCategories);
 
     const member = await TeamMember.create({
       name,
       role,
-      bio:          bio          || '',
-      avatar:       avatar       || '',
-      email:        email        || '',
-      phone:        phone        || '',
-      specialties:  specialties  || [],
+      bio: bio || '',
+      avatar: avatar || '',
+      email: email || '',
+      phone: phone || '',
+      specialties: specialties || [],
+      serviceCategories: normalizedCategories,
       workingHours: workingHours || {},
-      daysOff:      daysOff      || [],
-      isActive:     isActive !== undefined ? isActive : true,
-      order:        order        || 0,
+      daysOff: daysOff || [],
+      isActive: isActive !== undefined ? isActive : true,
+      order: order || 0,
+      showOnHomepage: !!showOnHomepage,
+      homeOrder: homeOrder || 0,
     });
 
     res.status(201).json({ success: true, data: member });
@@ -180,10 +200,15 @@ const updateTeamMember = async (req, res) => {
       }
     }
 
+    const updates = { ...req.body };
+    if (updates.serviceCategories) {
+      updates.serviceCategories = await normalizeMemberCategories(updates.serviceCategories);
+    }
+
     const member = await TeamMember.findByIdAndUpdate(
       req.params.id,
-      { ...req.body },
-      { new: true, runValidators: true }
+      updates,
+      { returnDocument: 'after', runValidators: true }
     );
 
     res.json({ success: true, data: member });
@@ -235,6 +260,20 @@ const toggleTeamMemberActive = async (req, res) => {
   }
 };
 
+const toggleTeamHomepage = async (req, res) => {
+  try {
+    const member = await TeamMember.findById(req.params.id);
+    if (!member) {
+      return res.status(404).json({ success: false, message: 'Team member not found' });
+    }
+    member.showOnHomepage = !member.showOnHomepage;
+    await member.save();
+    res.json({ success: true, data: member });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error', error: err.message });
+  }
+};
+
 module.exports = {
   // Public
   getTeamMembers,
@@ -248,4 +287,5 @@ module.exports = {
   updateTeamMember,
   deleteTeamMember,
   toggleTeamMemberActive,
+  toggleTeamHomepage,
 };

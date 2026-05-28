@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { normalizeCategory } = require('../constants/categories');
 
 const serviceSchema = new mongoose.Schema(
   {
@@ -32,12 +33,39 @@ const serviceSchema = new mongoose.Schema(
     category: {
       type: String,
       required: [true, 'Category is required'],
-      enum: ['manicure','pedicure','hair-women','hair-men','other','nails','hair','skincare','bridal'],
+      trim: true,
+      lowercase: true,
       default: 'other',
+      set: (v) => normalizeCategory(v),
     },
-    image:    { type: String,  default: '' },
-    isActive: { type: Boolean, default: true },
-    order:    { type: Number,  default: 0 },
+    image: {
+      type: String,
+      default: '',
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
+    order: {
+      type: Number,
+      default: 0,
+    },
+    showOnHomepage: {
+      type: Boolean,
+      default: false,
+    },
+    homeOrder: {
+      type: Number,
+      default: 0,
+    },
+    featuredOnServicesPage: {
+      type: Boolean,
+      default: false,
+    },
+    featuredOrder: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );
@@ -45,17 +73,14 @@ const serviceSchema = new mongoose.Schema(
 serviceSchema.index({ isActive: 1, order: 1 });
 serviceSchema.index({ category: 1 });
 
-
-// Auto-populează durationMinutes din string-ul duration (ex: "75 min", "1h 15min", "60")
 serviceSchema.pre('save', function () {
-  
   if (this.isModified('duration') || !this.durationMinutes) {
     const raw = String(this.duration || '');
     const hoursMatch = raw.match(/(\d+)\s*h/i);
-    const minsMatch  = raw.match(/(\d+)\s*m/i);
+    const minsMatch = raw.match(/(\d+)\s*m/i);
     if (hoursMatch || minsMatch) {
       const h = hoursMatch ? parseInt(hoursMatch[1], 10) : 0;
-      const m = minsMatch  ? parseInt(minsMatch[1],  10) : 0;
+      const m = minsMatch ? parseInt(minsMatch[1], 10) : 0;
       this.durationMinutes = h * 60 + m;
     } else {
       const num = parseInt(raw, 10);

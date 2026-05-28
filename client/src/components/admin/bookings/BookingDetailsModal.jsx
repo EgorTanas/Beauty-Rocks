@@ -6,6 +6,7 @@ import {
   Loader2,
   Mail,
   Sparkles,
+  Trash2,
   UserRound,
   X,
   XCircle,
@@ -18,6 +19,7 @@ export default function BookingDetailsModal({
   booking,
   onClose,
   onStatusChange,
+  onDelete,
   actionLoading,
   statusError,
 }) {
@@ -26,6 +28,8 @@ export default function BookingDetailsModal({
   const canConfirm = booking?.status === 'pending';
   const canComplete = booking?.status === 'confirmed';
   const canCancel = booking?.status === 'pending' || booking?.status === 'confirmed';
+  const canDelete =
+    booking?.status === 'cancelled' || booking?.status === 'completed';
   const notes = booking?.notes?.trim();
 
   const overlayProps = reduce
@@ -176,6 +180,17 @@ export default function BookingDetailsModal({
           >
             {actionLoading ? <Loader2 size={16} className="adm-spinner" /> : <XCircle size={16} />}
             Cancel booking
+          </button>
+        ) : null}
+        {canDelete && onDelete ? (
+          <button
+            type="button"
+            className="adm-btn adm-btn--danger adm-bk-modal__action"
+            disabled={actionLoading}
+            onClick={() => onDelete(booking.id)}
+          >
+            {actionLoading ? <Loader2 size={16} className="adm-spinner" /> : <Trash2 size={16} />}
+            Delete permanently
           </button>
         ) : null}
         <button type="button" className="adm-btn adm-btn--ghost adm-bk-modal__action" onClick={onClose}>

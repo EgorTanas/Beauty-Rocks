@@ -9,6 +9,7 @@ const {
   updateService,
   deleteService,
   toggleServiceActive,
+  toggleServicePlacement,
   uploadServiceImage,
 } = require('../../controllers/Servicecontroller');
 
@@ -31,5 +32,8 @@ router.delete('/:id', deleteService);
 
 // PATCH /api/admin/services/:id/toggle  — show / hide
 router.patch('/:id/toggle', toggleServiceActive);
+
+// PATCH /api/admin/services/:id/placement — homepage / featured flags
+router.patch('/:id/placement', toggleServicePlacement);
 
 module.exports = router;

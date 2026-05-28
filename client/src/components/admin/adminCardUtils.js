@@ -1,3 +1,5 @@
+import { getCategoryLabel } from '../../utils/categories';
+
 const BADGE_MAP = {
   nails: 'nails',
   hair: 'hair',
@@ -17,9 +19,7 @@ export function categoryBadgeClass(category) {
 export function formatCategoryLabel(category) {
   const key = String(category || '').trim();
   if (!key) return 'Other';
-  return key
-    .replace(/-/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  return getCategoryLabel(key);
 }
 
 export function formatAdminPrice(price) {

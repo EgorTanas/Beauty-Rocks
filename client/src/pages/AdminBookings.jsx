@@ -147,6 +147,41 @@ export default function AdminBookings() {
     setSelected((s) => (s?.id === id ? { ...s, status: nextStatus } : s));
   };
 
+  const handleDeleteBooking = async (id) => {
+    if (!window.confirm('Delete this booking permanently? This cannot be undone.')) return;
+
+    setStatusError(null);
+
+    if (usedMock || String(id).startsWith('mock-')) {
+      setBookings((list) => list.filter((b) => b.id !== id));
+      setSelected(null);
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+      const res = await fetch(`${ADMIN_APPOINTMENTS}/${id}`, fetchOpts('DELETE'));
+
+      if (res.status === 401 || res.status === 403) {
+        navigate('/login');
+        return;
+      }
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setStatusError(json.message || 'Delete failed');
+        return;
+      }
+
+      setBookings((list) => list.filter((b) => b.id !== id));
+      setSelected(null);
+    } catch (err) {
+      setStatusError(err.message || 'Could not delete booking.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleStatusChange = async (id, nextStatus) => {
     const normalized = String(nextStatus).trim().toLowerCase();
     setStatusError(null);
@@ -311,6 +346,7 @@ export default function AdminBookings() {
               setStatusError(null);
             }}
             onStatusChange={handleStatusChange}
+            onDelete={handleDeleteBooking}
             actionLoading={actionLoading}
             statusError={statusError}
           />

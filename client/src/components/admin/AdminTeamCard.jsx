@@ -1,13 +1,19 @@
 import { motion, useReducedMotion } from 'framer-motion';
-import { Edit2, Eye, EyeOff, Trash2, User } from 'lucide-react';
+import { Edit2, Eye, EyeOff, Home, Trash2, User } from 'lucide-react';
 import { adminItem } from './adminMotionVariants';
 
-export default function AdminTeamCard({ member, onEdit, onToggle, onDelete }) {
+export default function AdminTeamCard({ member, onEdit, onToggle, onDelete, onToggleHomepage }) {
   const reduce = useReducedMotion();
   const cls = `adm-dash-card adm-dash-card--team ${member.isActive ? '' : 'adm-dash-card--muted'}`;
 
   const body = (
-    <TeamCardBody member={member} onEdit={onEdit} onToggle={onToggle} onDelete={onDelete} />
+    <TeamCardBody
+      member={member}
+      onEdit={onEdit}
+      onToggle={onToggle}
+      onDelete={onDelete}
+      onToggleHomepage={onToggleHomepage}
+    />
   );
 
   if (reduce) {
@@ -21,7 +27,7 @@ export default function AdminTeamCard({ member, onEdit, onToggle, onDelete }) {
   );
 }
 
-function TeamCardBody({ member, onEdit, onToggle, onDelete }) {
+function TeamCardBody({ member, onEdit, onToggle, onDelete, onToggleHomepage }) {
   const tags = (member.specialties || []).slice(0, 3);
 
   return (
@@ -56,6 +62,16 @@ function TeamCardBody({ member, onEdit, onToggle, onDelete }) {
       </div>
 
       <div className="adm-dash-card__bar">
+        {onToggleHomepage ? (
+          <button
+            type="button"
+            className={`adm-pin-btn adm-pin-btn--compact ${member.showOnHomepage ? 'adm-pin-btn--on' : ''}`}
+            onClick={() => onToggleHomepage(member._id)}
+            title="Homepage"
+          >
+            <Home size={14} />
+          </button>
+        ) : null}
         <button
           type="button"
           className={`adm-toggle-btn adm-toggle-btn--compact ${member.isActive ? 'adm-toggle-btn--on' : 'adm-toggle-btn--off'}`}

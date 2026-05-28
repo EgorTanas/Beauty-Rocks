@@ -5,6 +5,10 @@ import {
   Footprints,
   UserRound,
 } from 'lucide-react';
+import {
+  normalizeCategory as normalizeCategorySlug,
+  getCategoryLabel as getDynamicCategoryLabel,
+} from '../../utils/categories';
 
 /** Salon categories — no skincare */
 export const CATEGORY_FILTERS = [
@@ -13,6 +17,7 @@ export const CATEGORY_FILTERS = [
   { id: 'pedicure', label: 'Pedicure', Icon: Footprints },
   { id: 'hair-women', label: 'Women\'s cut', Icon: Scissors },
   { id: 'hair-men', label: 'Men\'s cut', Icon: UserRound },
+  { id: 'beard', label: 'Beard & grooming', Icon: UserRound },
   { id: 'other', label: 'Other', Icon: Sparkles },
 ];
 
@@ -33,23 +38,24 @@ export const CATEGORY_META = {
     label: 'Men\'s haircut',
     lead: 'Tunsori bărbați, aranjat barbă și styling masculin.',
   },
+  beard: {
+    label: 'Beard & grooming',
+    lead: 'Tuns barbă, contur și îngrijire masculină.',
+  },
   other: {
     label: 'Other',
     lead: 'Pachete speciale și servicii la cerere.',
   },
 };
 
-const LEGACY_CATEGORY_MAP = {
-  nails: 'manicure',
-  hair: 'hair-women',
-  skincare: 'other',
-  bridal: 'other',
-};
-
 export function normalizeCategory(category) {
-  if (!category) return 'other';
-  if (CATEGORY_META[category]) return category;
-  return LEGACY_CATEGORY_MAP[category] || 'other';
+  return normalizeCategorySlug(category);
+}
+
+export function getCategoryDisplayLabel(category) {
+  const id = normalizeCategory(category);
+  if (CATEGORY_META[id]?.label) return CATEGORY_META[id].label;
+  return getDynamicCategoryLabel(id);
 }
 
 export const CATEGORY_IMAGES = {
@@ -57,6 +63,7 @@ export const CATEGORY_IMAGES = {
   pedicure: '/imgHome/nails3.jpeg',
   'hair-women': '/imgHome/hair2.png',
   'hair-men': '/imgHome/hair2.png',
+  beard: '/imgHome/hair2.png',
   other: '/imgHome/salon2.jpg',
 };
 
@@ -112,7 +119,7 @@ export function matchesServiceSearch(service, query) {
   if (!q) return true;
 
   const category = normalizeCategory(service.category);
-  const categoryLabel = (CATEGORY_META[category]?.label ?? category).toLowerCase();
+  const categoryLabel = getCategoryDisplayLabel(category).toLowerCase();
 
   return (
     service.name?.toLowerCase().includes(q) ||

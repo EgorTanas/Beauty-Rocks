@@ -52,6 +52,9 @@ app.use("/api/services", require("./routes/Serviceroutes"));
 // Team (public)
 app.use("/api/team", require("./routes/TeamRoutes"));
 
+// Site settings (public)
+app.use("/api/site-settings", require("./routes/siteSettingsRoutes"));
+
 // Appointments (public + protected)
 app.use("/api/appointments", require("./routes/appointmentRoutes"));
 

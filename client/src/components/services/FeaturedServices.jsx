@@ -3,24 +3,27 @@ import { ChevronRight, Sparkles } from 'lucide-react';
 import ServicesCarousel from './ServicesCarousel';
 import ServiceListingCard from './ServiceListingCard';
 import { toListingCard } from './servicesData';
-
 const API = (import.meta.env.VITE_API_URL || 'http://localhost:5000').trim().replace(/\/$/, '');
-const FEATURED_COUNT = 4;
 
-/** Static featured row — not affected by category/search filters */
+const DEFAULT_COPY = {
+  badge: 'Featured services',
+  title: 'Our Most Loved',
+  linkText: 'View all services',
+};
+
+/** Featured row — services pinned in admin + editable section copy */
 export default function FeaturedServices({ searchQuery = '' }) {
   const [featured, setFeatured] = useState([]);
-
   useEffect(() => {
     let cancelled = false;
 
     const load = async () => {
       try {
-        const res = await fetch(`${API}/api/services`);
+        const res = await fetch(`${API}/api/services?featured=true`);
         if (!res.ok) return;
         const json = await res.json();
         if (!cancelled && Array.isArray(json?.data)) {
-          setFeatured(json.data.slice(0, FEATURED_COUNT).map(toListingCard));
+          setFeatured(json.data.map(toListingCard));
         }
       } catch {
         /* hide on failure */
@@ -39,14 +42,14 @@ export default function FeaturedServices({ searchQuery = '' }) {
         <div className="services-featured__intro">
           <p className="br-badge">
             <Sparkles size={14} strokeWidth={1.5} className="br-badge-icon" aria-hidden />
-            <span>Featured services</span>
+            <span>{DEFAULT_COPY.badge}</span>
           </p>
           <h2 id="services-featured-title" className="services-featured__title">
-            Our Most Loved
+            {DEFAULT_COPY.title}
           </h2>
         </div>
         <a href="#services-catalog" className="services-featured__link">
-          View all services
+          {DEFAULT_COPY.linkText}
           <ChevronRight size={15} strokeWidth={2.5} aria-hidden />
         </a>
       </header>

@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from 'framer-motion';
-import { Edit2, Eye, EyeOff, Image as ImageIcon, Trash2 } from 'lucide-react';
+import { Edit2, Eye, EyeOff, Home, Image as ImageIcon, Star, Trash2 } from 'lucide-react';
 import { adminItem } from './adminMotionVariants';
 import {
   categoryBadgeClass,
@@ -7,12 +7,26 @@ import {
   formatServiceMeta,
 } from './adminCardUtils';
 
-export default function AdminServiceCard({ service, onEdit, onToggle, onDelete }) {
+export default function AdminServiceCard({
+  service,
+  onEdit,
+  onToggle,
+  onDelete,
+  onToggleHome,
+  onToggleFeatured,
+}) {
   const reduce = useReducedMotion();
   const cls = `adm-dash-card adm-dash-card--service ${service.isActive ? '' : 'adm-dash-card--muted'}`;
 
   const body = (
-    <CardBody service={service} onEdit={onEdit} onToggle={onToggle} onDelete={onDelete} />
+    <CardBody
+      service={service}
+      onEdit={onEdit}
+      onToggle={onToggle}
+      onDelete={onDelete}
+      onToggleHome={onToggleHome}
+      onToggleFeatured={onToggleFeatured}
+    />
   );
 
   if (reduce) {
@@ -26,7 +40,7 @@ export default function AdminServiceCard({ service, onEdit, onToggle, onDelete }
   );
 }
 
-function CardBody({ service, onEdit, onToggle, onDelete }) {
+function CardBody({ service, onEdit, onToggle, onDelete, onToggleHome, onToggleFeatured }) {
   return (
     <>
       <div className="adm-dash-card__row">
@@ -50,6 +64,26 @@ function CardBody({ service, onEdit, onToggle, onDelete }) {
       </div>
 
       <div className="adm-dash-card__bar">
+        {onToggleHome ? (
+          <button
+            type="button"
+            className={`adm-pin-btn adm-pin-btn--compact ${service.showOnHomepage ? 'adm-pin-btn--on' : ''}`}
+            onClick={() => onToggleHome(service._id)}
+            title="Homepage"
+          >
+            <Home size={14} />
+          </button>
+        ) : null}
+        {onToggleFeatured ? (
+          <button
+            type="button"
+            className={`adm-pin-btn adm-pin-btn--compact ${service.featuredOnServicesPage ? 'adm-pin-btn--on' : ''}`}
+            onClick={() => onToggleFeatured(service._id)}
+            title="Our Most Loved"
+          >
+            <Star size={14} />
+          </button>
+        ) : null}
         <button
           type="button"
           className={`adm-toggle-btn adm-toggle-btn--compact ${service.isActive ? 'adm-toggle-btn--on' : 'adm-toggle-btn--off'}`}

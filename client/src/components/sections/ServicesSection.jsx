@@ -8,7 +8,12 @@ import { toListingCard } from '../services/servicesData';
 import '../../style/services.css';
 
 const API = (import.meta.env.VITE_API_URL || 'http://localhost:5000').trim().replace(/\/$/, '');
-const HOME_LIMIT = 6;
+
+const DEFAULT_COPY = {
+  badge: 'What we offer',
+  title: 'Our services',
+  linkText: 'View all services',
+};
 
 export default function ServicesSection() {
   const reduceMotion = useReducedMotion();
@@ -22,12 +27,12 @@ export default function ServicesSection() {
     const fetchServices = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${API}/api/services`);
+        const res = await fetch(`${API}/api/services?homepage=true`);
         if (!res.ok) throw new Error('Failed to load services');
         const json = await res.json();
         if (!cancelled) {
           const list = Array.isArray(json?.data) ? json.data : [];
-          setServices(list.slice(0, HOME_LIMIT).map(toListingCard));
+          setServices(list.map(toListingCard));
         }
       } catch (err) {
         if (!cancelled) setError(err.message);
@@ -61,9 +66,9 @@ export default function ServicesSection() {
         <header className="br-section-head br-section-head--services">
           <p className="br-badge br-badge--center">
             <Sparkles size={14} strokeWidth={1.5} className="br-badge-icon" aria-hidden />
-            <span>What we offer</span>
+            <span>{DEFAULT_COPY.badge}</span>
           </p>
-          <h2 className="br-section-title">Our services</h2>
+          <h2 className="br-section-title">{DEFAULT_COPY.title}</h2>
           <motion.div
             className="br-section-head-deco"
             aria-hidden
@@ -86,7 +91,7 @@ export default function ServicesSection() {
             initial={reduceMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            {Array.from({ length: HOME_LIMIT }).map((_, i) => (
+            {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="br-service-card--skeleton services-card services-card--light" aria-hidden>
                 <motion.div
                   className="services-card__media-wrap br-skeleton-box"
@@ -142,12 +147,14 @@ export default function ServicesSection() {
         )}
 
         {!loading && !error && services.length === 0 && (
-          <p className="br-services-empty">No services available yet. Check back soon!</p>
+          <p className="br-services-empty">
+            No services selected for the homepage yet. Pin services in Admin → Services.
+          </p>
         )}
 
         <div className="br-section-cta">
           <Link to="/services" className="br-link-services">
-            View all services
+            {DEFAULT_COPY.linkText}
             <ChevronRight size={18} strokeWidth={2} aria-hidden />
           </Link>
         </div>

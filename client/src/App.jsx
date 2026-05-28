@@ -125,6 +125,7 @@ function AppRoutes() {
         }
       />
       <Route path="/admin/dashboard" element={<Navigate to="/admin" replace />} />
+      <Route path="/admin/homepage" element={<Navigate to="/admin" replace />} />
       <Route
         path="/admin/services"
         element={
@@ -149,7 +150,6 @@ function AppRoutes() {
           </AdminRoute>
         }
       />
-
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

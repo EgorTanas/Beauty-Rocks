@@ -1,10 +1,26 @@
 const Service = require('../models/Service');
 const { deleteFromCloudinary, extractPublicId } = require('../middleware/uploadMiddleware');
+const { normalizeCategory } = require('../constants/categories');
+const { registerCustomCategory } = require('./siteSettingsController');
+
 const getServices = async (req, res) => {
   try {
-    const { category } = req.query;
+    const { category, homepage, featured } = req.query;
     const filter = { isActive: true };
-    if (category && category !== 'all') filter.category = category;
+
+    if (homepage === 'true') {
+      filter.showOnHomepage = true;
+      const services = await Service.find(filter).sort({ homeOrder: 1, order: 1, createdAt: 1 });
+      return res.json({ success: true, count: services.length, data: services });
+    }
+
+    if (featured === 'true') {
+      filter.featuredOnServicesPage = true;
+      const services = await Service.find(filter).sort({ featuredOrder: 1, order: 1, createdAt: 1 });
+      return res.json({ success: true, count: services.length, data: services });
+    }
+
+    if (category && category !== 'all') filter.category = normalizeCategory(category);
     const services = await Service.find(filter).sort({ order: 1, createdAt: 1 });
     res.json({ success: true, count: services.length, data: services });
   } catch (err) {
@@ -54,18 +70,45 @@ const uploadServiceImage = (req, res) => {
   }
 };
 
+const persistServiceCategory = async (category, customCategoryLabel) => {
+  const normalized = normalizeCategory(category);
+  if (customCategoryLabel || (normalized && normalized !== 'other')) {
+    await registerCustomCategory(normalized, customCategoryLabel);
+  }
+  return normalized;
+};
+
 const createService = async (req, res) => {
   try {
-    const { name, description, price, duration, category, image, isActive, order } = req.body;
-    const service = await Service.create({
+    const {
       name,
       description,
       price,
       duration,
       category,
-      image:    image    || '',
+      customCategoryLabel,
+      image,
+      isActive,
+      order,
+      showOnHomepage,
+      homeOrder,
+      featuredOnServicesPage,
+      featuredOrder,
+    } = req.body;
+    const normalizedCategory = await persistServiceCategory(category, customCategoryLabel);
+    const service = await Service.create({
+      name,
+      description,
+      price,
+      duration,
+      category: normalizedCategory,
+      image: image || '',
       isActive: isActive !== undefined ? isActive : true,
-      order:    order    || 0,
+      order: order || 0,
+      showOnHomepage: !!showOnHomepage,
+      homeOrder: homeOrder || 0,
+      featuredOnServicesPage: !!featuredOnServicesPage,
+      featuredOrder: featuredOrder || 0,
     });
     res.status(201).json({ success: true, data: service });
   } catch (err) {
@@ -91,10 +134,20 @@ const updateService = async (req, res) => {
         );
       }
     }
+
+    const updates = { ...req.body };
+    if (updates.category !== undefined) {
+      updates.category = await persistServiceCategory(
+        updates.category,
+        updates.customCategoryLabel,
+      );
+    }
+    delete updates.customCategoryLabel;
+
     const service = await Service.findByIdAndUpdate(
       req.params.id,
-      { ...req.body },
-      { new: true, runValidators: true }
+      updates,
+      { returnDocument: 'after', runValidators: true }
     );
 
     res.json({ success: true, data: service });
@@ -142,6 +195,29 @@ const toggleServiceActive = async (req, res) => {
   }
 };
 
+const toggleServicePlacement = async (req, res) => {
+  try {
+    const service = await Service.findById(req.params.id);
+    if (!service) {
+      return res.status(404).json({ success: false, message: 'Service not found' });
+    }
+
+    const { field } = req.body;
+    if (field === 'showOnHomepage') {
+      service.showOnHomepage = !service.showOnHomepage;
+    } else if (field === 'featuredOnServicesPage') {
+      service.featuredOnServicesPage = !service.featuredOnServicesPage;
+    } else {
+      return res.status(400).json({ success: false, message: 'Invalid field' });
+    }
+
+    await service.save();
+    res.json({ success: true, data: service });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Server error', error: err.message });
+  }
+};
+
 module.exports = {
   getServices,
   getServiceById,
@@ -151,4 +227,5 @@ module.exports = {
   updateService,
   deleteService,
   toggleServiceActive,
+  toggleServicePlacement,
 };

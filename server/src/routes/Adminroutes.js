@@ -19,4 +19,7 @@ router.use('/team', adminTeamRouter);
 const adminAppointmentRouter = require('./admin/adminAppointmentRoutes');
 router.use('/appointments', adminAppointmentRouter);
 
+const { updateSiteSettings } = require('../controllers/siteSettingsController');
+router.put('/site-settings', updateSiteSettings);
+
 module.exports = router;
