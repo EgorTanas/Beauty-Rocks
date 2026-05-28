@@ -12,8 +12,8 @@ import {
   sortServices,
   toListingCard,
 } from './servicesData';
+import { API_BASE } from '@/lib/api';
 
-const API = (import.meta.env.VITE_API_URL || 'http://localhost:5000').trim().replace(/\/$/, '');
 const PAGE_SIZE = 8;
 
 function groupByCategory(services) {
@@ -56,7 +56,7 @@ export default function ServicesGrid({
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(`${API}/api/services`);
+        const res = await fetch(`${API_BASE}/api/services`);
         if (!res.ok) throw new Error('Failed to load services');
         const json = await res.json();
         if (!cancelled) {

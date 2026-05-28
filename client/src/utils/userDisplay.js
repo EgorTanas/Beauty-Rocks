@@ -1,4 +1,4 @@
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000').trim().replace(/\/$/, '');
+import { resolveAvatarUrl } from '@/lib/media';
 
 /** Display name for header / profile (username from API or legacy name field). */
 export function getUserDisplayName(user) {
@@ -21,10 +21,5 @@ export function getUserInitials(user) {
 
 /** Resolves avatar URL for img src (absolute or API-backed uploads path). */
 export function getUserAvatarUrl(user) {
-  const raw = user?.avatar;
-  if (typeof raw !== 'string' || !raw.trim()) return null;
-  const url = raw.trim();
-  if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  if (url.startsWith('/')) return `${API_BASE.replace(/\/$/, '')}${url}`;
-  return `${API_BASE.replace(/\/$/, '')}/uploads/avatars/${url}`;
+  return resolveAvatarUrl(user?.avatar);
 }

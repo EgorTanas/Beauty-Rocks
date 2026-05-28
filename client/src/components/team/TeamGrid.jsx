@@ -3,8 +3,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { Users } from 'lucide-react';
 import TeamMemberCard from './TeamMemberCard';
 import { FALLBACK_TEAM, mapApiMember } from './teamUtils';
-
-const API = (import.meta.env.VITE_API_URL || 'http://localhost:5000').trim().replace(/\/$/, '');
+import { API_BASE } from '@/lib/api';
 
 export default function TeamGrid() {
   const reduceMotion = useReducedMotion();
@@ -17,7 +16,7 @@ export default function TeamGrid() {
 
     async function load() {
       try {
-        const res = await fetch(`${API}/api/team`);
+        const res = await fetch(`${API_BASE}/api/team`);
         if (!res.ok) throw new Error('Failed to load team');
         const json = await res.json();
         const list = Array.isArray(json.data) ? json.data.map(mapApiMember) : [];

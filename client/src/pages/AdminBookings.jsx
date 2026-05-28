@@ -22,10 +22,10 @@ import {
   isApiPatchableStatus,
   mapApiAppointment,
 } from '../components/admin/bookings/bookingAdminUtils';
+import { API_BASE } from '@/lib/api';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-const ADMIN_APPOINTMENTS = `${API}/api/admin/appointments`;
-const ADMIN_TEAM = `${API}/api/admin/team`;
+const ADMIN_APPOINTMENTS = `${API_BASE}/api/admin/appointments`;
+const ADMIN_TEAM = `${API_BASE}/api/admin/team`;
 
 const fetchOpts = (method = 'GET', body) => ({
   method,

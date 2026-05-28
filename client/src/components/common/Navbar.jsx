@@ -3,7 +3,7 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, Settings, UserRound, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getUserDisplayName } from '../../utils/userDisplay';
-import UserAvatar from '../UserAvatar';
+import UserAvatar from '../common/UserAvatar';
 
 export default function Navbar() {
   const navigate = useNavigate();

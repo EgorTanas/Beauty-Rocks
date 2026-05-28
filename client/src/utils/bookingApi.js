@@ -1,6 +1,5 @@
 import { apiFetch, isMongoId, parseJson, toISODateString } from './api';
 import { resolveTeamAvatar } from '../components/team/teamUtils';
-import { getServiceSpecialistTypes } from '../components/booking/bookingData';
 
 const SPECIALTY_KEYWORDS = [
   ['manicure', 'nails'],

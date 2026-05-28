@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { CATEGORY_FILTERS, normalizeCategory } from '../components/services/servicesData';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
-import HeroSection from '../components/services/HeroSection';
+import ServicesHero from '../components/services/ServicesHero';
 import CategoriesBar from '../components/services/CategoriesBar';
 import FeaturedServices from '../components/services/FeaturedServices';
 import ServicesGrid from '../components/services/ServicesGrid';
@@ -50,7 +50,7 @@ export default function Services() {
 
       <main className="services-main">
         <div className="services-hero-zone">
-          <HeroSection />
+          <ServicesHero />
         </div>
 
         <section

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getUserAvatarUrl, getUserInitials } from '../utils/userDisplay';
+import { getUserAvatarUrl, getUserInitials } from '@/utils/userDisplay';
 
 export default function UserAvatar({ user, className = 'site-user-avatar' }) {
   const src = getUserAvatarUrl(user);

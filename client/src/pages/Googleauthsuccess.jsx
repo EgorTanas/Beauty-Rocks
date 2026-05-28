@@ -1,8 +1,8 @@
 import { useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
-import { persistUser } from '../utils/api';
-import '../style/Auth.css';
+import { persistUser } from '@/lib/api';
+import '@/style/Auth.css';
 
 function getCallbackState(searchParams) {
   const error = searchParams.get('error');

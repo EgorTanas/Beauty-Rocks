@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { fadeUp } from '../common/motionVariants';
 
-export default function HeroSection() {
+export default function ServicesHero() {
   return (
     <motion.section
       className="services-hero services-hero--minimal"

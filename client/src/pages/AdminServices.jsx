@@ -27,10 +27,9 @@ import { AdminHeader } from '../components/admin/AdminMotion';
 import { adminStagger, adminTableRow } from '../components/admin/adminMotionVariants';
 import { buildCategoryOptions, normalizeCategory, slugifyCategory } from '../utils/categories';
 import { fetchSiteSettings } from '../utils/siteSettingsApi';
+import { API_BASE } from '@/lib/api';
 
-const API = (import.meta.env.VITE_API_URL || 'http://localhost:5000').trim().replace(/\/$/, '');
-
-const ADMIN_API = `${API}/api/admin/services`;
+const ADMIN_API = `${API_BASE}/api/admin/services`;
 
 const BUILTIN_IDS = new Set(['manicure', 'pedicure', 'hair-women', 'hair-men', 'beard']);
 
@@ -168,7 +167,7 @@ function AppointmentTester({ services }) {
   // Load workers once panel opens
   useEffect(() => {
     if (!open || workers.length) return;
-    fetch(`${API}/api/team`, { credentials: 'include' })
+    fetch(`${API_BASE}/api/team`, { credentials: 'include' })
       .then((r) => r.json())
       .then((j) => setWorkers(j.data || []))
       .catch(console.error);
@@ -183,7 +182,7 @@ function AppointmentTester({ services }) {
 
     setLoading(true);
     fetch(
-      `${API}/api/appointments/available-slots?worker=${tWorker}&date=${tDate}&service=${tService}`,
+      `${API_BASE}/api/appointments/available-slots?worker=${tWorker}&date=${tDate}&service=${tService}`,
       { credentials: 'include' }
     )
       .then((r) => r.json())
@@ -200,7 +199,7 @@ function AppointmentTester({ services }) {
     setBooking(true);
     setResult(null);
     try {
-      const res = await fetch(`${API}/api/appointments`, {
+      const res = await fetch(`${API_BASE}/api/appointments`, {
         method:      'POST',
         credentials: 'include',
         headers:     { 'Content-Type': 'application/json' },

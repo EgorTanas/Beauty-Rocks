@@ -13,7 +13,7 @@ import {
   CheckCircle,
   ArrowLeft,
 } from 'lucide-react';
-import { persistUser } from '../utils/api';
+import { persistUser, API_BASE } from '@/lib/api';
 import '../style/Auth.css';
 
 /* ── easings & variants ─────────────────────────────────────── */
@@ -130,7 +130,7 @@ function getOAuthErrorMessage(searchParams) {
    AUTH COMPONENT - with Forgot & Reset Password views
    and ProtectedRoute redirect support
 ════════════════════════════════════════════════════════════ */
-export default function Auth({ apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000' }) {
+export default function Auth({ apiBaseUrl = API_BASE }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();

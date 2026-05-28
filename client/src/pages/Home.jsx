@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
-import HeroSection from '../components/sections/HeroSection';
+import HomeHero from '../components/sections/HomeHero';
 import ServicesSection from '../components/sections/ServicesSection';
 import AboutSection from '../components/sections/AboutSection';
 import TeamSection from '../components/sections/TeamSection';
@@ -25,7 +25,7 @@ export default function Home() {
       <Navbar />
 
       <main>
-        <HeroSection />
+        <HomeHero />
         <ServicesSection />
         <AboutSection />
         <TeamSection />

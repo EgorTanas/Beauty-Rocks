@@ -5,7 +5,7 @@ import { ChevronRight, Users } from 'lucide-react';
 import TeamPreviewCard from '../common/TeamPreviewCard';
 import { sectionReveal } from '../common/motionVariants';
 import { mapApiMember } from '../team/teamUtils';
-const API = (import.meta.env.VITE_API_URL || 'http://localhost:5000').trim().replace(/\/$/, '');
+import { API_BASE } from '@/lib/api';
 
 const DEFAULT_COPY = {
   badge: 'The studio',
@@ -24,7 +24,7 @@ export default function TeamSection() {
 
     async function load() {
       try {
-        const teamRes = await fetch(`${API}/api/team?homepage=true`);
+        const teamRes = await fetch(`${API_BASE}/api/team?homepage=true`);
         if (!teamRes.ok) throw new Error('Failed');
         const json = await teamRes.json();
         const list = Array.isArray(json.data) ? json.data.map(mapApiMember) : [];

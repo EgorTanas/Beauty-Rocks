@@ -63,20 +63,24 @@ Repository-ul este organizat într-o structură monorepo cu două pachete princi
 │   │   ├── img/                    # Imagini pentru autentificare și logo
 │   │   └── imgHome/                # Imagini pentru pagina principală
 │   └── src/
+│       ├── app/                    # Router + route guards (ProtectedRoute, AdminRoute)
+│       ├── lib/                    # API_BASE, apiFetch, resolveUploadUrl
 │       ├── components/
 │       │   ├── admin/              # Componente panou de administrare
 │       │   │   └── bookings/       # Componente gestionare programări admin
 │       │   ├── booking/            # Componente flux de rezervare
-│       │   ├── common/             # Componente reutilizabile (Navbar, Footer etc.)
+│       │   ├── common/             # Navbar, Footer, UserAvatar, butoane
 │       │   ├── profile/            # Componente pagina de profil
-│       │   ├── sections/           # Secțiuni pagina principală
+│       │   ├── sections/           # Secțiuni homepage (HomeHero, Services, Team…)
 │       │   ├── services/           # Componente pagina servicii
 │       │   └── team/               # Componente pagina echipă
 │       ├── constants/              # Constante globale (linkuri sociale, locație)
 │       ├── context/                # Context React (AuthContext)
+│       ├── docs/                   # STRUCTURA-FRONTEND.md — ghid pentru prezentare
 │       ├── hooks/                  # Hook-uri personalizate
-│       ├── pages/                  # Paginile aplicației
-│       └── utils/                  # Funcții utilitare și API helpers
+│       ├── pages/                  # Paginile aplicației (thin composers)
+│       ├── style/                  # CSS pe pagină / secțiune
+│       └── utils/                  # Helpers pe domeniu (booking, profile, categorii)
 └── server/                         # API backend Node.js (Express)
 	└── src/
 		├── config/                 # Configurare DB și Passport

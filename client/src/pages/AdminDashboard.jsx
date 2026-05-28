@@ -26,8 +26,7 @@ import {
   mapApiAppointment,
   sortBookingsRecent,
 } from '../components/admin/dashboard/adminDashboardUtils';
-
-const API = (import.meta.env.VITE_API_URL || 'http://localhost:5000').trim().replace(/\/$/, '');
+import { API_BASE } from '@/lib/api';
 
 const fetchOpts = () => ({
   method: 'GET',
@@ -58,9 +57,9 @@ export default function AdminDashboard() {
 
     try {
       const [bkRes, svcRes, teamRes] = await Promise.all([
-        fetch(`${API}/api/admin/appointments?limit=80&page=1`, fetchOpts()),
-        fetch(`${API}/api/admin/services`, fetchOpts()),
-        fetch(`${API}/api/admin/team`, fetchOpts()),
+        fetch(`${API_BASE}/api/admin/appointments?limit=80&page=1`, fetchOpts()),
+        fetch(`${API_BASE}/api/admin/services`, fetchOpts()),
+        fetch(`${API_BASE}/api/admin/team`, fetchOpts()),
       ]);
 
       if (bkRes.status === 401 || bkRes.status === 403) {

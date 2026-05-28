@@ -3,7 +3,7 @@ import { ChevronRight, Sparkles } from 'lucide-react';
 import ServicesCarousel from './ServicesCarousel';
 import ServiceListingCard from './ServiceListingCard';
 import { toListingCard } from './servicesData';
-const API = (import.meta.env.VITE_API_URL || 'http://localhost:5000').trim().replace(/\/$/, '');
+import { API_BASE } from '@/lib/api';
 
 const DEFAULT_COPY = {
   badge: 'Featured services',
@@ -19,7 +19,7 @@ export default function FeaturedServices({ searchQuery = '' }) {
 
     const load = async () => {
       try {
-        const res = await fetch(`${API}/api/services?featured=true`);
+        const res = await fetch(`${API_BASE}/api/services?featured=true`);
         if (!res.ok) return;
         const json = await res.json();
         if (!cancelled && Array.isArray(json?.data)) {

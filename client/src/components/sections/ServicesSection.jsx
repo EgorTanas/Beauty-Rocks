@@ -5,9 +5,8 @@ import { ChevronRight, Sparkles } from 'lucide-react';
 import { sectionReveal } from '../common/motionVariants';
 import ServiceListingCard from '../services/ServiceListingCard';
 import { toListingCard } from '../services/servicesData';
+import { API_BASE } from '@/lib/api';
 import '../../style/services.css';
-
-const API = (import.meta.env.VITE_API_URL || 'http://localhost:5000').trim().replace(/\/$/, '');
 
 const DEFAULT_COPY = {
   badge: 'What we offer',
@@ -27,7 +26,7 @@ export default function ServicesSection() {
     const fetchServices = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${API}/api/services?homepage=true`);
+        const res = await fetch(`${API_BASE}/api/services?homepage=true`);
         if (!res.ok) throw new Error('Failed to load services');
         const json = await res.json();
         if (!cancelled) {

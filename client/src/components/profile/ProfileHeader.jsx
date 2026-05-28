@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Camera, Trash2, ArrowUpRight } from 'lucide-react';
-import UserAvatar from '../UserAvatar';
+import UserAvatar from '../common/UserAvatar';
 import { getUserDisplayName } from '../../utils/userDisplay';
 
 function formatMemberSince(createdAt) {

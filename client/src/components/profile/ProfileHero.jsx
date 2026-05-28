@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowUpRight, Camera } from 'lucide-react';
-import UserAvatar from '../UserAvatar';
+import UserAvatar from '../common/UserAvatar';
 import { getUserDisplayName } from '../../utils/userDisplay';
 import { fadeUp } from '../common/motionVariants';
 

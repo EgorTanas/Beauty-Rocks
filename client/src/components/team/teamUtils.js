@@ -1,6 +1,5 @@
 import { TEAM_PAGE_FALLBACK } from './teamData';
-
-const API_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000').trim().replace(/\/$/, '');
+import { resolveAvatarUrl } from '@/lib/media';
 
 export function getMemberInitials(name) {
   if (!name || typeof name !== 'string') return '?';
@@ -12,11 +11,7 @@ export function getMemberInitials(name) {
 }
 
 export function resolveTeamAvatar(avatar) {
-  if (typeof avatar !== 'string' || !avatar.trim()) return null;
-  const url = avatar.trim();
-  if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  if (url.startsWith('/')) return `${API_BASE.replace(/\/$/, '')}${url}`;
-  return `${API_BASE.replace(/\/$/, '')}/uploads/avatars/${url}`;
+  return resolveAvatarUrl(avatar);
 }
 
 export function mapApiMember(member) {

@@ -26,9 +26,9 @@ import { AdminHeader } from '../components/admin/AdminMotion';
 import { adminStagger, adminTableRow } from '../components/admin/adminMotionVariants';
 import { buildCategoryOptions, getCategoryLabel, slugifyCategory } from '../utils/categories';
 import { fetchSiteSettings } from '../utils/siteSettingsApi';
+import { API_BASE } from '@/lib/api';
 
-const API        = (import.meta.env.VITE_API_URL || 'http://localhost:5000').trim().replace(/\/$/, '');
-const ADMIN_API  = `${API}/api/admin/team`;
+const ADMIN_API = `${API_BASE}/api/admin/team`;
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 

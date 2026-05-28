@@ -8,7 +8,7 @@ const HERO_PORTRAIT_SRC = '/imgHome/girl%20exported.png';
 const HERO_PORTRAIT_W = 1536;
 const HERO_PORTRAIT_H = 1024;
 
-export default function HeroSection() {
+export default function HomeHero() {
   const reduceMotion = useReducedMotion();
   const [isMobile, setIsMobile] = useState(false);
   const portraitMaskId = useId().replace(/:/g, '');
@@ -44,8 +44,6 @@ export default function HeroSection() {
       </span>
 
       <div className="br-hero-grid">
-
-        {/* ── Coloana text ── */}
         <motion.div
           className="br-hero-copy"
           variants={fadeUp}
@@ -74,13 +72,11 @@ export default function HeroSection() {
           </div>
         </motion.div>
 
-        {/* ── Coloana imagine ── */}
         <motion.div
           className="br-hero-visual"
           variants={fadeUp}
           transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
         >
-          {/* Desktop: SVG portret + cercuri decorative separate */}
           <motion.div
             className="br-hero-portrait-stack br-hero-portrait-stack--desktop"
             animate={reduceMotion || isMobile ? false : { y: [0, -10, 0] }}
@@ -119,7 +115,6 @@ export default function HeroSection() {
             </svg>
           </motion.div>
 
-          {/* Mobile: portret în cerc (neschimbat) */}
           <motion.div
             className="br-hero-photo-frame br-hero-photo-frame--mobile"
             animate={reduceMotion || isMobile ? false : { y: [0, -10, 0] }}
@@ -142,7 +137,6 @@ export default function HeroSection() {
             </div>
           </motion.div>
         </motion.div>
-
       </div>
 
       <div className="br-hero-scroll-hint" aria-hidden>
