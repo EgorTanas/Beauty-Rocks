@@ -9,13 +9,12 @@ const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 
-// Render (și orice hosting cu reverse proxy) trimite X-Forwarded-For
-// Fără această linie, express-rate-limit aruncă eroare și blochează toate requesturile
+
 app.set('trust proxy', 1);
 
 connectDB();
 
-// ─── CORS — suportă mai multe origini (localhost + Vercel) ───────────────────
+// ─── CORS — suportă mai multe origini (localhost + Vercel) 
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
@@ -26,7 +25,7 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Permite requests fără origin (ex: curl, Postman, mobile apps)
+    
       if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) return callback(null, true);
       return callback(new Error(`CORS blocked: ${origin}`));

@@ -183,7 +183,7 @@ const updateTeamMember = async (req, res) => {
     const member = await TeamMember.findByIdAndUpdate(
       req.params.id,
       { ...req.body },
-      { returnDocument: 'after', runValidators: true }
+      { new: true, runValidators: true }
     );
 
     res.json({ success: true, data: member });
