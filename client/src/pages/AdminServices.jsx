@@ -443,8 +443,8 @@ export default function AdminServices() {
 
   // ── Save (create / update)   ────
   const handleSave = async () => {
-    if (!form.name.trim() || !form.price.trim() || !form.duration.trim()) {
-      setFormError('Name, price and duration are required.');
+    if (!form.name.trim() || !form.description.trim() || !form.price.trim() || !form.duration.trim()) {
+      setFormError('Name, description, price and duration are required.');
       return;
     }
 
@@ -691,7 +691,7 @@ export default function AdminServices() {
               </label>
 
               <label className="adm-label">
-                Description
+                Description *
                 <textarea
                   className="adm-input adm-textarea"
                   value={form.description}

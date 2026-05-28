@@ -76,7 +76,12 @@ app.use((req, res) => {
 // Error handler
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(err.status || 500).json({ message: err.message || "Internal server error." });
+  const msg = err?.message || "Internal server error.";
+  // CORS errors are expected configuration issues; return 403 instead of 500
+  const status =
+    err?.status ||
+    (typeof msg === 'string' && msg.startsWith('CORS blocked:') ? 403 : 500);
+  res.status(status).json({ message: msg });
 });
 
 const PORT = process.env.PORT || 5000;
