@@ -9,7 +9,7 @@ import {
 import {
   BOOKING_CATEGORIES,
   groupBookingServicesByCategory,
-} from './bookingData';
+} from '@/data/bookingData';
 import { catalogItem, catalogStagger } from '../common/motionVariants';
 
 function ServiceCard({ service, selected, onSelect }) {

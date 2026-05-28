@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { CATEGORY_FILTERS, normalizeCategory } from '../components/services/servicesData';
+import { CATEGORY_FILTERS, normalizeCategory } from '@/data/servicesData';
 import Navbar from '../components/common/Navbar';
 import Footer from '../components/common/Footer';
 import ServicesHero from '../components/services/ServicesHero';

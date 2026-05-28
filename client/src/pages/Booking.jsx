@@ -10,7 +10,7 @@ import ServiceSelectionStep from '../components/booking/ServiceSelectionStep';
 import SpecialistSelectionStep from '../components/booking/SpecialistSelectionStep';
 import DateTimeStep from '../components/booking/DateTimeStep';
 import ConfirmationStep from '../components/booking/ConfirmationStep';
-import { apiServiceToBooking } from '../components/booking/bookingData';
+import { apiServiceToBooking } from '@/data/bookingData';
 import { consumeBookingPrefill } from '../utils/bookingPrefill';
 import {
   createAppointment,

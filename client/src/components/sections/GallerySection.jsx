@@ -3,7 +3,7 @@ import { Sparkles } from 'lucide-react';
 import GalleryCard from '../common/GalleryCard';
 import ReusableButton from '../common/ReusableButton';
 import { sectionReveal } from '../common/motionVariants';
-import { GALLERY } from './homeData';
+import { GALLERY } from '@/data/homeData';
 
 export default function GallerySection() {
   const reduceMotion = useReducedMotion();

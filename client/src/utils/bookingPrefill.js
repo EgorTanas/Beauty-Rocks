@@ -1,4 +1,4 @@
-import { normalizeCategory } from '../components/services/servicesData';
+import { normalizeCategory } from '@/data/servicesData';
 
 const STORAGE_KEY = 'br_booking_prefill';
 

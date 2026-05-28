@@ -1,7 +1,7 @@
 import { useId, useRef, useState } from 'react';
 import { motion, useReducedMotion, AnimatePresence } from 'framer-motion';
 import { Search, Sparkles, X, SlidersHorizontal } from 'lucide-react';
-import { CATEGORY_FILTERS } from './servicesData';
+import { CATEGORY_FILTERS } from '@/data/servicesData';
 
 export default function CategoriesBar({
   activeCategoryId = 'all',

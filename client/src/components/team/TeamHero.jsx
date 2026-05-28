@@ -1,7 +1,7 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { Sparkles, Users } from 'lucide-react';
 import { fadeUp } from '../common/motionVariants';
-import { TEAM_PREVIEW } from '../sections/homeData';
+import { TEAM_PREVIEW } from '@/data/homeData';
 
 const HERO_STATS = [
   { value: '8+', label: 'Years craft' },

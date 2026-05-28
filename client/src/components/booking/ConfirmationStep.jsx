@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CalendarCheck, CheckCircle2, Clock, Loader2, Sparkles, UserRound, X } from 'lucide-react';
 import ReusableButton from '../common/ReusableButton';
-import { formatBookingDate } from './bookingData';
+import { formatBookingDate } from '@/data/bookingData';
 import { formatProfileTime } from '../../utils/profileBookingUtils';
 
 function SummaryRow({ icon: Icon, label, value }) {

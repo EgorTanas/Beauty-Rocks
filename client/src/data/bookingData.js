@@ -4,7 +4,7 @@ import {
   getCategoryDisplayLabel,
   normalizeCategory,
   resolveServiceImage,
-} from '../services/servicesData';
+} from './servicesData';
 
 /** Categoriile pentru filtrare în booking — aceleași ca la pagina Services */
 export const BOOKING_CATEGORIES = CATEGORY_FILTERS;

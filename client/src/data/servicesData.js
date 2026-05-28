@@ -8,7 +8,7 @@ import {
 import {
   normalizeCategory as normalizeCategorySlug,
   getCategoryLabel as getDynamicCategoryLabel,
-} from '../../utils/categories';
+} from '../utils/categories';
 
 /** Salon categories — no skincare */
 export const CATEGORY_FILTERS = [

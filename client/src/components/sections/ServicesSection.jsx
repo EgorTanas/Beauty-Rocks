@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { ChevronRight, Sparkles } from 'lucide-react';
 import { sectionReveal } from '../common/motionVariants';
 import ServiceListingCard from '../services/ServiceListingCard';
-import { toListingCard } from '../services/servicesData';
+import { toListingCard } from '@/data/servicesData';
 import { API_BASE } from '@/lib/api';
 import '../../style/services.css';
 

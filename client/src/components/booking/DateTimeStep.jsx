@@ -5,7 +5,7 @@ import {
   BOOKING_TIME_SLOTS,
   buildCalendarMonth,
   formatBookingDate,
-} from './bookingData';
+} from '@/data/bookingData';
 import { formatProfileTime } from '../../utils/profileBookingUtils';
 
 const WEEKDAY_HEADERS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];

@@ -11,7 +11,7 @@ import {
   normalizeCategory,
   sortServices,
   toListingCard,
-} from './servicesData';
+} from '@/data/servicesData';
 import { API_BASE } from '@/lib/api';
 
 const PAGE_SIZE = 8;

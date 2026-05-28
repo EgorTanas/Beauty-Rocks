@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ChevronRight, Sparkles } from 'lucide-react';
 import ServicesCarousel from './ServicesCarousel';
 import ServiceListingCard from './ServiceListingCard';
-import { toListingCard } from './servicesData';
+import { toListingCard } from '@/data/servicesData';
 import { API_BASE } from '@/lib/api';
 
 const DEFAULT_COPY = {

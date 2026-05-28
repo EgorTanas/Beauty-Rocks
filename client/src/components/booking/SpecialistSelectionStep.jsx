@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Loader2 } from 'lucide-react';
-import { getSpecialistDisplayTags } from './bookingData';
+import { getSpecialistDisplayTags } from '@/data/bookingData';
 import { catalogItem, catalogStagger } from '../common/motionVariants';
 
 const listFade = {

@@ -5,7 +5,7 @@ import { buildBookingServiceFromCard, setBookingPrefill } from '../../utils/book
 import {
   CATEGORY_META,
   resolveServiceImage,
-} from '../services/servicesData';
+} from '@/data/servicesData';
 import { catalogItem, catalogStagger } from '../common/motionVariants';
 
 export default function ProfileSavedSection({ favorites, onRemove }) {

@@ -74,9 +74,10 @@ Repository-ul este organizat într-o structură monorepo cu două pachete princi
 │       │   ├── sections/           # Secțiuni homepage (HomeHero, Services, Team…)
 │       │   ├── services/           # Componente pagina servicii
 │       │   └── team/               # Componente pagina echipă
+│       ├── data/                   # Date statice (categorii, fallback, pași booking)
 │       ├── constants/              # Constante globale (linkuri sociale, locație)
 │       ├── context/                # Context React (AuthContext)
-│       ├── docs/                   # STRUCTURA-FRONTEND.md — ghid pentru prezentare
+│       ├── docs/                   # GHID-PREZENTARE.md — cum explici proiectul
 │       ├── hooks/                  # Hook-uri personalizate
 │       ├── pages/                  # Paginile aplicației (thin composers)
 │       ├── style/                  # CSS pe pagină / secțiune

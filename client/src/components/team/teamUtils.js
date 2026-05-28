@@ -1,4 +1,4 @@
-import { TEAM_PAGE_FALLBACK } from './teamData';
+import { TEAM_PAGE_FALLBACK } from '@/data/teamData';
 import { resolveAvatarUrl } from '@/lib/media';
 
 export function getMemberInitials(name) {

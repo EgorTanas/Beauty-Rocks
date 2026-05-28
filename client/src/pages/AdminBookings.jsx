@@ -11,7 +11,7 @@ import BookingTable from '../components/admin/bookings/BookingTable';
 import BookingCard from '../components/admin/bookings/BookingCard';
 import BookingDetailsModal from '../components/admin/bookings/BookingDetailsModal';
 import EmptyBookingsState from '../components/admin/bookings/EmptyBookingsState';
-import { MOCK_ADMIN_BOOKINGS } from '../components/admin/bookings/bookingAdminData';
+import { MOCK_ADMIN_BOOKINGS } from '@/data/bookingAdminData';
 import { AdminHeaderActions, AdminNav } from '../components/admin/AdminNav';
 import { AdminHeader } from '../components/admin/AdminMotion';
 import { adminListSwap, adminStagger } from '../components/admin/adminMotionVariants';

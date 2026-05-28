@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
-import { CATEGORY_IMAGES } from '../services/servicesData';
+import { CATEGORY_IMAGES } from '@/data/servicesData';
 
 const FALLBACK = '/imgHome/image.png';
 

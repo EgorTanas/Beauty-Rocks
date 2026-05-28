@@ -8,7 +8,7 @@ import {
   subscribeFavorites,
   toggleFavoriteService,
 } from '../../utils/favoriteServices';
-import { CATEGORY_IMAGES, CATEGORY_META } from './servicesData';
+import { CATEGORY_IMAGES, CATEGORY_META } from '@/data/servicesData';
 import { useAuth } from '../../context/AuthContext';
 
 const FALLBACK_IMAGE = '/imgHome/image.png';

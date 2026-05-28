@@ -1,5 +1,5 @@
 import { Check } from 'lucide-react';
-import { BOOKING_STEPS } from './bookingData';
+import { BOOKING_STEPS } from '@/data/bookingData';
 
 export default function BookingStepper({ currentStep }) {
   const activeMeta = BOOKING_STEPS.find((s) => s.id === currentStep) ?? BOOKING_STEPS[0];
