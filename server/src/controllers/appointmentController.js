@@ -1,8 +1,13 @@
 const Appointment = require('../models/Appointment');
 const TeamMember  = require('../models/TeamMember');
 const Service     = require('../models/Service');
-const User = require('../models/User');
-const { escapeHtml, sendTelegramMessage } = require('../utils/telegram');
+const {
+  emitBookingCancelled,
+  emitBookingCompleted,
+  emitBookingConfirmed,
+  emitBookingCreated,
+  emitBookingRescheduled,
+} = require('../events/bookingEvents');
 
 const toMinutes = (time) => {
   const [h, m] = time.split(':').map(Number);
@@ -158,21 +163,7 @@ const createAppointment = async (req, res) => {
     });
 
     await appointment.populate(['service', 'teamMember']);
-
-    const user = await User.findById(req.user.id).select('username email phone');
-    const telegramMessage = [
-      '💅 <b>New booking created</b>',
-      `• <b>Client:</b> ${escapeHtml(user?.username || 'Unknown')}`,
-      `• <b>Email:</b> ${escapeHtml(user?.email || 'N/A')}`,
-      `• <b>Phone:</b> ${escapeHtml(user?.phone || 'N/A')}`,
-      `• <b>Service:</b> ${escapeHtml(appointment.service?.name || 'N/A')}`,
-      `• <b>Specialist:</b> ${escapeHtml(appointment.teamMember?.name || 'N/A')}`,
-      `• <b>Date:</b> ${escapeHtml(new Date(appointment.date).toLocaleDateString('en-GB'))}`,
-      `• <b>Time:</b> ${escapeHtml(appointment.startTime)} - ${escapeHtml(appointment.endTime)}`,
-      `• <b>Status:</b> ${escapeHtml(appointment.status)}`,
-    ].join('\n');
-
-    await sendTelegramMessage(telegramMessage);
+    emitBookingCreated(String(appointment._id));
 
     res.status(201).json({ success: true, data: appointment });
   } catch (err) {
@@ -235,6 +226,7 @@ const cancelAppointment = async (req, res) => {
 
     appointment.status = 'cancelled';
     await appointment.save();
+    emitBookingCancelled(String(appointment._id));
 
     res.json({ success: true, data: appointment });
   } catch (err) {
@@ -310,6 +302,7 @@ const createAppointmentAdmin = async (req, res) => {
     });
 
     await appointment.populate(['user', 'service', 'teamMember']);
+    emitBookingCreated(String(appointment._id));
 
     res.status(201).json({ success: true, data: appointment });
   } catch (err) {
@@ -343,6 +336,14 @@ const updateAppointmentStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Appointment not found' });
     }
 
+    if (status === 'confirmed') {
+      emitBookingConfirmed(String(appointment._id));
+    } else if (status === 'completed') {
+      emitBookingCompleted(String(appointment._id));
+    } else if (status === 'cancelled') {
+      emitBookingCancelled(String(appointment._id));
+    }
+
     res.json({ success: true, data: appointment });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error', error: err.message });
@@ -358,6 +359,8 @@ const rescheduleAppointment = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Appointment not found' });
     }
 
+    const oldDateTime = `${new Date(appointment.date).toLocaleDateString('en-GB')} ${appointment.startTime}`;
+
     if (startTime) {
       const svc = await Service.findById(appointment.service);
       let durationMin = svc.durationMinutes || (typeof svc.duration === 'number' ? svc.duration : parseInt(svc.duration, 10));
@@ -372,6 +375,9 @@ const rescheduleAppointment = async (req, res) => {
 
     await appointment.save();
     await appointment.populate(['user', 'service', 'teamMember']);
+
+    const newDateTime = `${new Date(appointment.date).toLocaleDateString('en-GB')} ${appointment.startTime}`;
+    emitBookingRescheduled(String(appointment._id), oldDateTime, newDateTime);
 
     res.json({ success: true, data: appointment });
   } catch (err) {

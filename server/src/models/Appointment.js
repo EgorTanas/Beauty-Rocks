@@ -52,6 +52,28 @@ const appointmentSchema = new mongoose.Schema(
       maxlength: [500, 'Notes cannot exceed 500 characters'],
       default: '',
     },
+
+    reminder24hSentAt: {
+      type: Date,
+      default: null,
+    },
+
+    reminder2hSentAt: {
+      type: Date,
+      default: null,
+    },
+
+    telegramMessageId: {
+      type: String,
+      default: null,
+      select: false,
+    },
+
+    telegramChatId: {
+      type: String,
+      default: null,
+      select: false,
+    },
   },
   { timestamps: true }
 );

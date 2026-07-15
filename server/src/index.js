@@ -6,6 +6,10 @@ const rateLimit = require("express-rate-limit");
 const connectDB = require("./config/db");
 const passport = require("./config/Passport");
 const authRoutes = require("./routes/authRoutes");
+const telegramRoutes = require("./routes/telegramRoutes");
+const { scheduleReminderJob } = require("./jobs/reminderJob");
+const { scheduleSummaryJobs } = require("./jobs/summaryJob");
+const { validateNotificationConfig } = require("./config/notificationConfig");
 
 const app = express();
 
@@ -13,6 +17,7 @@ const app = express();
 app.set('trust proxy', 1);
 
 connectDB();
+validateNotificationConfig();
 
 // ─── CORS — suportă mai multe origini (localhost + Vercel) 
 const allowedOrigins = [
@@ -45,6 +50,7 @@ app.get("/health", (req, res) => res.json({ status: "ok", timestamp: new Date().
 
 // Auth
 app.use("/api/auth", authRoutes);
+app.use("/api/webhooks/telegram", telegramRoutes);
 
 // Services (public)
 app.use("/api/services", require("./routes/Serviceroutes"));
@@ -67,6 +73,9 @@ app.use("/api/user", require("./routes/UserRoutes"));
 
 // Admin routes (services + team + appointments)
 app.use("/api/admin", require("./routes/Adminroutes"));
+
+scheduleReminderJob();
+scheduleSummaryJobs();
 
 // ─── Error Handlers 
 
