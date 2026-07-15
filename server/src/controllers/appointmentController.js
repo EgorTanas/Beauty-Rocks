@@ -1,6 +1,8 @@
 const Appointment = require('../models/Appointment');
 const TeamMember  = require('../models/TeamMember');
 const Service     = require('../models/Service');
+const User = require('../models/User');
+const { escapeHtml, sendTelegramMessage } = require('../utils/telegram');
 
 const toMinutes = (time) => {
   const [h, m] = time.split(':').map(Number);
@@ -156,6 +158,21 @@ const createAppointment = async (req, res) => {
     });
 
     await appointment.populate(['service', 'teamMember']);
+
+    const user = await User.findById(req.user.id).select('username email phone');
+    const telegramMessage = [
+      '💅 <b>New booking created</b>',
+      `• <b>Client:</b> ${escapeHtml(user?.username || 'Unknown')}`,
+      `• <b>Email:</b> ${escapeHtml(user?.email || 'N/A')}`,
+      `• <b>Phone:</b> ${escapeHtml(user?.phone || 'N/A')}`,
+      `• <b>Service:</b> ${escapeHtml(appointment.service?.name || 'N/A')}`,
+      `• <b>Specialist:</b> ${escapeHtml(appointment.teamMember?.name || 'N/A')}`,
+      `• <b>Date:</b> ${escapeHtml(new Date(appointment.date).toLocaleDateString('en-GB'))}`,
+      `• <b>Time:</b> ${escapeHtml(appointment.startTime)} - ${escapeHtml(appointment.endTime)}`,
+      `• <b>Status:</b> ${escapeHtml(appointment.status)}`,
+    ].join('\n');
+
+    await sendTelegramMessage(telegramMessage);
 
     res.status(201).json({ success: true, data: appointment });
   } catch (err) {

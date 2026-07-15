@@ -188,7 +188,7 @@ exports.forgotPassword = async (req, res) => {
   } catch (emailErr) {
     console.error('Failed to send Google account notice:', emailErr.message);
   }
-  return res.status(200).json({ message: successMsg }); // tot 200 — nu dezvăluim
+  return res.status(200).json({ message: successMsg });
 }
     const rawToken = user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
@@ -203,10 +203,8 @@ exports.forgotPassword = async (req, res) => {
         sendPasswordResetEmail(user, rawToken),
         emailTimeout(10000),
       ]);
-      console.log('Reset email sent to', user.email);
     } catch (emailErr) {
       console.error("Failed to send reset email:", emailErr.message);
-      // Raspundem cu succes oricum — nu dezvaluim daca emailul exista sau SMTP-ul a picat
     }
 
     return res.status(200).json({ message: successMsg });

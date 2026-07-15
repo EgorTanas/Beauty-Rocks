@@ -45,12 +45,10 @@ const getAllServicesAdmin = async (req, res) => {
     const services = await Service.find().sort({ order: 1, createdAt: 1 });
     res.json({ success: true, count: services.length, data: services });
   } catch (err) {
-    console.error('SERVICES ERROR FULL:', err); // adaugă asta
-    res.status(500).json({ 
-      success: false, 
-      message: 'Server error', 
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
       error: err.message,
-      stack: err.stack  // adaugă asta temporar
     });
   }
 };

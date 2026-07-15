@@ -47,10 +47,16 @@ const verifyRefreshToken = (token) => {
 
 // ── Cookie options 
 
+const isProduction = process.env.NODE_ENV === "production";
+const cookieSameSite = (process.env.AUTH_COOKIE_SAMESITE || (isProduction ? "None" : "Lax")).trim();
+const cookieSecure = process.env.AUTH_COOKIE_SECURE
+  ? process.env.AUTH_COOKIE_SECURE !== "false"
+  : isProduction;
+
 const COOKIE_BASE = {
   httpOnly: true,                                  // JS cannot read
-  secure: process.env.NODE_ENV === "production",   // HTTPS only in prod
-  sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+  secure: cookieSecure,                            // HTTPS only when enabled
+  sameSite: cookieSameSite,
   path: "/",
 };
 
