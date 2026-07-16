@@ -23,6 +23,30 @@ const createTransporter = () => {
   });
 };
 
+const verifyTransporter = async () => {
+  if (!isEnabled()) {
+    return { ok: false, skipped: true, reason: 'missing_configuration' };
+  }
+
+  try {
+    const transporter = createTransporter();
+    await transporter.verify();
+    log('info', 'SMTP authentication verified', {
+      host: process.env.SMTP_HOST,
+      user: process.env.SMTP_USER,
+      secure: process.env.SMTP_SECURE === 'true',
+    });
+    return { ok: true };
+  } catch (error) {
+    log('error', 'SMTP authentication failed', {
+      host: process.env.SMTP_HOST,
+      user: process.env.SMTP_USER,
+      error: error?.message || 'SMTP verify failed',
+    });
+    return { ok: false, error: error?.message || 'SMTP verify failed' };
+  }
+};
+
 const escapeHtml = (value) =>
   String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -139,6 +163,7 @@ const sendEmail = async ({ to, subject, html, text, attachments = [] }) => {
   try {
     const transporter = createTransporter();
     const from = process.env.SMTP_FROM || `"${process.env.EMAIL_FROM_NAME || BRAND.shortName}" <${process.env.EMAIL_FROM_ADDRESS || process.env.SMTP_USER}>`;
+    log('info', 'Email send started', { to, subject, from });
     const info = await retry(() =>
       transporter.sendMail({
         from,
@@ -268,4 +293,5 @@ module.exports = {
   sendEmail,
   isEnabled,
   summaryEmail,
+  verifyTransporter,
 };

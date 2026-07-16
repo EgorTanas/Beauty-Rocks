@@ -3,6 +3,7 @@ const Appointment = require('../models/Appointment');
 
 const TELEGRAM_API_BASE = 'https://api.telegram.org';
 const TELEGRAM_WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET?.trim() || '';
+const TELEGRAM_WEBHOOK_PATH = '/api/webhooks/telegram';
 
 const isEnabled = () => {
   const token = process.env.TELEGRAM_BOT_TOKEN?.trim();
@@ -14,6 +15,15 @@ const log = (level, message, meta = {}) => {
   const payload = { scope: 'telegram', message, ...meta };
   if (level === 'error') console.error(JSON.stringify(payload));
   else console.log(JSON.stringify({ level, ...payload }));
+};
+
+const getWebhookUrl = () => {
+  const baseUrl =
+    process.env.RENDER_EXTERNAL_URL?.trim() ||
+    (process.env.RENDER_EXTERNAL_HOSTNAME ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME.trim()}` : '') ||
+    process.env.PUBLIC_URL?.trim() ||
+    process.env.APP_URL?.trim();
+  return baseUrl ? `${baseUrl.replace(/\/$/, '')}${TELEGRAM_WEBHOOK_PATH}` : '';
 };
 
 const escapeHtml = (value) =>
@@ -112,6 +122,80 @@ const answerCallbackQuery = async ({ callbackQueryId, text, show_alert = false }
     });
     return { ok: false, error: error?.response?.data?.description || error?.message || 'Callback answer failed' };
   }
+};
+
+const getWebhookInfo = async () => {
+  if (!isEnabled()) {
+    return { ok: false, skipped: true, reason: 'missing_configuration' };
+  }
+
+  try {
+    const token = process.env.TELEGRAM_BOT_TOKEN.trim();
+    const response = await axios.get(`${TELEGRAM_API_BASE}/bot${token}/getWebhookInfo`, { timeout: 10000 });
+    log('info', 'Telegram webhook info fetched', { url: response.data?.result?.url || '', pending: response.data?.result?.pending_update_count || 0 });
+    return { ok: true, data: response.data?.result };
+  } catch (error) {
+    log('error', 'Telegram webhook info failure', {
+      error: error?.response?.data?.description || error?.message || 'getWebhookInfo failed',
+    });
+    return { ok: false, error: error?.response?.data?.description || error?.message || 'getWebhookInfo failed' };
+  }
+};
+
+const setTelegramWebhook = async () => {
+  if (!isEnabled()) {
+    return { ok: false, skipped: true, reason: 'missing_configuration' };
+  }
+
+  const webhookUrl = getWebhookUrl();
+  if (!webhookUrl) {
+    log('error', 'Telegram webhook URL missing', { reason: 'missing_public_base_url' });
+    return { ok: false, error: 'Missing webhook URL' };
+  }
+
+  try {
+    const token = process.env.TELEGRAM_BOT_TOKEN.trim();
+    const payload = {
+      url: webhookUrl,
+      allowed_updates: ['message', 'callback_query'],
+      drop_pending_updates: false,
+    };
+
+    if (TELEGRAM_WEBHOOK_SECRET) {
+      payload.secret_token = TELEGRAM_WEBHOOK_SECRET;
+    }
+
+    const response = await axios.post(`${TELEGRAM_API_BASE}/bot${token}/setWebhook`, payload, { timeout: 10000 });
+    log('info', 'Telegram webhook set', { url: webhookUrl, ok: response.data?.ok });
+    return { ok: true, data: response.data?.result, url: webhookUrl };
+  } catch (error) {
+    log('error', 'Telegram webhook set failure', {
+      url: webhookUrl,
+      error: error?.response?.data?.description || error?.message || 'setWebhook failed',
+    });
+    return { ok: false, error: error?.response?.data?.description || error?.message || 'setWebhook failed' };
+  }
+};
+
+const ensureTelegramWebhook = async () => {
+  const webhookUrl = getWebhookUrl();
+  if (!webhookUrl || !isEnabled()) {
+    return { ok: false, skipped: true };
+  }
+
+  const info = await getWebhookInfo();
+  if (!info?.ok) {
+    return info;
+  }
+
+  const currentUrl = info.data?.url || '';
+  if (currentUrl === webhookUrl) {
+    log('info', 'Telegram webhook already correct', { url: webhookUrl });
+    return { ok: true, alreadySet: true, url: webhookUrl, info: info.data };
+  }
+
+  log('info', 'Telegram webhook mismatch detected', { currentUrl, desiredUrl: webhookUrl });
+  return setTelegramWebhook();
 };
 
 const formatDate = (date) =>
@@ -272,6 +356,12 @@ const handleCallbackQuery = async (update) => {
   const callback = update.callback_query;
   if (!callback?.data) return { ok: false };
 
+  log('info', 'Telegram callback received', {
+    data: callback.data,
+    chatId: callback.message?.chat?.id,
+    userId: callback.from?.id,
+  });
+
   const parts = callback.data.split(':');
   if (parts.length !== 3 || parts[0] !== 'booking') return { ok: false };
 
@@ -295,6 +385,7 @@ const handleCallbackQuery = async (update) => {
     appointment.status = 'pending';
     await appointment.save();
     await answerCallbackQuery({ callbackQueryId: callback.id, text: 'Reschedule requested.' });
+    log('info', 'Telegram callback executed', { action: 'reschedule', appointmentId });
     void getNotificationService().notifyBookingStatus(String(appointment._id), 'rescheduled', {
       emailHtml: 'An admin requested a reschedule. Our team will contact you with the next available time.',
       telegramLines: ['Action: Reschedule requested by admin'],
@@ -310,6 +401,7 @@ const handleCallbackQuery = async (update) => {
     appointment.status = 'confirmed';
     await appointment.save();
     await answerCallbackQuery({ callbackQueryId: callback.id, text: 'Booking confirmed.' });
+    log('info', 'Telegram callback executed', { action: 'confirm', appointmentId });
     void getNotificationService().notifyBookingStatus(String(appointment._id), 'confirmed');
     return { ok: true, action: 'confirm' };
   }
@@ -322,6 +414,7 @@ const handleCallbackQuery = async (update) => {
     appointment.status = 'cancelled';
     await appointment.save();
     await answerCallbackQuery({ callbackQueryId: callback.id, text: 'Booking cancelled.' });
+    log('info', 'Telegram callback executed', { action: 'cancel', appointmentId });
     void getNotificationService().notifyBookingStatus(String(appointment._id), 'cancelled');
     return { ok: true, action: 'cancel' };
   }
@@ -341,7 +434,10 @@ const handleTelegramUpdate = async (update) => {
   const chatId = String(message?.chat?.id || '');
   if (!text || !chatId) return { ok: false };
 
+  log('info', 'Telegram command received', { text, chatId, userId: message?.from?.id });
+
   if (text === '/start' || text === '/help') {
+    log('info', 'Telegram command executed', { text, command: 'help' });
     return sendTelegramMessage(
       [
         '💅 <b>Beauty Rocks Assistant</b>',
@@ -360,24 +456,51 @@ const handleTelegramUpdate = async (update) => {
     );
   }
 
-  if (text === '/today') return sendTelegramMessage(await buildAppointmentsList(0, "📅 <b>Today's bookings</b>"), { chatId });
-  if (text === '/tomorrow') return sendTelegramMessage(await buildAppointmentsList(1, '📅 <b>Tomorrow</b>'), { chatId });
-  if (text === '/pending') return sendTelegramMessage(await buildStatusList('pending', '🟠 <b>Pending bookings</b>'), { chatId });
-  if (text === '/confirmed') return sendTelegramMessage(await buildStatusList('confirmed', '🟢 <b>Confirmed bookings</b>'), { chatId });
-  if (text === '/completed') return sendTelegramMessage(await buildStatusList('completed', '✅ <b>Completed bookings</b>'), { chatId });
-  if (text === '/cancelled') return sendTelegramMessage(await buildStatusList('cancelled', '❌ <b>Cancelled bookings</b>'), { chatId });
-  if (text === '/stats') return sendTelegramMessage(await buildStatsMessage(), { chatId });
+  if (text === '/today') {
+    log('info', 'Telegram command executed', { text, command: 'today' });
+    return sendTelegramMessage(await buildAppointmentsList(0, "📅 <b>Today's bookings</b>"), { chatId });
+  }
+  if (text === '/tomorrow') {
+    log('info', 'Telegram command executed', { text, command: 'tomorrow' });
+    return sendTelegramMessage(await buildAppointmentsList(1, '📅 <b>Tomorrow</b>'), { chatId });
+  }
+  if (text === '/pending') {
+    log('info', 'Telegram command executed', { text, command: 'pending' });
+    return sendTelegramMessage(await buildStatusList('pending', '🟠 <b>Pending bookings</b>'), { chatId });
+  }
+  if (text === '/confirmed') {
+    log('info', 'Telegram command executed', { text, command: 'confirmed' });
+    return sendTelegramMessage(await buildStatusList('confirmed', '🟢 <b>Confirmed bookings</b>'), { chatId });
+  }
+  if (text === '/completed') {
+    log('info', 'Telegram command executed', { text, command: 'completed' });
+    return sendTelegramMessage(await buildStatusList('completed', '✅ <b>Completed bookings</b>'), { chatId });
+  }
+  if (text === '/cancelled') {
+    log('info', 'Telegram command executed', { text, command: 'cancelled' });
+    return sendTelegramMessage(await buildStatusList('cancelled', '❌ <b>Cancelled bookings</b>'), { chatId });
+  }
+  if (text === '/stats') {
+    log('info', 'Telegram command executed', { text, command: 'stats' });
+    return sendTelegramMessage(await buildStatsMessage(), { chatId });
+  }
   if (text === '/revenue') {
+    log('info', 'Telegram command executed', { text, command: 'revenue' });
     const completed = await Appointment.find({ status: 'completed' }).populate('service', 'price');
     const revenue = completed.reduce((sum, appt) => sum + Number(appt.service?.price || 0), 0);
     return sendTelegramMessage(`💰 <b>Revenue summary</b>\nCompleted appointments revenue: $${revenue.toFixed(2)}`, { chatId });
   }
 
+  log('info', 'Telegram command executed', { text, command: 'unknown' });
   return sendTelegramMessage('Unknown command. Use /help.', { chatId });
 };
 
 module.exports = {
   TELEGRAM_WEBHOOK_SECRET,
+  ensureTelegramWebhook,
+  getWebhookInfo,
+  getWebhookUrl,
+  setTelegramWebhook,
   buildBookingMessage,
   buildInlineKeyboard,
   buildStatusMessage,

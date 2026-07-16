@@ -10,6 +10,8 @@ const telegramRoutes = require("./routes/telegramRoutes");
 const { scheduleReminderJob } = require("./jobs/reminderJob");
 const { scheduleSummaryJobs } = require("./jobs/summaryJob");
 const { validateNotificationConfig } = require("./config/notificationConfig");
+const { ensureTelegramWebhook } = require("./services/telegramService");
+const { verifyTransporter } = require("./services/emailService");
 
 const app = express();
 
@@ -76,6 +78,12 @@ app.use("/api/admin", require("./routes/Adminroutes"));
 
 scheduleReminderJob();
 scheduleSummaryJobs();
+verifyTransporter().catch((error) => {
+  console.error(JSON.stringify({ scope: 'startup', message: 'SMTP verification failed', error: error.message }));
+});
+ensureTelegramWebhook().catch((error) => {
+  console.error(JSON.stringify({ scope: 'startup', message: 'Telegram webhook bootstrap failed', error: error.message }));
+});
 
 // ─── Error Handlers 
 
