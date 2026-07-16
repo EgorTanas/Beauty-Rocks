@@ -3,13 +3,12 @@ import {
   bootstrapSession,
   logoutSession,
   persistUser,
-  readStoredUser,
 } from '../utils/api';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => readStoredUser());
+  const [user, setUser] = useState(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {

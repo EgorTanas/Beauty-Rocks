@@ -167,15 +167,85 @@ GOOGLE_CALLBACK_URL=http://localhost:5000/api/auth/google/callback
 # URL Client pentru redirecționări
 CLIENT_URL=http://localhost:5173
 
-# Configurare Email SMTP (folosind Nodemailer)
+# Configurare Email
+RESEND_API_KEY=<resend_api_key>
+RESEND_FROM="Beauty Rocks <onboarding@resend.dev>"
+RESEND_FROM_ADDRESS=<adresa_compatibilă_resend_opțională>
+EMAIL_FROM_NAME="Beauty Rocks"
+EMAIL_FROM_ADDRESS=<adresă_email_expeditor>
+
+# SMTP fallback opțional
 SMTP_HOST=<host_smtp>
 SMTP_PORT=<port_smtp>
 SMTP_SECURE=false # true pentru portul 465, false pentru altele
 SMTP_USER=<nume_utilizator_smtp>
 SMTP_PASS=<parolă_smtp>
-EMAIL_FROM_NAME="Beauty Rocks"
-EMAIL_FROM_ADDRESS=<adresă_email_expeditor>
+SMTP_FROM="Beauty Rocks <no-reply@beautyrocks.studio>"
+
+# Brand & notificări
+BRAND_LOGO_URL=<logo_public_opțional>
+
+# Notificări Telegram pentru programări noi
+TELEGRAM_BOT_TOKEN=<token_bot_telegram>
+TELEGRAM_CHAT_ID=<chat_id_telegram>
+TELEGRAM_WEBHOOK_SECRET=<secret_opțional_webhook>
+
+# Timp și branding pentru calendare / rapoarte
+BUSINESS_TIMEZONE=Europe/Chisinau
+
+# Scheduler
+REMINDER_JOB_DISABLED=false
 ```
+
+`TELEGRAM_BOT_TOKEN` și `TELEGRAM_CHAT_ID` sunt opționale. Dacă lipsesc, serverul pornește normal, iar crearea programărilor nu este afectată.
+`RESEND_API_KEY` este metoda recomandată de livrare email în producție.
+`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER` și `SMTP_PASS` rămân ca fallback opțional.
+`RESEND_FROM` poate fi folosit pentru un sender verificat.
+`BRAND_LOGO_URL` este opțional și permite suprascrierea logo-ului din emailuri.
+`BUSINESS_TIMEZONE` este folosit pentru fișierele `.ics` și sumarul programărilor.
+
+### Telegram setup
+
+1. Creează un bot cu [@BotFather](https://t.me/BotFather).
+2. Setează `TELEGRAM_BOT_TOKEN` în `.env`.
+3. Obține `TELEGRAM_CHAT_ID` trimițând un mesaj botului și citind update-ul sau folosind un helper de chat id.
+4. Configurează webhook-ul către `POST /api/webhooks/telegram`.
+5. Dacă vrei protecție suplimentară, setează `TELEGRAM_WEBHOOK_SECRET` și trimite același secret în header-ul `x-telegram-bot-api-secret-token`.
+
+### Email debug endpoint
+
+`POST /api/debug/email`
+
+Folosește-l pentru a verifica livrarea emailului pe providerul configurat. Endpoint-ul:
+- verifică providerul
+- trimite un email text simplu
+- returnează `messageId`, `accepted`, `rejected`, `response` sau eroarea completă
+
+### Scheduler
+
+Programările cu reminder la 24 de ore sunt verificate la fiecare 15 minute de `node-cron`.
+Poți opri schedulerul cu `REMINDER_JOB_DISABLED=true`.
+
+### Cron jobs
+
+- `*/15 * * * *` - trimite reminder-ele de 24h și 2h
+- `0 8 * * *` - trimite rezumatul zilnic la 08:00
+- `0 8 * * 1` - trimite rezumatul săptămânal în fiecare luni la 08:00
+
+### Testare
+
+1. Configurează `.env` în `server/`.
+2. Pornește backend-ul cu `npm run dev`.
+3. Creează o rezervare din frontend.
+4. Confirmă că booking-ul se salvează chiar dacă Telegram sau SMTP nu sunt configurate.
+5. Verifică:
+   - emailul de booking creat
+   - mesajul Telegram cu butoane inline
+   - callback-urile `Confirm`, `Cancel`, `Reschedule`
+   - emailurile de status pentru confirmare/anulare/reprogramare
+   - reminder-ele de 24h și 2h
+   - atașamentul `.ics`
+   - comenzile `/help`, `/today`, `/tomorrow`, `/pending`, `/confirmed`, `/completed`, `/cancelled`, `/stats`, `/revenue`
 
 ## Endpoint-uri API
 

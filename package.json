@@ -1,0 +1,24 @@
+{
+  "name": "beauty-rocks",
+  "version": "1.0.0",
+  "description": "Beauty Rocks este o aplicație web full-stack pentru un salon de înfrumusețare modern, care permite clienților să se înregistreze, să gestioneze profilurile lor și să programeze întâlniri online. Aplicația dispune de un frontend responsiv și animat, precum și de un API backend securizat, oferind o experiență de utilizator fără probleme.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EgorTanas/Beauty-Rocks.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EgorTanas/Beauty-Rocks/issues"
+  },
+  "homepage": "https://github.com/EgorTanas/Beauty-Rocks#readme",
+  "devDependencies": {
+    "@types/node": "^26.1.1"
+  }
+}
