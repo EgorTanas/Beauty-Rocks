@@ -47,6 +47,7 @@ const EMPTY_FORM = {
   specialties:  '',   // comma-separated string → array on save
   serviceCategories: [],
   workingHours: EMPTY_WORKING_HOURS,
+  breakMinutes: 15,
   daysOff:      [],   // array of ISO date strings
   isActive:     true,
   order:        0,
@@ -302,6 +303,7 @@ export default function AdminTeam() {
       specialties:  (m.specialties || []).join(', '),
       serviceCategories: Array.isArray(m.serviceCategories) ? [...m.serviceCategories] : [],
       workingHours: wh,
+      breakMinutes: Number.isFinite(Number(m.breakMinutes)) ? Number(m.breakMinutes) : 15,
       daysOff:      (m.daysOff || []).map((d) => new Date(d).toISOString().split('T')[0]),
       isActive:     m.isActive,
       order:        m.order,
@@ -347,6 +349,7 @@ export default function AdminTeam() {
         : [],
       serviceCategories: form.serviceCategories,
       workingHours: form.workingHours,
+      breakMinutes: Number.isFinite(Number(form.breakMinutes)) ? Number(form.breakMinutes) : 15,
       daysOff: form.daysOff,
       isActive: form.isActive,
       order: form.order,
@@ -788,6 +791,20 @@ export default function AdminTeam() {
                     />
                     <span className="adm-label-hint">
                       Lower number = appears first on the Team page and in admin lists (0, 1, 2…).
+                    </span>
+                  </label>
+                  <label className="adm-label">
+                    Buffer after booking (minutes)
+                    <input
+                      className="adm-input"
+                      type="number"
+                      min={0}
+                      step={1}
+                      value={form.breakMinutes}
+                      onChange={(e) => setForm({ ...form, breakMinutes: Number(e.target.value) })}
+                    />
+                    <span className="adm-label-hint">
+                      This buffer is added after every appointment before the specialist becomes available again.
                     </span>
                   </label>
                   <label className="adm-label adm-label--checkbox" style={{ justifyContent: 'flex-end', paddingTop: 28 }}>

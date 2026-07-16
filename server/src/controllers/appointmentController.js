@@ -1,7 +1,17 @@
-const crypto = require('crypto');
 const Appointment = require('../models/Appointment');
 const TeamMember  = require('../models/TeamMember');
 const Service     = require('../models/Service');
+const {
+  DEFAULT_BREAK_MINUTES,
+  buildBusyBlocks,
+  buildFreeIntervals,
+  generateSlotsFromFreeIntervals,
+  normalizeDate,
+  resolveBreakMinutes,
+  resolveServiceDurationMinutes,
+  toMinutes,
+  toTime,
+} = require('../utils/bookingSlots');
 const {
   emitBookingCancelled,
   emitBookingCompleted,
@@ -11,24 +21,14 @@ const {
   emitBookingRescheduled,
 } = require('../events/bookingEvents');
 
-const toMinutes = (time) => {
-  const [h, m] = time.split(':').map(Number);
-  return h * 60 + m;
-};
-
-const toTime = (minutes) => {
-  const h = Math.floor(minutes / 60).toString().padStart(2, '0');
-  const m = (minutes % 60).toString().padStart(2, '0');
-  return `${h}:${m}`;
-};
-
-const normalizeDate = (date) => {
-  const d = new Date(date);
-  d.setUTCHours(0, 0, 0, 0);
-  return d;
-};
-
-const isSlotAvailable = async ({ teamMember, date, startTime, endTime, ignoreAppointmentId = null }) => {
+const isSlotAvailable = async ({
+  teamMember,
+  date,
+  startTime,
+  endTime,
+  ignoreAppointmentId = null,
+  fallbackBreakMinutes = DEFAULT_BREAK_MINUTES,
+}) => {
   const dayStart = normalizeDate(date);
   const dayEnd = new Date(dayStart);
   dayEnd.setUTCDate(dayEnd.getUTCDate() + 1);
@@ -40,13 +40,11 @@ const isSlotAvailable = async ({ teamMember, date, startTime, endTime, ignoreApp
     date: { $gte: dayStart, $lt: dayEnd },
     status: { $in: ['pending', 'confirmed', 'rescheduleRequested'] },
     ...(ignoreAppointmentId ? { _id: { $ne: ignoreAppointmentId } } : {}),
-  }).select('startTime endTime');
+  }).select('startTime endTime breakMinutes');
 
-  return !existingOnDay.some((a) => {
-    const aStart = toMinutes(a.startTime);
-    const aEnd = toMinutes(a.endTime);
-    return startMin < aEnd && endMin > aStart;
-  });
+  const busyRanges = buildBusyBlocks(existingOnDay, fallbackBreakMinutes);
+
+  return !busyRanges.some((busy) => startMin < busy.end && endMin > busy.start);
 };
 
 const getAvailableSlots = async (req, res) => {
@@ -84,58 +82,43 @@ const getAvailableSlots = async (req, res) => {
       return res.json({ success: true, data: [], message: 'Team member does not work on this day' });
     }
 
-    let durationMin = svc.durationMinutes || (typeof svc.duration === 'number' ? svc.duration : parseInt(svc.duration, 10));
+    const durationMin = resolveServiceDurationMinutes(svc);
 
     if (!durationMin || durationMin <= 0) {
       return res.status(400).json({ success: false, message: 'Service has an invalid duration' });
     }
 
-    const workStart = toMinutes(hours.start);
-    const workEnd   = toMinutes(hours.end);
-    const allSlots  = [];
-
-    for (let t = workStart; t + durationMin <= workEnd; t += durationMin) {
-      allSlots.push(t);
-    }
-
     const dayStart = normalizeDate(date);
-    const dayEnd   = new Date(dayStart);
+    const dayEnd = new Date(dayStart);
     dayEnd.setUTCDate(dayEnd.getUTCDate() + 1);
 
     const existing = await Appointment.find({
       teamMember: worker,
       date:       { $gte: dayStart, $lt: dayEnd },
-      status:     { $in: ['pending', 'confirmed'] },
-    }).select('startTime endTime');
+      status:     { $in: ['pending', 'confirmed', 'rescheduleRequested'] },
+    }).select('startTime endTime breakMinutes');
 
-    const busyRanges = existing.map((a) => ({
-      start: toMinutes(a.startTime),
-      end:   toMinutes(a.endTime),
-    }));
+    const workStart = toMinutes(hours.start);
+    const workEnd = toMinutes(hours.end);
+    const breakMinutes = resolveBreakMinutes(member.breakMinutes, DEFAULT_BREAK_MINUTES);
+    const busyRanges = buildBusyBlocks(existing, breakMinutes);
+    const freeIntervals = buildFreeIntervals({ workStart, workEnd, busyBlocks: busyRanges });
+    const freeSlots = generateSlotsFromFreeIntervals({
+      freeIntervals,
+      serviceDurationMinutes: durationMin,
+    });
 
-  const now = new Date();
+    const now = new Date();
+    const isToday =
+      targetDate.getFullYear() === now.getFullYear() &&
+      targetDate.getMonth() === now.getMonth() &&
+      targetDate.getDate() === now.getDate();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const visibleSlots = isToday
+      ? freeSlots.filter((slotStart) => slotStart >= currentMinutes)
+      : freeSlots;
 
-  const isToday =
-  targetDate.getFullYear() === now.getFullYear() &&
-  targetDate.getMonth() === now.getMonth() &&
-  targetDate.getDate() === now.getDate();
-
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-  const freeSlots = allSlots.filter((slotStart) => {
-  const slotEnd = slotStart + durationMin;
-
-  // Nu afișa orele deja trecute pentru ziua curentă
-  if (isToday && slotStart < currentMinutes) {
-    return false;
-  }
-
-  return !busyRanges.some(
-    (busy) => slotStart < busy.end && slotEnd > busy.start
-  );
-});
-
-    res.json({ success: true, data: freeSlots.map(toTime) });
+    res.json({ success: true, data: visibleSlots.map(toTime) });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Server error', error: err.message });
   }
@@ -152,10 +135,15 @@ const createAppointment = async (req, res) => {
       });
     }
 
-    const svc = await Service.findById(service);
+    const [svc, member] = await Promise.all([
+      Service.findById(service),
+      TeamMember.findById(teamMember),
+    ]);
     if (!svc) return res.status(404).json({ success: false, message: 'Service not found' });
+    if (!member) return res.status(404).json({ success: false, message: 'Team member not found' });
 
-    let durationMin = svc.durationMinutes || (typeof svc.duration === 'number' ? svc.duration : parseInt(svc.duration, 10));
+    const durationMin = resolveServiceDurationMinutes(svc);
+    const breakMinutes = resolveBreakMinutes(member.breakMinutes, DEFAULT_BREAK_MINUTES);
 
     if (!durationMin || durationMin <= 0) {
       return res.status(400).json({ success: false, message: 'Service has an invalid duration' });
@@ -163,18 +151,12 @@ const createAppointment = async (req, res) => {
 
     const endTime = toTime(toMinutes(startTime) + durationMin);
 
-    const dayStart = normalizeDate(date);
-    const dayEnd   = new Date(dayStart);
-    dayEnd.setUTCDate(dayEnd.getUTCDate() + 1);
-
-    const startMin = toMinutes(startTime);
-    const endMin   = toMinutes(endTime);
-
     const hasConflict = await isSlotAvailable({
       teamMember,
       date: normalizeDate(date),
       startTime,
       endTime,
+      fallbackBreakMinutes: breakMinutes,
     });
 
     if (!hasConflict) {
@@ -188,6 +170,7 @@ const createAppointment = async (req, res) => {
       user:       req.user.id,
       service,
       teamMember,
+      breakMinutes,
       date:       normalizeDate(date),
       startTime,
       endTime,
@@ -223,7 +206,7 @@ const getRescheduleRequestByToken = async (req, res) => {
     })
       .select('+rescheduleToken +rescheduleTokenExpiresAt +rescheduleTokenUsedAt')
       .populate('service', 'name price duration durationMinutes category image')
-      .populate('teamMember', 'name role avatar')
+      .populate('teamMember', 'name role avatar breakMinutes')
       .populate('user', 'username email phone');
 
     if (!appointment) {
@@ -253,7 +236,7 @@ const submitRescheduleRequest = async (req, res) => {
     })
       .select('+rescheduleToken +rescheduleTokenExpiresAt +rescheduleTokenUsedAt')
       .populate('service', 'name price duration durationMinutes category image')
-      .populate('teamMember', 'name role avatar')
+      .populate('teamMember', 'name role avatar breakMinutes')
       .populate('user', 'username email phone');
 
     if (!appointment) {
@@ -261,18 +244,26 @@ const submitRescheduleRequest = async (req, res) => {
     }
 
     const svc = await Service.findById(appointment.service._id);
-    let durationMin = svc.durationMinutes || (typeof svc.duration === 'number' ? svc.duration : parseInt(svc.duration, 10));
+    if (!svc) {
+      return res.status(404).json({ success: false, message: 'Service not found' });
+    }
+    const durationMin = resolveServiceDurationMinutes(svc);
     if (!durationMin || durationMin <= 0) {
       return res.status(400).json({ success: false, message: 'Service has an invalid duration' });
     }
 
     const nextEndTime = toTime(toMinutes(startTime) + durationMin);
+    const breakMinutes = resolveBreakMinutes(
+      appointment.breakMinutes ?? appointment.teamMember?.breakMinutes,
+      DEFAULT_BREAK_MINUTES
+    );
     const allowed = await isSlotAvailable({
       teamMember: appointment.teamMember._id,
       date,
       startTime,
       endTime: nextEndTime,
       ignoreAppointmentId: appointment._id,
+      fallbackBreakMinutes: breakMinutes,
     });
 
     if (!allowed) {
@@ -417,15 +408,33 @@ const createAppointmentAdmin = async (req, res) => {
 
     const svc = await Service.findById(service);
     if (!svc) return res.status(404).json({ success: false, message: 'Service not found' });
+    const member = await TeamMember.findById(teamMember);
+    if (!member) return res.status(404).json({ success: false, message: 'Team member not found' });
 
-    let durationMin = svc.durationMinutes || (typeof svc.duration === 'number' ? svc.duration : parseInt(svc.duration, 10));
-
+    const durationMin = resolveServiceDurationMinutes(svc);
+    const breakMinutes = resolveBreakMinutes(member?.breakMinutes, DEFAULT_BREAK_MINUTES);
     const endTime = toTime(toMinutes(startTime) + durationMin);
+
+    const allowed = await isSlotAvailable({
+      teamMember,
+      date: normalizeDate(date),
+      startTime,
+      endTime,
+      fallbackBreakMinutes: breakMinutes,
+    });
+
+    if (!allowed) {
+      return res.status(409).json({
+        success: false,
+        message: 'This time slot is no longer available. Please choose another.',
+      });
+    }
 
     const appointment = await Appointment.create({
       user,
       service,
       teamMember,
+      breakMinutes,
       date:      normalizeDate(date),
       startTime,
       endTime,
@@ -493,10 +502,41 @@ const rescheduleAppointment = async (req, res) => {
 
     const oldDateTime = `${new Date(appointment.date).toLocaleDateString('en-GB')} ${appointment.startTime}`;
 
+    const svc = await Service.findById(appointment.service);
+    if (!svc) {
+      return res.status(404).json({ success: false, message: 'Service not found' });
+    }
+    const durationMin = resolveServiceDurationMinutes(svc);
+    const nextTeamMember = teamMember || appointment.teamMember;
+    const nextDate = date || appointment.date;
+    const nextStartTime = startTime || appointment.startTime;
+    const nextEndTime = startTime ? toTime(toMinutes(startTime) + durationMin) : appointment.endTime;
+    const member = await TeamMember.findById(nextTeamMember);
+    const breakMinutes = resolveBreakMinutes(
+      appointment.breakMinutes ?? member?.breakMinutes,
+      DEFAULT_BREAK_MINUTES
+    );
+
+    if (startTime || date || teamMember) {
+      const allowed = await isSlotAvailable({
+        teamMember: nextTeamMember,
+        date: nextDate,
+        startTime: nextStartTime,
+        endTime: nextEndTime,
+        ignoreAppointmentId: appointment._id,
+        fallbackBreakMinutes: breakMinutes,
+      });
+
+      if (!allowed) {
+        return res.status(409).json({
+          success: false,
+          message: 'This time slot is no longer available. Please choose another.',
+        });
+      }
+    }
+
     if (startTime) {
-      const svc = await Service.findById(appointment.service);
-      let durationMin = svc.durationMinutes || (typeof svc.duration === 'number' ? svc.duration : parseInt(svc.duration, 10));
-      appointment.endTime = toTime(toMinutes(startTime) + durationMin);
+      appointment.endTime = nextEndTime;
       appointment.startTime = startTime;
     }
 

@@ -18,6 +18,12 @@ const appointmentSchema = new mongoose.Schema(
       required: [true, 'Team member is required'],
     },
 
+    breakMinutes: {
+      type: Number,
+      min: [0, 'Break must be zero or greater'],
+      default: 15,
+    },
+
     date: {
       type: Date,
       required: [true, 'Date is required'],

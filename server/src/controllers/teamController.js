@@ -98,6 +98,7 @@ const checkAvailability = async (req, res) => {
         isAvailable,
         workingHours,
         dayName,
+        breakMinutes: member.breakMinutes ?? 15,
       },
     });
   } catch (err) {
@@ -146,6 +147,7 @@ const createTeamMember = async (req, res) => {
       specialties,
       serviceCategories,
       workingHours,
+      breakMinutes,
       daysOff,
       isActive,
       order,
@@ -165,6 +167,7 @@ const createTeamMember = async (req, res) => {
       specialties: specialties || [],
       serviceCategories: normalizedCategories,
       workingHours: workingHours || {},
+      breakMinutes: breakMinutes !== undefined ? breakMinutes : 15,
       daysOff: daysOff || [],
       isActive: isActive !== undefined ? isActive : true,
       order: order || 0,

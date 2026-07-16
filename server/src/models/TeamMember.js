@@ -87,6 +87,11 @@ const teamMemberSchema = new mongoose.Schema(
       saturday:  { type: workingHoursSchema, default: () => ({}) },
       sunday:    { type: workingHoursSchema, default: () => ({}) },
     },
+    breakMinutes: {
+      type: Number,
+      min: [0, 'Break must be zero or greater'],
+      default: 15,
+    },
     daysOff: [{
       type: Date,
     }],
