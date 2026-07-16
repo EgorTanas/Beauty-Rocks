@@ -113,12 +113,27 @@ const getAvailableSlots = async (req, res) => {
       end:   toMinutes(a.endTime),
     }));
 
-    const freeSlots = allSlots.filter((slotStart) => {
-      const slotEnd = slotStart + durationMin;
-      return !busyRanges.some(
-        (busy) => slotStart < busy.end && slotEnd > busy.start
-      );
-    });
+  const now = new Date();
+
+  const isToday =
+  targetDate.getFullYear() === now.getFullYear() &&
+  targetDate.getMonth() === now.getMonth() &&
+  targetDate.getDate() === now.getDate();
+
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  const freeSlots = allSlots.filter((slotStart) => {
+  const slotEnd = slotStart + durationMin;
+
+  // Nu afișa orele deja trecute pentru ziua curentă
+  if (isToday && slotStart < currentMinutes) {
+    return false;
+  }
+
+  return !busyRanges.some(
+    (busy) => slotStart < busy.end && slotEnd > busy.start
+  );
+});
 
     res.json({ success: true, data: freeSlots.map(toTime) });
   } catch (err) {
