@@ -6,6 +6,7 @@ const rateLimit = require("express-rate-limit");
 const connectDB = require("./config/db");
 const passport = require("./config/Passport");
 const authRoutes = require("./routes/authRoutes");
+const debugRoutes = require("./routes/debugRoutes");
 const telegramRoutes = require("./routes/telegramRoutes");
 const { scheduleReminderJob } = require("./jobs/reminderJob");
 const { scheduleSummaryJobs } = require("./jobs/summaryJob");
@@ -52,6 +53,7 @@ app.get("/health", (req, res) => res.json({ status: "ok", timestamp: new Date().
 
 // Auth
 app.use("/api/auth", authRoutes);
+app.use("/api/debug", debugRoutes);
 app.use("/api/webhooks/telegram", telegramRoutes);
 
 // Services (public)

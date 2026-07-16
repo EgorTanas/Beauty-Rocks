@@ -52,17 +52,22 @@ const verifyTransporter = async () => {
       secure: process.env.SMTP_SECURE === 'true',
       user: process.env.SMTP_USER,
     });
-    await withTimeout(transporter.verify(), Number(process.env.SMTP_VERIFY_TIMEOUT_MS) || 10000, 'SMTP verify');
+    const result = await withTimeout(transporter.verify(), Number(process.env.SMTP_VERIFY_TIMEOUT_MS) || 10000, 'SMTP verify');
     log('info', 'SMTP authentication verified', {
       host: process.env.SMTP_HOST,
       user: process.env.SMTP_USER,
       secure: process.env.SMTP_SECURE === 'true',
+      result,
     });
     return { ok: true };
   } catch (error) {
     log('error', 'SMTP authentication failed', {
       host: process.env.SMTP_HOST,
       user: process.env.SMTP_USER,
+      code: error?.code || null,
+      command: error?.command || null,
+      response: error?.response || null,
+      stack: error?.stack || null,
       error: error?.message || 'SMTP verify failed',
     });
     return { ok: false, error: error?.message || 'SMTP verify failed' };
@@ -215,7 +220,10 @@ const sendEmail = async ({ to, subject, html, text, attachments = [] }) => {
     log('error', 'Email failure', {
       to,
       subject,
-      smtpError: error?.response || error?.code || null,
+      code: error?.code || null,
+      command: error?.command || null,
+      response: error?.response || null,
+      stack: error?.stack || null,
       error: error?.message || 'Email send failed',
     });
     return { ok: false, error: error?.message || 'Email send failed' };
@@ -330,4 +338,6 @@ module.exports = {
   isEnabled,
   summaryEmail,
   verifyTransporter,
+  createTransporter,
+  withTimeout,
 };
