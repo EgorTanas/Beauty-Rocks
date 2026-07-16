@@ -11,7 +11,7 @@ export function getUserDisplayName(user) {
 /** Initials for avatar fallback (max 2 chars). */
 export function getUserInitials(user) {
   const name = getUserDisplayName(user);
-  if (name === 'Account') return '?';
+  if (name === 'Account') return 'BR';
   const parts = name.split(/\s+/).filter(Boolean);
   if (parts.length >= 2) {
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();

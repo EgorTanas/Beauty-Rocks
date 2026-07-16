@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import {
   bootstrapSession,
+  readStoredUser,
   logoutSession,
   persistUser,
 } from '../utils/api';
