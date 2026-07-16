@@ -1,11 +1,14 @@
 const Appointment = require('../models/Appointment');
 const TeamMember  = require('../models/TeamMember');
 const Service     = require('../models/Service');
+const { BRAND } = require('../config/brand');
 const {
   DEFAULT_BREAK_MINUTES,
   buildBusyBlocks,
   buildFreeIntervals,
+  getCurrentMinutesInTimeZone,
   generateSlotsFromFreeIntervals,
+  isSameCalendarDayInTimeZone,
   normalizeDate,
   resolveBreakMinutes,
   resolveServiceDurationMinutes,
@@ -109,11 +112,8 @@ const getAvailableSlots = async (req, res) => {
     });
 
     const now = new Date();
-    const isToday =
-      targetDate.getFullYear() === now.getFullYear() &&
-      targetDate.getMonth() === now.getMonth() &&
-      targetDate.getDate() === now.getDate();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const isToday = isSameCalendarDayInTimeZone(targetDate, now, BRAND.timezone);
+    const currentMinutes = getCurrentMinutesInTimeZone(now, BRAND.timezone);
     const visibleSlots = isToday
       ? freeSlots.filter((slotStart) => slotStart >= currentMinutes)
       : freeSlots;

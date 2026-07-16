@@ -20,6 +20,37 @@ function normalizeDate(date) {
   return d;
 }
 
+function getZonedParts(date, timeZone) {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+
+  return formatter.formatToParts(date).reduce((acc, part) => {
+    if (part.type !== 'literal') {
+      acc[part.type] = part.value;
+    }
+    return acc;
+  }, {});
+}
+
+function getCurrentMinutesInTimeZone(date, timeZone) {
+  const parts = getZonedParts(date, timeZone);
+  return ((Number(parts.hour) || 0) * 60) + (Number(parts.minute) || 0);
+}
+
+function isSameCalendarDayInTimeZone(left, right, timeZone) {
+  const a = getZonedParts(left, timeZone);
+  const b = getZonedParts(right, timeZone);
+  return a.year === b.year && a.month === b.month && a.day === b.day;
+}
+
 function parseMinutes(value, fallback = DEFAULT_BREAK_MINUTES) {
   if (value === undefined || value === null || value === '') return fallback;
   const parsed = Number.parseInt(value, 10);
@@ -145,6 +176,8 @@ module.exports = {
   buildFreeIntervals,
   generateSlotsFromFreeIntervals,
   isValidTimeString,
+  getCurrentMinutesInTimeZone,
+  isSameCalendarDayInTimeZone,
   normalizeDate,
   resolveBreakMinutes,
   resolveServiceDurationMinutes,
