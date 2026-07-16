@@ -1,5 +1,4 @@
-const nodemailer = require('nodemailer');
-const { createTransporter, withTimeout } = require('../services/emailService');
+const { sendEmail, verifyTransporter, isResendEnabled } = require('../services/emailService');
 
 const log = (level, message, meta = {}) => {
   const payload = { scope: 'debug-email', message, ...meta };
@@ -17,55 +16,43 @@ const debugEmail = async (req, res) => {
   }
 
   try {
-    const transporter = createTransporter();
-    const transportConfig = {
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT) || 587,
-      secure: process.env.SMTP_SECURE === 'true',
-      user: process.env.SMTP_USER,
-      connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT_MS) || 10000,
-      greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT_MS) || 10000,
-      socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT_MS) || 10000,
-    };
+    const verifyResult = await verifyTransporter();
+    log('info', 'Debug verify completed', { verifyResult, to });
 
-    log('info', 'Debug SMTP verify started', { transportConfig, to });
-    const verifyResult = await withTimeout(
-      transporter.verify(),
-      Number(process.env.SMTP_VERIFY_TIMEOUT_MS) || 10000,
-      'SMTP verify'
-    );
-    log('info', 'Debug SMTP verify completed', { verifyResult, to });
+    log('info', 'Debug sendMail started', { to, subject, provider: isResendEnabled() ? 'resend' : 'smtp' });
+    const info = await sendEmail({
+      to,
+      subject,
+      text,
+      html: `<p>${text}</p>`,
+    });
 
-    log('info', 'Debug sendMail started', { to, subject, transportConfig });
-    const info = await withTimeout(
-      transporter.sendMail({
-        from: process.env.SMTP_FROM || `"${process.env.EMAIL_FROM_NAME || 'Beauty Rocks'}" <${process.env.EMAIL_FROM_ADDRESS || process.env.SMTP_USER}>`,
+    if (!info?.ok) {
+      return res.status(500).json({
+        ok: false,
         to,
         subject,
-        text,
-        html: `<p>${text}</p>`,
-      }),
-      Number(process.env.SMTP_SEND_TIMEOUT_MS) || 20000,
-      'SMTP sendMail'
-    );
+        error: info?.error || 'Email send failed',
+      });
+    }
 
     log('info', 'Debug sendMail completed', {
       to,
       subject,
-      messageId: info.messageId,
-      accepted: info.accepted,
-      rejected: info.rejected,
-      response: info.response,
+      messageId: info.data?.id || info.data?.messageId || info.data?.message_id || null,
+      accepted: info.data?.accepted || [to],
+      rejected: info.data?.rejected || [],
+      response: info.data?.response || info.data,
     });
 
     return res.json({
       ok: true,
       to,
       subject,
-      messageId: info.messageId,
-      accepted: info.accepted,
-      rejected: info.rejected,
-      response: info.response,
+      messageId: info.data?.id || info.data?.messageId || info.data?.message_id || null,
+      accepted: info.data?.accepted || [to],
+      rejected: info.data?.rejected || [],
+      response: info.data?.response || info.data,
     });
   } catch (error) {
     log('error', 'Debug SMTP failed', {

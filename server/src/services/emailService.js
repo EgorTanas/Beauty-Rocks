@@ -1,8 +1,10 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const { BRAND } = require('../config/brand');
 const { buildCalendarAttachment } = require('../utils/calendar');
 
-const isEnabled = () => Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+const isSmtpEnabled = () => Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+const isResendEnabled = () => Boolean(process.env.RESEND_API_KEY?.trim());
+const isEnabled = () => isSmtpEnabled() || isResendEnabled();
 
 const log = (level, message, meta = {}) => {
   const payload = { scope: 'email', message, ...meta };
@@ -10,20 +12,11 @@ const log = (level, message, meta = {}) => {
   else console.log(JSON.stringify({ level, ...payload }));
 };
 
-const createTransporter = () => {
-  if (!isEnabled()) return null;
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT) || 587,
-    secure: process.env.SMTP_SECURE === 'true',
-    connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT_MS) || 10000,
-    greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT_MS) || 10000,
-    socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT_MS) || 10000,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
+const createTransporter = () => null;
+
+const createResendClient = () => {
+  if (!isResendEnabled()) return null;
+  return new Resend(process.env.RESEND_API_KEY.trim());
 };
 
 const withTimeout = async (promise, timeoutMs, label) => {
@@ -45,32 +38,29 @@ const verifyTransporter = async () => {
   }
 
   try {
-    const transporter = createTransporter();
-    log('info', 'SMTP verify started', {
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT) || 587,
-      secure: process.env.SMTP_SECURE === 'true',
-      user: process.env.SMTP_USER,
-    });
-    const result = await withTimeout(transporter.verify(), Number(process.env.SMTP_VERIFY_TIMEOUT_MS) || 10000, 'SMTP verify');
-    log('info', 'SMTP authentication verified', {
-      host: process.env.SMTP_HOST,
-      user: process.env.SMTP_USER,
-      secure: process.env.SMTP_SECURE === 'true',
-      result,
-    });
-    return { ok: true };
+    if (isResendEnabled()) {
+      const client = createResendClient();
+      log('info', 'Resend verify started', { provider: 'resend' });
+      const result = await withTimeout(
+        client.domains.list(),
+        Number(process.env.RESEND_VERIFY_TIMEOUT_MS) || 10000,
+        'Resend verify'
+      );
+      log('info', 'Resend authentication verified', { provider: 'resend', result });
+      return { ok: true, provider: 'resend', result };
+    }
+
+    return { ok: false, skipped: true, reason: 'resend_not_enabled' };
   } catch (error) {
-    log('error', 'SMTP authentication failed', {
-      host: process.env.SMTP_HOST,
-      user: process.env.SMTP_USER,
+    log('error', 'Resend authentication failed', {
+      provider: 'resend',
       code: error?.code || null,
       command: error?.command || null,
       response: error?.response || null,
       stack: error?.stack || null,
-      error: error?.message || 'SMTP verify failed',
+      error: error?.message || 'Resend verify failed',
     });
-    return { ok: false, error: error?.message || 'SMTP verify failed' };
+    return { ok: false, error: error?.message || 'Resend verify failed' };
   }
 };
 
@@ -188,38 +178,104 @@ const sendEmail = async ({ to, subject, html, text, attachments = [] }) => {
   }
 
   try {
-    const transporter = createTransporter();
-    const from = process.env.SMTP_FROM || `"${process.env.EMAIL_FROM_NAME || BRAND.shortName}" <${process.env.EMAIL_FROM_ADDRESS || process.env.SMTP_USER}>`;
+    const plainText = text || html.replace(/<[^>]*>/g, '');
+    const emailFromPreview =
+      process.env.RESEND_FROM ||
+      process.env.SMTP_FROM ||
+      `"${process.env.EMAIL_FROM_NAME || BRAND.shortName}" <${process.env.EMAIL_FROM_ADDRESS || process.env.SMTP_USER || 'onboarding@resend.dev'}>`;
+    log('info', 'Email send started', {
+      to,
+      subject,
+      from: emailFromPreview,
+      provider: isResendEnabled() ? 'resend' : 'smtp',
+    });
+
+    if (isResendEnabled()) {
+      const client = createResendClient();
+      const resendAttachments = attachments.map((attachment) => ({
+        filename: attachment.filename,
+        content: attachment.content,
+        contentType: attachment.contentType,
+      }));
+
+      log('info', 'Resend send started', { to, subject, provider: 'resend' });
+      const result = await retry(async () => {
+        const response = await withTimeout(
+          client.emails.send({
+            from: process.env.RESEND_FROM || `${BRAND.shortName} <${process.env.RESEND_FROM_ADDRESS || 'onboarding@resend.dev'}>`,
+            to,
+            subject,
+            html,
+            text: plainText,
+            attachments: resendAttachments,
+          }),
+          Number(process.env.RESEND_SEND_TIMEOUT_MS) || 20000,
+          'Resend send'
+        );
+        log('info', 'Resend send completed', {
+          to,
+          subject,
+          id: response?.data?.id || response?.id || null,
+          accepted: [to],
+          rejected: [],
+          response: response,
+        });
+        return response;
+      });
+
+      const messageId = result?.id || result?.data?.id || null;
+      log('info', 'Email sent successfully', { to, subject, messageId, provider: 'resend' });
+      return { ok: true, data: result };
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT) || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT_MS) || 10000,
+      greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT_MS) || 10000,
+      socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT_MS) || 10000,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
     const smtpConfig = {
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT) || 587,
       secure: process.env.SMTP_SECURE === 'true',
       user: process.env.SMTP_USER,
     };
-    log('info', 'Email send started', { to, subject, from, smtpConfig });
-    const info = await retry(async () => {
-      log('info', 'SMTP sendMail started', { to, subject, smtpConfig });
-      const result = await withTimeout(
-        transporter.sendMail({
-        from,
+    const smtpFrom = process.env.SMTP_FROM || `"${process.env.EMAIL_FROM_NAME || BRAND.shortName}" <${process.env.EMAIL_FROM_ADDRESS || process.env.SMTP_USER}>`;
+    log('info', 'SMTP send started', { to, subject, from: smtpFrom, smtpConfig });
+    const info = await withTimeout(
+      transporter.sendMail({
+        from: smtpFrom,
         to,
         subject,
         html,
-        text: text || html.replace(/<[^>]*>/g, ''),
+        text: plainText,
         attachments,
-        }),
-        Number(process.env.SMTP_SEND_TIMEOUT_MS) || 20000,
-        'SMTP sendMail'
-      );
-      log('info', 'SMTP sendMail completed', { to, subject, messageId: result.messageId });
-      return result;
+      }),
+      Number(process.env.SMTP_SEND_TIMEOUT_MS) || 20000,
+      'SMTP sendMail'
+    );
+    log('info', 'SMTP sendMail completed', {
+      to,
+      subject,
+      messageId: info.messageId,
+      accepted: info.accepted,
+      rejected: info.rejected,
+      response: info.response,
     });
-    log('info', 'Email sent successfully', { to, subject, messageId: info.messageId });
+    log('info', 'Email sent successfully', { to, subject, messageId: info.messageId, provider: 'smtp' });
     return { ok: true, data: info };
   } catch (error) {
     log('error', 'Email failure', {
       to,
       subject,
+      provider: isResendEnabled() ? 'resend' : 'smtp',
       code: error?.code || null,
       command: error?.command || null,
       response: error?.response || null,
@@ -336,8 +392,11 @@ module.exports = {
   reminderEmail,
   sendEmail,
   isEnabled,
+  isSmtpEnabled,
+  isResendEnabled,
   summaryEmail,
   verifyTransporter,
   createTransporter,
   withTimeout,
+  createResendClient,
 };
