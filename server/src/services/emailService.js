@@ -16,11 +16,27 @@ const createTransporter = () => {
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT) || 587,
     secure: process.env.SMTP_SECURE === 'true',
+    connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT_MS) || 10000,
+    greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT_MS) || 10000,
+    socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT_MS) || 10000,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
   });
+};
+
+const withTimeout = async (promise, timeoutMs, label) => {
+  let timeoutId;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(`${label} timed out after ${timeoutMs}ms`)), timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    clearTimeout(timeoutId);
+  }
 };
 
 const verifyTransporter = async () => {
@@ -30,7 +46,13 @@ const verifyTransporter = async () => {
 
   try {
     const transporter = createTransporter();
-    await transporter.verify();
+    log('info', 'SMTP verify started', {
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT) || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      user: process.env.SMTP_USER,
+    });
+    await withTimeout(transporter.verify(), Number(process.env.SMTP_VERIFY_TIMEOUT_MS) || 10000, 'SMTP verify');
     log('info', 'SMTP authentication verified', {
       host: process.env.SMTP_HOST,
       user: process.env.SMTP_USER,
@@ -163,23 +185,37 @@ const sendEmail = async ({ to, subject, html, text, attachments = [] }) => {
   try {
     const transporter = createTransporter();
     const from = process.env.SMTP_FROM || `"${process.env.EMAIL_FROM_NAME || BRAND.shortName}" <${process.env.EMAIL_FROM_ADDRESS || process.env.SMTP_USER}>`;
-    log('info', 'Email send started', { to, subject, from });
-    const info = await retry(() =>
-      transporter.sendMail({
+    const smtpConfig = {
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT) || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      user: process.env.SMTP_USER,
+    };
+    log('info', 'Email send started', { to, subject, from, smtpConfig });
+    const info = await retry(async () => {
+      log('info', 'SMTP sendMail started', { to, subject, smtpConfig });
+      const result = await withTimeout(
+        transporter.sendMail({
         from,
         to,
         subject,
         html,
         text: text || html.replace(/<[^>]*>/g, ''),
         attachments,
-      })
-    );
-    log('info', 'Email success', { to, subject, messageId: info.messageId });
+        }),
+        Number(process.env.SMTP_SEND_TIMEOUT_MS) || 20000,
+        'SMTP sendMail'
+      );
+      log('info', 'SMTP sendMail completed', { to, subject, messageId: result.messageId });
+      return result;
+    });
+    log('info', 'Email sent successfully', { to, subject, messageId: info.messageId });
     return { ok: true, data: info };
   } catch (error) {
     log('error', 'Email failure', {
       to,
       subject,
+      smtpError: error?.response || error?.code || null,
       error: error?.message || 'Email send failed',
     });
     return { ok: false, error: error?.message || 'Email send failed' };
