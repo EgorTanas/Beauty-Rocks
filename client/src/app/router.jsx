@@ -9,6 +9,7 @@ import Auth from '@/pages/Auth';
 import GoogleAuthSuccess from '@/pages/GoogleAuthSuccess';
 import Booking from '@/pages/Booking';
 import Profile from '@/pages/Profile';
+import Reschedule from '@/pages/Reschedule';
 import AdminDashboard from '@/pages/AdminDashboard';
 import AdminServices from '@/pages/AdminServices';
 import AdminTeam from '@/pages/AdminTeam';
@@ -50,6 +51,7 @@ export default function AppRouter() {
       />
       <Route path="/reset-password" element={<Auth apiBaseUrl={API_BASE} />} />
       <Route path="/auth/google/success" element={<GoogleAuthSuccess />} />
+      <Route path="/reschedule/:token" element={<Reschedule />} />
 
       {/* Authenticated client area */}
       <Route

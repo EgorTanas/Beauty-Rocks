@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const Appointment = require('../models/Appointment');
 const TeamMember  = require('../models/TeamMember');
 const Service     = require('../models/Service');
@@ -6,6 +7,7 @@ const {
   emitBookingCompleted,
   emitBookingConfirmed,
   emitBookingCreated,
+  emitBookingRescheduleRequested,
   emitBookingRescheduled,
 } = require('../events/bookingEvents');
 
@@ -24,6 +26,27 @@ const normalizeDate = (date) => {
   const d = new Date(date);
   d.setUTCHours(0, 0, 0, 0);
   return d;
+};
+
+const isSlotAvailable = async ({ teamMember, date, startTime, endTime, ignoreAppointmentId = null }) => {
+  const dayStart = normalizeDate(date);
+  const dayEnd = new Date(dayStart);
+  dayEnd.setUTCDate(dayEnd.getUTCDate() + 1);
+  const startMin = toMinutes(startTime);
+  const endMin = toMinutes(endTime);
+
+  const existingOnDay = await Appointment.find({
+    teamMember,
+    date: { $gte: dayStart, $lt: dayEnd },
+    status: { $in: ['pending', 'confirmed', 'rescheduleRequested'] },
+    ...(ignoreAppointmentId ? { _id: { $ne: ignoreAppointmentId } } : {}),
+  }).select('startTime endTime');
+
+  return !existingOnDay.some((a) => {
+    const aStart = toMinutes(a.startTime);
+    const aEnd = toMinutes(a.endTime);
+    return startMin < aEnd && endMin > aStart;
+  });
 };
 
 const getAvailableSlots = async (req, res) => {
@@ -132,19 +155,14 @@ const createAppointment = async (req, res) => {
     const startMin = toMinutes(startTime);
     const endMin   = toMinutes(endTime);
 
-    const existingOnDay = await Appointment.find({
+    const hasConflict = await isSlotAvailable({
       teamMember,
-      date:   { $gte: dayStart, $lt: dayEnd },
-      status: { $in: ['pending', 'confirmed'] },
-    }).select('startTime endTime');
-
-    const hasConflict = existingOnDay.some((a) => {
-      const aStart = toMinutes(a.startTime);
-      const aEnd   = toMinutes(a.endTime);
-      return startMin < aEnd && endMin > aStart;
+      date: normalizeDate(date),
+      startTime,
+      endTime,
     });
 
-    if (hasConflict) {
+    if (!hasConflict) {
       return res.status(409).json({
         success: false,
         message: 'This time slot is no longer available. Please choose another.',
@@ -172,6 +190,105 @@ const createAppointment = async (req, res) => {
       return res.status(400).json({ success: false, message: messages.join(', ') });
     }
     res.status(500).json({ success: false, message: 'Server error', error: err.message });
+  }
+};
+
+const getRescheduleRequestByToken = async (req, res) => {
+  try {
+    const token = String(req.params.token || '').trim();
+    if (!token) {
+      return res.status(400).json({ success: false, message: 'Token is required' });
+    }
+
+    const appointment = await Appointment.findOne({
+      rescheduleToken: token,
+      rescheduleRequested: true,
+      rescheduleTokenUsedAt: null,
+      rescheduleTokenExpiresAt: { $gt: new Date() },
+    })
+      .select('+rescheduleToken +rescheduleTokenExpiresAt +rescheduleTokenUsedAt')
+      .populate('service', 'name price duration durationMinutes category image')
+      .populate('teamMember', 'name role avatar')
+      .populate('user', 'username email phone');
+
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: 'Reschedule link is invalid or expired.' });
+    }
+
+    return res.json({ success: true, data: appointment });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error', error: err.message });
+  }
+};
+
+const submitRescheduleRequest = async (req, res) => {
+  try {
+    const token = String(req.params.token || '').trim();
+    const { date, startTime } = req.body;
+
+    if (!token || !date || !startTime) {
+      return res.status(400).json({ success: false, message: 'token, date and startTime are required' });
+    }
+
+    const appointment = await Appointment.findOne({
+      rescheduleToken: token,
+      rescheduleRequested: true,
+      rescheduleTokenUsedAt: null,
+      rescheduleTokenExpiresAt: { $gt: new Date() },
+    })
+      .select('+rescheduleToken +rescheduleTokenExpiresAt +rescheduleTokenUsedAt')
+      .populate('service', 'name price duration durationMinutes category image')
+      .populate('teamMember', 'name role avatar')
+      .populate('user', 'username email phone');
+
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: 'Reschedule link is invalid or expired.' });
+    }
+
+    const svc = await Service.findById(appointment.service._id);
+    let durationMin = svc.durationMinutes || (typeof svc.duration === 'number' ? svc.duration : parseInt(svc.duration, 10));
+    if (!durationMin || durationMin <= 0) {
+      return res.status(400).json({ success: false, message: 'Service has an invalid duration' });
+    }
+
+    const nextEndTime = toTime(toMinutes(startTime) + durationMin);
+    const allowed = await isSlotAvailable({
+      teamMember: appointment.teamMember._id,
+      date,
+      startTime,
+      endTime: nextEndTime,
+      ignoreAppointmentId: appointment._id,
+    });
+
+    if (!allowed) {
+      return res.status(409).json({ success: false, message: 'This time slot is no longer available. Please choose another.' });
+    }
+
+    const oldDateTime = `${new Date(appointment.date).toLocaleDateString('en-GB')} ${appointment.startTime}`;
+    appointment.date = normalizeDate(date);
+    appointment.startTime = startTime;
+    appointment.endTime = nextEndTime;
+    appointment.status = 'confirmed';
+    appointment.rescheduleRequested = false;
+    appointment.rescheduleToken = null;
+    appointment.rescheduleTokenExpiresAt = null;
+    appointment.rescheduleTokenUsedAt = new Date();
+    await appointment.save();
+
+    const newDateTime = `${new Date(appointment.date).toLocaleDateString('en-GB')} ${appointment.startTime}`;
+    emitBookingRescheduled(String(appointment._id), oldDateTime, newDateTime, {
+      finalized: true,
+      telegramLines: [
+        '✅ Client selected a new appointment.',
+        `Old: ${oldDateTime}`,
+        `New: ${newDateTime}`,
+      ],
+      emailHtml: 'Appointment successfully rescheduled.',
+    });
+
+    return res.json({ success: true, data: appointment });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Server error', error: err.message });
   }
 };
 
@@ -404,6 +521,8 @@ const deleteAppointment = async (req, res) => {
 module.exports = {
   getAvailableSlots,
   createAppointment,
+  getRescheduleRequestByToken,
+  submitRescheduleRequest,
   getMyAppointments,
   getAppointmentById,
   cancelAppointment,

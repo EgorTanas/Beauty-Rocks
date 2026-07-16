@@ -132,4 +132,39 @@ export async function createAppointment({ serviceId, teamMemberId, date, startTi
   return { ok: true, data: json.data };
 }
 
+export async function fetchRescheduleRequest(token) {
+  if (!token) {
+    return { ok: false, message: 'Missing reschedule token' };
+  }
+
+  const res = await apiFetch(`/api/appointments/reschedule/${encodeURIComponent(token)}`);
+  const json = await parseJson(res);
+  if (!res.ok) {
+    return { ok: false, message: json.message || 'Could not load reschedule request' };
+  }
+
+  return { ok: true, data: json.data };
+}
+
+export async function submitRescheduleRequest(token, { date, startTime }) {
+  if (!token || !date || !startTime) {
+    return { ok: false, message: 'Token, date and startTime are required' };
+  }
+
+  const iso = date instanceof Date ? toISODateString(date) : date;
+  const res = await apiFetch(`/api/appointments/reschedule/${encodeURIComponent(token)}`, {
+    method: 'POST',
+    body: {
+      date: iso,
+      startTime,
+    },
+  });
+  const json = await parseJson(res);
+  if (!res.ok) {
+    return { ok: false, message: json.message || 'Could not reschedule appointment' };
+  }
+
+  return { ok: true, data: json.data };
+}
+
 export { isMongoId };

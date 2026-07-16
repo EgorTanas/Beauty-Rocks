@@ -53,6 +53,29 @@ const appointmentSchema = new mongoose.Schema(
       default: '',
     },
 
+    rescheduleRequested: {
+      type: Boolean,
+      default: false,
+    },
+
+    rescheduleToken: {
+      type: String,
+      default: null,
+      select: false,
+    },
+
+    rescheduleTokenExpiresAt: {
+      type: Date,
+      default: null,
+      select: false,
+    },
+
+    rescheduleTokenUsedAt: {
+      type: Date,
+      default: null,
+      select: false,
+    },
+
     reminder24hSentAt: {
       type: Date,
       default: null,

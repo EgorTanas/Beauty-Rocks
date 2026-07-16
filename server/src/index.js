@@ -81,7 +81,7 @@ app.use("/api/admin", require("./routes/Adminroutes"));
 scheduleReminderJob();
 scheduleSummaryJobs();
 verifyTransporter().catch((error) => {
-  console.error(JSON.stringify({ scope: 'startup', message: 'SMTP verification failed', error: error.message }));
+  console.error(JSON.stringify({ scope: 'startup', message: 'Email verification failed', error: error.message }));
 });
 ensureTelegramWebhook().catch((error) => {
   console.error(JSON.stringify({ scope: 'startup', message: 'Telegram webhook bootstrap failed', error: error.message }));

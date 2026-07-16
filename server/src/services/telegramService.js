@@ -381,15 +381,16 @@ const handleCallbackQuery = async (update) => {
   }
 
   if (action === 'reschedule') {
+    const token = require('crypto').randomBytes(32).toString('hex');
+    appointment.rescheduleRequested = true;
+    appointment.rescheduleToken = token;
+    appointment.rescheduleTokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    appointment.rescheduleTokenUsedAt = null;
     appointment.notes = `${appointment.notes ? `${appointment.notes}\n` : ''}Reschedule requested by admin via Telegram.`;
-    appointment.status = 'pending';
     await appointment.save();
-    await answerCallbackQuery({ callbackQueryId: callback.id, text: 'Reschedule requested.' });
+    await answerCallbackQuery({ callbackQueryId: callback.id, text: 'Reschedule request sent.' });
     log('info', 'Telegram callback executed', { action: 'reschedule', appointmentId });
-    void getNotificationService().notifyBookingStatus(String(appointment._id), 'rescheduled', {
-      emailHtml: 'An admin requested a reschedule. Our team will contact you with the next available time.',
-      telegramLines: ['Action: Reschedule requested by admin'],
-    });
+    void require('../events/bookingEvents').emitBookingRescheduleRequested(String(appointment._id), token);
     return { ok: true, action: 'reschedule' };
   }
 

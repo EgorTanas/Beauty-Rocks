@@ -2,21 +2,13 @@ const { Resend } = require('resend');
 const { BRAND } = require('../config/brand');
 const { buildCalendarAttachment } = require('../utils/calendar');
 
-const isSmtpEnabled = () => Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 const isResendEnabled = () => Boolean(process.env.RESEND_API_KEY?.trim());
-const isEnabled = () => isSmtpEnabled() || isResendEnabled();
+const isEnabled = () => isResendEnabled();
 
 const log = (level, message, meta = {}) => {
   const payload = { scope: 'email', message, ...meta };
   if (level === 'error') console.error(JSON.stringify(payload));
   else console.log(JSON.stringify({ level, ...payload }));
-};
-
-const createTransporter = () => null;
-
-const createResendClient = () => {
-  if (!isResendEnabled()) return null;
-  return new Resend(process.env.RESEND_API_KEY.trim());
 };
 
 const withTimeout = async (promise, timeoutMs, label) => {
@@ -32,25 +24,29 @@ const withTimeout = async (promise, timeoutMs, label) => {
   }
 };
 
+const createResendClient = () => {
+  if (!isResendEnabled()) return null;
+  return new Resend(process.env.RESEND_API_KEY.trim());
+};
+
 const verifyTransporter = async () => {
-  if (!isEnabled()) {
+  if (!isResendEnabled()) {
     return { ok: false, skipped: true, reason: 'missing_configuration' };
   }
 
   try {
-    if (isResendEnabled()) {
-      const client = createResendClient();
-      log('info', 'Resend verify started', { provider: 'resend' });
-      const result = await withTimeout(
-        client.domains.list(),
-        Number(process.env.RESEND_VERIFY_TIMEOUT_MS) || 10000,
-        'Resend verify'
-      );
-      log('info', 'Resend authentication verified', { provider: 'resend', result });
-      return { ok: true, provider: 'resend', result };
+    const client = createResendClient();
+    log('info', 'Resend verify started', { provider: 'resend' });
+    const result = await withTimeout(
+      client.domains.list(),
+      Number(process.env.RESEND_VERIFY_TIMEOUT_MS) || 10000,
+      'Resend verify'
+    );
+    if (result?.error) {
+      throw new Error(result.error.message || 'Resend verification failed');
     }
-
-    return { ok: false, skipped: true, reason: 'resend_not_enabled' };
+    log('info', 'Resend authentication verified', { provider: 'resend', result });
+    return { ok: true, provider: 'resend', result };
   } catch (error) {
     log('error', 'Resend authentication failed', {
       provider: 'resend',
@@ -97,14 +93,12 @@ const baseLayout = ({ title, eyebrow, body, ctaLabel, ctaUrl, footer }) => `
         .hero h1 { margin: 0; font-size: 30px; line-height: 1.1; }
         .hero p { margin: 8px 0 0; color: rgba(255,255,255,.82); }
         .content { padding: 34px; color: #2a201d; line-height: 1.7; font-size: 15px; }
-        .content h2 { margin: 0 0 10px; font-size: 24px; }
         .details { width: 100%; border-collapse: collapse; margin: 22px 0; }
         .details td { padding: 11px 0; border-bottom: 1px solid #eee2dc; vertical-align: top; }
         .label { color: #8a6b5d; width: 170px; padding-right: 16px; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; }
         .value { font-weight: 600; color: #2a201d; }
         .status { display: inline-block; margin-top: 6px; padding: 8px 14px; border-radius: 999px; background: #f3e5dd; color: #7a4e3d; font-weight: 700; }
         .cta { display: inline-block; margin-top: 10px; background: linear-gradient(135deg, #caa27f 0%, #8f6248 100%); color: #fff !important; text-decoration: none; font-weight: 700; padding: 14px 24px; border-radius: 999px; }
-        .secondary { display: inline-block; margin-top: 14px; color: #8f6248; text-decoration: none; font-weight: 700; }
         .footer { background: #fcf8f5; padding: 22px 34px 30px; color: #7f6d66; font-size: 13px; }
         .footer a { color: #8f6248; text-decoration: none; }
         .social { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 12px; }
@@ -178,104 +172,55 @@ const sendEmail = async ({ to, subject, html, text, attachments = [] }) => {
   }
 
   try {
+    const client = createResendClient();
     const plainText = text || html.replace(/<[^>]*>/g, '');
-    const emailFromPreview =
+    const from =
       process.env.RESEND_FROM ||
-      process.env.SMTP_FROM ||
-      `"${process.env.EMAIL_FROM_NAME || BRAND.shortName}" <${process.env.EMAIL_FROM_ADDRESS || process.env.SMTP_USER || 'onboarding@resend.dev'}>`;
-    log('info', 'Email send started', {
-      to,
-      subject,
-      from: emailFromPreview,
-      provider: isResendEnabled() ? 'resend' : 'smtp',
-    });
+      `${BRAND.shortName} <${process.env.RESEND_FROM_ADDRESS || 'onboarding@resend.dev'}>`;
 
-    if (isResendEnabled()) {
-      const client = createResendClient();
-      const resendAttachments = attachments.map((attachment) => ({
-        filename: attachment.filename,
-        content: attachment.content,
-        contentType: attachment.contentType,
-      }));
+    const resendAttachments = attachments.map((attachment) => ({
+      filename: attachment.filename,
+      content: attachment.content,
+      contentType: attachment.contentType,
+    }));
 
-      log('info', 'Resend send started', { to, subject, provider: 'resend' });
-      const result = await retry(async () => {
-        const response = await withTimeout(
-          client.emails.send({
-            from: process.env.RESEND_FROM || `${BRAND.shortName} <${process.env.RESEND_FROM_ADDRESS || 'onboarding@resend.dev'}>`,
-            to,
-            subject,
-            html,
-            text: plainText,
-            attachments: resendAttachments,
-          }),
-          Number(process.env.RESEND_SEND_TIMEOUT_MS) || 20000,
-          'Resend send'
-        );
-        log('info', 'Resend send completed', {
+    log('info', 'Email send started', { to, subject, from, provider: 'resend' });
+    log('info', 'Resend send started', { to, subject, provider: 'resend' });
+
+    const result = await retry(async () => {
+      const response = await withTimeout(
+        client.emails.send({
+          from,
           to,
           subject,
-          id: response?.data?.id || response?.id || null,
-          accepted: [to],
-          rejected: [],
-          response: response,
-        });
-        return response;
-      });
+          html,
+          text: plainText,
+          attachments: resendAttachments,
+        }),
+        Number(process.env.RESEND_SEND_TIMEOUT_MS) || 20000,
+        'Resend send'
+      );
 
-      const messageId = result?.id || result?.data?.id || null;
-      log('info', 'Email sent successfully', { to, subject, messageId, provider: 'resend' });
-      return { ok: true, data: result };
-    }
-
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT) || 587,
-      secure: process.env.SMTP_SECURE === 'true',
-      connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT_MS) || 10000,
-      greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT_MS) || 10000,
-      socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT_MS) || 10000,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
-
-    const smtpConfig = {
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT) || 587,
-      secure: process.env.SMTP_SECURE === 'true',
-      user: process.env.SMTP_USER,
-    };
-    const smtpFrom = process.env.SMTP_FROM || `"${process.env.EMAIL_FROM_NAME || BRAND.shortName}" <${process.env.EMAIL_FROM_ADDRESS || process.env.SMTP_USER}>`;
-    log('info', 'SMTP send started', { to, subject, from: smtpFrom, smtpConfig });
-    const info = await withTimeout(
-      transporter.sendMail({
-        from: smtpFrom,
+      log('info', 'Resend send completed', {
         to,
         subject,
-        html,
-        text: plainText,
-        attachments,
-      }),
-      Number(process.env.SMTP_SEND_TIMEOUT_MS) || 20000,
-      'SMTP sendMail'
-    );
-    log('info', 'SMTP sendMail completed', {
-      to,
-      subject,
-      messageId: info.messageId,
-      accepted: info.accepted,
-      rejected: info.rejected,
-      response: info.response,
+        messageId: response?.id || response?.data?.id || null,
+        accepted: [to],
+        rejected: [],
+        response,
+      });
+
+      return response;
     });
-    log('info', 'Email sent successfully', { to, subject, messageId: info.messageId, provider: 'smtp' });
-    return { ok: true, data: info };
+
+    const messageId = result?.id || result?.data?.id || null;
+    log('info', 'Email sent successfully', { to, subject, messageId, provider: 'resend' });
+    return { ok: true, data: result };
   } catch (error) {
     log('error', 'Email failure', {
       to,
       subject,
-      provider: isResendEnabled() ? 'resend' : 'smtp',
+      provider: 'resend',
       code: error?.code || null,
       command: error?.command || null,
       response: error?.response || null,
@@ -352,6 +297,34 @@ const bookingStatusEmail = (appointment, title, eyebrow, extraHtml, subject) => 
   };
 };
 
+const rescheduleRequestEmail = (appointment, token) => {
+  const d = formatAppointmentDetails(appointment);
+  const rescheduleUrl = `${process.env.CLIENT_URL || BRAND.websiteUrl}/reschedule/${token}`;
+  return {
+    subject: 'We sincerely apologize — we need to reschedule your appointment',
+    html: baseLayout({
+      title: 'We need to reschedule',
+      eyebrow: 'A secure link is ready for you',
+      body: `
+        <p>Dear <strong>${escapeHtml(d.clientName)}</strong>,</p>
+        <p>We sincerely apologize, but due to an unexpected scheduling issue we are unfortunately unable to keep your appointment at the originally scheduled date and time.</p>
+        <p>We completely understand that this may be inconvenient and we truly appreciate your understanding.</p>
+        <p>To make the process as simple as possible, we have reserved a secure page where you can choose another available appointment that works best for you.</p>
+        <table class="details" role="presentation">
+          <tr><td class="label">Service</td><td class="value">${escapeHtml(d.serviceName)}</td></tr>
+          <tr><td class="label">Specialist</td><td class="value">${escapeHtml(d.specialistName)}</td></tr>
+          <tr><td class="label">Date</td><td class="value">${escapeHtml(d.dateLabel)}</td></tr>
+          <tr><td class="label">Time</td><td class="value">${escapeHtml(d.timeLabel)}</td></tr>
+        </table>
+        <p>Please click the button below to choose another available time.</p>
+      `,
+      ctaLabel: 'Choose New Appointment',
+      ctaUrl: rescheduleUrl,
+      footer: 'This secure link will remain valid for 24 hours. If you have any questions, please contact Beauty Rocks directly. Thank you for your patience and understanding. Beauty Rocks Team',
+    }),
+  };
+};
+
 const buildReminderBody = (appointment, reminderLabel) => {
   const d = formatAppointmentDetails(appointment);
   return baseLayout({
@@ -390,13 +363,12 @@ module.exports = {
   bookingStatusEmail,
   buildReminderBody,
   reminderEmail,
+  rescheduleRequestEmail,
   sendEmail,
   isEnabled,
-  isSmtpEnabled,
-  isResendEnabled,
   summaryEmail,
   verifyTransporter,
-  createTransporter,
   withTimeout,
   createResendClient,
+  isResendEnabled,
 };

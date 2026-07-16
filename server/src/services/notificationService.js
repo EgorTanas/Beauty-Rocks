@@ -3,6 +3,7 @@ const TeamMember = require('../models/TeamMember');
 const {
   bookingCreatedEmail,
   bookingStatusEmail,
+  rescheduleRequestEmail,
   reminderEmail,
   sendEmail,
 } = require('./emailService');
@@ -83,7 +84,7 @@ const safeEditTelegramMessage = async (payload) =>
 
 const getAppointment = async (appointmentId) =>
   Appointment.findById(appointmentId)
-    .select('+telegramMessageId +telegramChatId +reminder24hSentAt +reminder2hSentAt')
+    .select('+telegramMessageId +telegramChatId +reminder24hSentAt +reminder2hSentAt +rescheduleToken +rescheduleTokenExpiresAt +rescheduleTokenUsedAt')
     .populate('service', 'name price duration durationMinutes')
     .populate('teamMember', 'name role')
     .populate('user', 'username email phone');
@@ -175,6 +176,34 @@ const notifyBookingStatus = async (appointmentId, status, extra = {}) => {
   }
 
   const emailPayload = renderStatusEmail(appointment, status, extra);
+  await safeSendEmail({
+    to: appointment.user?.email,
+    subject: emailPayload.subject,
+    html: emailPayload.html,
+    attachments: emailPayload.attachments || [],
+  });
+
+  return { ok: true };
+};
+
+const notifyRescheduleRequested = async (appointmentId, token) => {
+  const appointment = await getAppointment(appointmentId);
+  if (!appointment) return { ok: false, error: 'Appointment not found' };
+
+  if (appointment.telegramMessageId && appointment.telegramChatId && isTelegramEnabled()) {
+    await safeEditTelegramMessage({
+      chatId: appointment.telegramChatId,
+      messageId: appointment.telegramMessageId,
+      text: buildStatusMessage(
+        '📅 <b>Reschedule request sent</b>',
+        appointment,
+        appointment.user,
+        ['The client has been asked to choose a new appointment.']
+      ),
+    });
+  }
+
+  const emailPayload = rescheduleRequestEmail(appointment, token);
   await safeSendEmail({
     to: appointment.user?.email,
     subject: emailPayload.subject,
@@ -353,6 +382,7 @@ const notifyWeeklySummary = async () => {
 module.exports = {
   notifyBookingCreated,
   notifyBookingStatus,
+  notifyRescheduleRequested,
   notifyReminder,
   notifyDailySummary,
   notifyWeeklySummary,
